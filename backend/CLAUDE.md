@@ -1,0 +1,443 @@
+# Backend Guidelines - Todo Web Application Phase 2
+
+**Project**: Todo Web Application - Backend  
+**Phase**: Phase 2 - Full-Stack Web Application  
+**Technology**: Python FastAPI + SQLModel + Neon PostgreSQL
+
+---
+
+## 🔗 Coupling with Root CLAUDE.md
+
+This file extends the root `../CLAUDE.md`. Always read the root file first for:
+- Project overview and phase information
+- Available agents and skills
+- Spec-driven development workflow
+- PHR and ADR requirements
+
+---
+
+## Stack
+
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| Python | 3.13+ | Programming language |
+| FastAPI | 0.115+ | Web framework |
+| SQLModel | 0.0.24+ | ORM (SQLAlchemy + Pydantic) |
+| Pydantic | 2.0+ | Data validation |
+| PostgreSQL | 16+ | Database (Neon Serverless) |
+| UV | Latest | Package manager |
+| pytest | 8.0+ | Testing framework |
+| Alembic | 1.13+ | Database migrations |
+
+---
+
+## Project Structure
+
+```
+backend/
+├── src/
+│   ├── __init__.py
+│   ├── main.py                  # FastAPI application entry
+│   ├── config.py                # Configuration & settings
+│   ├── database.py              # Database connection
+│   ├── models/
+│   │   ├── __init__.py
+│   │   ├── task.py             # Task SQLModel
+│   │   └── user.py             # User model
+│   ├── routers/
+│   │   ├── __init__.py
+│   │   ├── auth.py             # Auth endpoints
+│   │   └── tasks.py            # Task CRUD endpoints
+│   ├── services/
+│   │   ├── __init__.py
+│   │   ├── auth_service.py     # Auth business logic
+│   │   └── task_service.py     # Task business logic
+│   ├── middleware/
+│   │   ├── __init__.py
+│   │   └── auth.py             # JWT validation
+│   ├── schemas/
+│   │   ├── __init__.py
+│   │   ├── task.py             # Task Pydantic models
+│   │   └── auth.py             # Auth Pydantic models
+│   └── utils/
+│       ├── __init__.py
+│       └── jwt.py              # JWT utilities
+├── tests/
+│   ├── __init__.py
+│   ├── conftest.py             # Pytest fixtures
+│   ├── test_auth.py            # Auth tests
+│   ├── test_tasks.py           # Task API tests
+│   └── integration/
+│       └── test_full_flow.py   # E2E tests
+├── alembic/
+│   ├── versions/               # Migration files
+│   ├── env.py                  # Alembic config
+│   └── script.py.mako
+├── alembic.ini
+├── pyproject.toml              # UV configuration
+├── requirements.txt            # Dependencies
+├── .env.example                # Environment template
+└── Dockerfile                  # Container config
+```
+
+---
+
+## Available Agents
+
+Call these specialized agents for backend tasks:
+
+| Agent | Command | When to Use |
+|-------|---------|-------------|
+| **Backend API Builder** | `@backend-api-builder` | Building endpoints, services, middleware |
+| **Database Designer** | `@database-designer` | Schema design, models, migrations |
+
+---
+
+## Available Skills
+
+Use these skills for setup and configuration:
+
+| Skill | Command | When to Use |
+|-------|---------|-------------|
+| **FastAPI Setup** | Reference `fastapi-setup` | Initialize project |
+| **Neon DB Setup** | Reference `neon-db-setup` | Configure database |
+| **Better Auth** | Reference `better-auth-integration` | JWT authentication |
+
+---
+
+## API Conventions
+
+### RESTful Endpoints
+
+All routes follow REST conventions:
+
+| Method | Pattern | Action |
+|--------|---------|--------|
+| GET | `/api/{user_id}/tasks` | List all tasks |
+| POST | `/api/{user_id}/tasks` | Create task |
+| GET | `/api/{user_id}/tasks/{id}` | Get task |
+| PUT | `/api/{user_id}/tasks/{id}` | Update task |
+| PATCH | `/api/{user_id}/tasks/{id}/complete` | Toggle complete |
+| DELETE | `/api/{user_id}/tasks/{id}` | Delete task |
+
+### Response Format
+
+**Success Response:**
+```json
+{
+  "success": true,
+  "data": { ... }
+}
+```
+
+**Error Response:**
+```json
+{
+  "success": false,
+  "error": {
+    "code": 400,
+    "message": "Validation error"
+  }
+}
+```
+
+### HTTP Status Codes
+
+| Code | Meaning | When to Use |
+|------|---------|-------------|
+| 200 | OK | Successful GET, PUT, PATCH |
+| 201 | Created | Successful POST |
+| 204 | No Content | Successful DELETE |
+| 400 | Bad Request | Validation errors |
+| 401 | Unauthorized | Missing/invalid token |
+| 403 | Forbidden | Access denied |
+| 404 | Not Found | Resource not found |
+| 500 | Server Error | Internal errors |
+
+---
+
+## Code Patterns
+
+### SQLModel Models
+
+```python
+from sqlmodel import SQLModel, Field
+from datetime import datetime
+from typing import Optional
+
+class TaskBase(SQLModel):
+    title: str = Field(max_length=200)
+    description: Optional[str] = Field(default=None, max_length=1000)
+    completed: bool = Field(default=False)
+
+class Task(TaskBase, table=True):
+    __tablename__ = "tasks"
+    
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: str = Field(foreign_key="users.id", index=True)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+```
+
+### Pydantic Schemas
+
+```python
+from pydantic import BaseModel
+from datetime import datetime
+
+class TaskCreate(BaseModel):
+    title: str
+    description: str | None = None
+
+class TaskResponse(BaseModel):
+    id: int
+    user_id: str
+    title: str
+    description: str | None
+    completed: bool
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+```
+
+### API Endpoints
+
+```python
+from fastapi import APIRouter, Depends, HTTPException
+from sqlmodel import Session, select
+
+router = APIRouter(prefix="/api/{user_id}/tasks", tags=["tasks"])
+
+@router.get("/", response_model=list[TaskResponse])
+async def list_tasks(
+    user_id: str,
+    session: Session = Depends(get_session),
+    current_user: CurrentUser = Depends(get_current_user)
+):
+    # Enforce user isolation
+    verify_user_access(current_user, user_id)
+    
+    # Query tasks
+    statement = select(Task).where(Task.user_id == user_id)
+    tasks = session.exec(statement).all()
+    return tasks
+```
+
+### Service Layer
+
+```python
+# services/task_service.py
+from sqlmodel import Session, select
+from src.models.task import Task
+
+class TaskService:
+    def __init__(self, session: Session):
+        self.session = session
+
+    def create_task(self, user_id: str, data: TaskCreate) -> Task:
+        task = Task(**data.dict(), user_id=user_id)
+        self.session.add(task)
+        self.session.commit()
+        self.session.refresh(task)
+        return task
+
+    def get_tasks(self, user_id: str) -> list[Task]:
+        statement = select(Task).where(Task.user_id == user_id)
+        return self.session.exec(statement).all()
+```
+
+---
+
+## Security Requirements
+
+### JWT Authentication
+
+All protected routes MUST:
+1. Require valid JWT token in `Authorization: Bearer <token>` header
+2. Validate token signature and expiration
+3. Extract user_id from token payload
+4. Enforce user isolation (users only access their own data)
+
+```python
+from fastapi import Depends, HTTPException
+from fastapi.security import HTTPBearer
+
+security = HTTPBearer()
+
+async def get_current_user(credentials = Depends(security)) -> CurrentUser:
+    token = credentials.credentials
+    payload = decode_jwt(token)
+    if not payload:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    return CurrentUser(id=payload["sub"], email=payload["email"])
+
+def verify_user_access(current_user: CurrentUser, resource_user_id: str):
+    if current_user.id != resource_user_id:
+        raise HTTPException(status_code=403, detail="Access denied")
+```
+
+### Input Validation
+
+- Use Pydantic models for all request validation
+- Set max_length on string fields
+- Sanitize user input automatically via Pydantic
+
+### Environment Variables
+
+Never hardcode secrets:
+
+```python
+# config.py
+from pydantic_settings import BaseSettings
+
+class Settings(BaseSettings):
+    database_url: str
+    jwt_secret_key: str
+    cors_origins: str = "http://localhost:3000"
+
+    class Config:
+        env_file = ".env"
+```
+
+---
+
+## Database Guidelines
+
+### Connection Management
+
+```python
+# database.py
+from sqlmodel import SQLModel, Session, create_engine
+
+engine = create_engine(
+    settings.database_url,
+    pool_pre_ping=True,
+    pool_size=5,
+    max_overflow=10,
+)
+
+def get_session():
+    with Session(engine) as session:
+        yield session
+```
+
+### Migrations with Alembic
+
+```bash
+# Create migration
+alembic revision --autogenerate -m "Add tasks table"
+
+# Apply migrations
+alembic upgrade head
+
+# Rollback
+alembic downgrade -1
+```
+
+### Indexes
+
+Always index:
+- Foreign keys (`user_id`)
+- Frequently filtered columns (`completed`)
+- Search columns (`title`)
+
+---
+
+## Testing Strategy
+
+| Type | Tool | Coverage Goal |
+|------|------|---------------|
+| Unit | pytest | Models, Services |
+| Integration | pytest + httpx | API endpoints |
+| E2E | pytest | Full user flows |
+
+**Target Coverage**: 80%
+
+### Test Example
+
+```python
+import pytest
+from fastapi.testclient import TestClient
+
+def test_create_task(client, auth_token):
+    response = client.post(
+        "/api/test-user/tasks",
+        json={"title": "Test Task"},
+        headers={"Authorization": f"Bearer {auth_token}"}
+    )
+    assert response.status_code == 201
+    assert response.json()["data"]["title"] == "Test Task"
+```
+
+---
+
+## Environment Variables
+
+```env
+# .env
+DATABASE_URL=postgresql://user:pass@host/db?sslmode=require
+DATABASE_URL_DIRECT=postgresql://user:pass@host/db?sslmode=require
+JWT_SECRET_KEY=your-super-secret-key-min-32-chars
+JWT_ALGORITHM=HS256
+JWT_ACCESS_TOKEN_EXPIRE_MINUTES=10080
+CORS_ORIGINS=http://localhost:3000
+```
+
+---
+
+## Quick Commands
+
+```bash
+# Development
+cd backend
+uv run uvicorn src.main:app --reload --port 8000
+
+# Run tests
+uv run pytest
+
+# Run tests with coverage
+uv run pytest --cov=src --cov-report=html
+
+# Create migration
+uv run alembic revision --autogenerate -m "description"
+
+# Apply migrations
+uv run alembic upgrade head
+
+# Format code
+uv run black src tests
+uv run isort src tests
+```
+
+---
+
+## Specifications
+
+Always reference specs before implementing:
+
+| Spec | Path | Content |
+|------|------|---------|
+| API Endpoints | `../specs/api/rest-endpoints.md` | Full API documentation |
+| Database Schema | `../specs/database/schema.md` | Tables, indexes, relations |
+| Features | `../specs/features/` | Feature requirements |
+| Auth | `../specs/features/authentication.md` | Auth flows |
+
+---
+
+## Quality Checklist
+
+Before considering backend work complete:
+
+- [ ] All endpoints follow RESTful conventions
+- [ ] JWT validation on all protected routes
+- [ ] User isolation enforced
+- [ ] Input validation with Pydantic
+- [ ] Error handling implemented
+- [ ] Tests written and passing (>80% coverage)
+- [ ] OpenAPI docs generated (`/docs`)
+- [ ] Environment variables documented
+- [ ] Database migrations created
+- [ ] Security checklist verified
+- [ ] CORS configured properly

@@ -1,0 +1,167 @@
+# Spec-Kit Plus Configuration
+# Todo Web Application - Phase 2
+# ================================
+
+version: "1.0"
+project:
+  name: "Todo Web Application"
+  phase: 2
+  description: "Full-stack web application for task management"
+  due_date: "2024-12-14"
+
+# Specification Organization
+specs:
+  root: "./specs"
+  categories:
+    features:
+      path: "features"
+      description: "Feature specifications and user stories"
+      files:
+        - authentication.md
+        - task-crud.md
+    api:
+      path: "api"
+      description: "API endpoint documentation"
+      files:
+        - rest-endpoints.md
+    database:
+      path: "database"
+      description: "Database schema and migrations"
+      files:
+        - schema.md
+    ui:
+      path: "ui"
+      description: "UI components and pages"
+      files:
+        - components.md
+        - pages.md
+
+# Claude Code Integration
+claude:
+  root_config: "./CLAUDE.md"
+  subfolders:
+    - path: "./frontend"
+      config: "CLAUDE.md"
+      description: "Frontend-specific instructions"
+    - path: "./backend"
+      config: "CLAUDE.md"
+      description: "Backend-specific instructions"
+  
+  agents:
+    directory: ".claude/agents"
+    available:
+      - name: "backend-api-builder"
+        file: "backend-api-builder.md"
+        trigger: "@backend-api-builder"
+        purpose: "FastAPI backend development"
+      - name: "frontend-ui-builder"
+        file: "frontend-ui-builder.md"
+        trigger: "@frontend-ui-builder"
+        purpose: "Next.js frontend development"
+      - name: "database-designer"
+        file: "database-designer.md"
+        trigger: "@database-designer"
+        purpose: "PostgreSQL schema and migrations"
+  
+  skills:
+    directory: ".claude/skills"
+    available:
+      - name: "fastapi-setup"
+        description: "Initialize FastAPI project"
+      - name: "nextjs-setup"
+        description: "Initialize Next.js project"
+      - name: "shadcn-ui-setup"
+        description: "Configure Shadcn/ui components"
+      - name: "neon-db-setup"
+        description: "Configure Neon PostgreSQL"
+      - name: "better-auth-integration"
+        description: "JWT authentication setup"
+
+# History & Memory
+history:
+  prompts_directory: "./history/prompts"
+  categories:
+    - constitution
+    - general
+  memory_file: ".specify/memory/constitution.md"
+
+# Tech Stack
+tech_stack:
+  frontend:
+    framework: "Next.js 16+"
+    language: "TypeScript"
+    ui_library: "Shadcn/ui"
+    styling: "Tailwind CSS 4.0"
+    animations: "Framer Motion"
+    state: "React Context + React Query"
+    forms: "react-hook-form + zod"
+  
+  backend:
+    framework: "FastAPI 0.115+"
+    language: "Python 3.13+"
+    orm: "SQLModel"
+    validation: "Pydantic 2.0+"
+    testing: "pytest"
+    migrations: "Alembic"
+  
+  database:
+    provider: "Neon PostgreSQL"
+    version: "16+"
+    features:
+      - "Serverless"
+      - "Connection pooling"
+      - "Branching"
+  
+  authentication:
+    library: "Better Auth"
+    method: "JWT"
+    features:
+      - "Email/password"
+      - "Token refresh"
+      - "User isolation"
+  
+  deployment:
+    frontend: "Vercel"
+    backend: "Vercel Serverless Functions"
+    database: "Neon Serverless"
+
+# Development Workflow
+workflow:
+  spec_driven: true
+  steps:
+    1: "Read specifications before implementing"
+    2: "Use appropriate agent for the task"
+    3: "Reference skills for setup/configuration"
+    4: "Follow coding standards in CLAUDE.md"
+    5: "Write tests alongside implementation"
+    6: "Document changes in PHR"
+
+# Quality Gates
+quality:
+  testing:
+    unit_coverage: 80
+    integration_required: true
+  code_review:
+    required: true
+    checklist:
+      - "Follows spec requirements"
+      - "Tests included"
+      - "CLAUDE.md guidelines followed"
+  documentation:
+    required:
+      - "API endpoints documented"
+      - "Component props documented"
+      - "Environment variables documented"
+
+# File Patterns
+patterns:
+  frontend:
+    components: "frontend/src/components/**/*.tsx"
+    pages: "frontend/src/app/**/*.tsx"
+    hooks: "frontend/src/hooks/**/*.ts"
+    lib: "frontend/src/lib/**/*.ts"
+  backend:
+    routers: "backend/src/routers/**/*.py"
+    models: "backend/src/models/**/*.py"
+    services: "backend/src/services/**/*.py"
+    tests: "backend/tests/**/*.py"
