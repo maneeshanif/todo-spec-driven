@@ -18,7 +18,9 @@ Transform the Phase 1 console application into a production-ready, full-stack we
 - RESTful API with FastAPI backend
 - Modern React frontend with Next.js
 - PostgreSQL database with SQLModel ORM
-- Responsive UI with Shadcn/ui and animations
+- Responsive UI with Shadcn/ui + Aceternity UI effects
+- **Zustand** state management (MANDATORY)
+- **Axios** HTTP client with interceptors (MANDATORY)
 - Deployed to Vercel with Neon database
 
 ---
@@ -205,6 +207,9 @@ Transform the Phase 1 console application into a production-ready, full-stack we
 - **FR-UI-006**: System MUST implement optimistic UI updates for better UX
 - **FR-UI-007**: System MUST support dark mode (optional for Phase 2)
 - **FR-UI-008**: System MUST be accessible (keyboard navigation, ARIA labels)
+- **FR-UI-009**: System MUST use Zustand for ALL state management (NO React Context)
+- **FR-UI-010**: System MUST use Axios for ALL HTTP requests (NO fetch API)
+- **FR-UI-011**: System MUST use Aceternity UI effects on landing page (BackgroundBeams, TextGenerateEffect)
 
 ### Non-Functional Requirements
 
@@ -284,7 +289,8 @@ Transform the Phase 1 console application into a production-ready, full-stack we
 │  ┌──────────────────────────────────────────────────────────┐  │
 │  │                 Next.js Frontend (Vercel)                 │  │
 │  │  - React 19 Server & Client Components                   │  │
-│  │  - Shadcn/ui + Tailwind CSS + Framer Motion              │  │
+│  │  - Shadcn/ui + Tailwind CSS + Framer Motion + Aceternity │  │
+│  │  - Zustand State Management + Axios HTTP Client          │  │
 │  │  - Better Auth Client                                     │  │
 │  └──────────────────────┬───────────────────────────────────┘  │
 └─────────────────────────┼──────────────────────────────────────┘
@@ -380,6 +386,58 @@ interface Task {
 }
 ```
 
+#### Zustand Store Types (TypeScript)
+
+**Auth Store:**
+```typescript
+interface AuthState {
+  user: User | null;
+  token: string | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+}
+
+interface AuthActions {
+  login: (user: User, token: string) => void;
+  logout: () => void;
+  setLoading: (loading: boolean) => void;
+}
+```
+
+**Task Store:**
+```typescript
+interface TaskState {
+  tasks: Task[];
+  isLoading: boolean;
+  error: string | null;
+  filter: 'all' | 'active' | 'completed';
+}
+
+interface TaskActions {
+  fetchTasks: () => Promise<void>;
+  addTask: (title: string, description?: string) => Promise<void>;
+  toggleTask: (id: number) => Promise<void>;
+  deleteTask: (id: number) => Promise<void>;
+  setFilter: (filter: TaskState['filter']) => void;
+}
+```
+
+**UI Store:**
+```typescript
+interface UIState {
+  sidebarOpen: boolean;
+  activeModal: string | null;
+  theme: 'light' | 'dark' | 'system';
+}
+
+interface UIActions {
+  toggleSidebar: () => void;
+  openModal: (modalId: string) => void;
+  closeModal: () => void;
+  setTheme: (theme: UIState['theme']) => void;
+}
+```
+
 ---
 
 ## Out of Scope (Future Phases)
@@ -456,6 +514,9 @@ Before Phase 2 is considered complete, verify:
 - [SQLModel Tutorial](https://sqlmodel.tiangolo.com/tutorial/)
 - [Better Auth Docs](https://www.better-auth.com/docs/introduction)
 - [Shadcn/ui Components](https://ui.shadcn.com/components)
+- [Aceternity UI](https://ui.aceternity.com/)
+- [Zustand Documentation](https://zustand.docs.pmnd.rs/)
+- [Axios Documentation](https://axios-http.com/docs/intro)
 - [Neon Database Quickstart](https://neon.tech/docs/get-started)
 
 ---

@@ -19,7 +19,9 @@ Build a production-ready, full-stack web application that transforms the Phase 1
 - Monorepo structure with separate frontend (Next.js) and backend (FastAPI) services
 - PostgreSQL database with SQLModel ORM for type-safe data access
 - Better Auth for JWT-based authentication
-- Shadcn/ui components with Framer Motion animations
+- Shadcn/ui components with Framer Motion animations + Aceternity UI effects
+- **Zustand** for state management (MANDATORY - NO React Context)
+- **Axios** for HTTP requests (MANDATORY - NO fetch API)
 - Deployment to Vercel with Neon Serverless PostgreSQL
 
 ---
@@ -32,7 +34,7 @@ Build a production-ready, full-stack web application that transforms the Phase 1
 
 **Primary Dependencies**:
 - Backend: FastAPI 0.115+, SQLModel 0.0.24+, Pydantic 2.0, better-auth integration
-- Frontend: Next.js 16+, React 19, Shadcn/ui, Framer Motion 11+, Tailwind CSS 4.0
+- Frontend: Next.js 16+, React 19, Shadcn/ui, Framer Motion 11+, Tailwind CSS 4.0, **Zustand 5.0+**, **Axios 1.7+**, **Aceternity UI**
 
 **Storage**:
 - Neon Serverless PostgreSQL (cloud-hosted)
@@ -107,8 +109,10 @@ Build a production-ready, full-stack web application that transforms the Phase 1
 - [ ] Migration strategy planned
 
 ### ✅ Modern UI/UX Standards
-- [ ] Component library selected (Shadcn/ui)
+- [ ] Component library selected (Shadcn/ui + Aceternity UI)
 - [ ] Animation library chosen (Framer Motion)
+- [ ] State management: Zustand (MANDATORY)
+- [ ] HTTP client: Axios with interceptors (MANDATORY)
 - [ ] Mobile-first approach defined
 - [ ] Accessibility requirements documented
 
@@ -238,6 +242,10 @@ frontend/
 │   │   │   ├── input.tsx
 │   │   │   ├── checkbox.tsx
 │   │   │   └── dialog.tsx
+│   │   ├── aceternity/          # Aceternity UI effects
+│   │   │   ├── background-beams.tsx
+│   │   │   ├── text-generate-effect.tsx
+│   │   │   └── moving-border.tsx
 │   │   ├── auth/
 │   │   │   ├── login-form.tsx
 │   │   │   └── signup-form.tsx
@@ -250,14 +258,20 @@ frontend/
 │   │       ├── header.tsx
 │   │       ├── nav.tsx
 │   │       └── footer.tsx
+│   ├── stores/                  # Zustand stores (MANDATORY)
+│   │   ├── auth-store.ts        # Authentication state
+│   │   ├── task-store.ts        # Task state with optimistic updates
+│   │   └── ui-store.ts          # UI state (modals, sidebar, theme)
 │   ├── lib/
-│   │   ├── api.ts               # API client wrapper
+│   │   ├── api/                 # Axios API modules
+│   │   │   ├── client.ts        # Axios instance with interceptors
+│   │   │   ├── auth.ts          # Auth API calls
+│   │   │   └── tasks.ts         # Task API calls
 │   │   ├── auth.ts              # Better Auth configuration
 │   │   ├── types.ts             # TypeScript type definitions
 │   │   └── utils.ts             # Utility functions (cn, etc.)
 │   ├── hooks/
-│   │   ├── use-tasks.ts         # Task data fetching hook
-│   │   └── use-auth.ts          # Authentication hook
+│   │   └── use-auth.ts          # Authentication hook (wraps store)
 │   └── styles/
 │       └── globals.css           # Global styles with Tailwind
 ├── public/
@@ -310,6 +324,9 @@ README.md                        # Complete setup instructions
    - Install and configure Shadcn/ui
    - Set up Tailwind CSS 4.0
    - Install Framer Motion
+   - **Install Zustand for state management**
+   - **Install Axios for HTTP requests**
+   - **Set up Aceternity UI components directory**
 
 3. Set up Neon PostgreSQL
    - Create Neon project and database
@@ -436,7 +453,7 @@ README.md                        # Complete setup instructions
 
 ### Phase 4: Frontend UI Components (Day 4-5)
 
-**Goal**: Build reusable UI components with Shadcn/ui.
+**Goal**: Build reusable UI components with Shadcn/ui and Aceternity UI.
 
 **Tasks**:
 1. Install and configure Shadcn/ui components
@@ -444,30 +461,43 @@ README.md                        # Complete setup instructions
    - Form components with React Hook Form
    - Configure Tailwind theme
 
-2. Build authentication components
+2. Set up Aceternity UI effects (Landing Page)
+   - Create `components/aceternity/` directory
+   - Add BackgroundBeams component
+   - Add TextGenerateEffect component
+   - Add MovingBorder component for CTAs
+
+3. Build authentication components
    - LoginForm component
    - SignupForm component
    - AuthLayout component
    - Better Auth client integration
 
-3. Build task components
+4. Build task components
    - TaskList component (with animations)
    - TaskItem component (with checkbox + actions)
    - TaskForm component (create + edit)
    - EmptyState component
 
-4. Add Framer Motion animations
+5. Add Framer Motion animations
    - Task creation/deletion animations
    - Page transitions
    - Hover effects and micro-interactions
 
-5. Test components in isolation
+6. Set up Zustand stores
+   - Create auth-store.ts with persist middleware
+   - Create task-store.ts with optimistic updates
+   - Create ui-store.ts for modals/theme
+
+7. Test components in isolation
    - Storybook (optional) or component test pages
    - Verify responsiveness
    - Test dark mode (optional)
 
 **Deliverables**:
 - [ ] All UI components implemented
+- [ ] Aceternity UI effects on landing page
+- [ ] Zustand stores configured
 - [ ] Components are responsive (mobile, tablet, desktop)
 - [ ] Animations are smooth and performant
 - [ ] Dark mode supported (optional)
@@ -476,23 +506,28 @@ README.md                        # Complete setup instructions
 
 ### Phase 5: Frontend Integration (Day 5-6)
 
-**Goal**: Connect frontend to backend API with proper state management.
+**Goal**: Connect frontend to backend API with Zustand state management and Axios.
 
 **Tasks**:
-1. Implement API client
-   - Create `lib/api.ts` with type-safe wrappers
-   - JWT token management (store in localStorage/cookies)
-   - Request/response interceptors
-   - Error handling
+1. Implement Axios API client
+   - Create `lib/api/client.ts` with Axios instance
+   - Add request interceptor for JWT token
+   - Add response interceptor for error handling (401 → logout)
+   - Create `lib/api/tasks.ts` and `lib/api/auth.ts` modules
 
-2. Implement authentication flow
+2. Connect Zustand stores to API
+   - Wire auth-store to auth API endpoints
+   - Wire task-store to task API endpoints
+   - Implement optimistic updates with rollback
+
+3. Implement authentication flow
    - Signup page with form validation
-   - Login page with JWT persistence
+   - Login page with JWT persistence (Zustand persist)
    - Protected route middleware
    - Logout functionality
 
-3. Implement task management pages
-   - Dashboard with task list
+4. Implement task management pages
+   - Dashboard with task list (from task-store)
    - Task creation flow
    - Task editing flow
    - Task deletion with confirmation

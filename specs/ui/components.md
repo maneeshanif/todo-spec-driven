@@ -2,7 +2,9 @@
 
 **Framework**: Next.js 16+ with Shadcn/ui  
 **Styling**: Tailwind CSS 4.0  
-**Animations**: Framer Motion  
+**Animations**: Framer Motion + Aceternity UI  
+**State**: Zustand (MANDATORY)  
+**HTTP**: Axios (MANDATORY)  
 **Phase**: Phase 2  
 **Date**: December 2024
 
@@ -11,6 +13,18 @@
 ## Overview
 
 This document specifies all UI components for the Todo Web Application frontend.
+
+---
+
+## Technology Stack
+
+| Technology | Purpose |
+|------------|---------|
+| Shadcn/ui | Base components (Button, Card, Input, etc.) |
+| Aceternity UI | Visual effects (BackgroundBeams, TextGenerateEffect, etc.) |
+| Framer Motion | Animations and transitions |
+| Zustand | State management (NO React Context) |
+| Axios | HTTP client (NO fetch for API calls) |
 
 ---
 
@@ -30,6 +44,16 @@ This document specifies all UI components for the Todo Web Application frontend.
 | Toast | `@/components/ui/toast` | Notifications |
 | Avatar | `@/components/ui/avatar` | User avatar |
 | Dropdown | `@/components/ui/dropdown-menu` | Menu options |
+
+### Aceternity UI Components
+
+| Component | Import | Usage |
+|-----------|--------|-------|
+| BackgroundBeams | `@/components/aceternity/background-beams` | Hero section background |
+| TextGenerateEffect | `@/components/aceternity/text-generate-effect` | Animated text reveal |
+| MovingBorder | `@/components/aceternity/moving-border` | Animated button borders |
+| SparklesCore | `@/components/aceternity/sparkles` | Sparkle effects |
+| BackgroundGradient | `@/components/aceternity/background-gradient` | Gradient card backgrounds |
 
 ---
 

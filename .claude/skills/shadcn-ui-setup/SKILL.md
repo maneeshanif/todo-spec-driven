@@ -1,12 +1,22 @@
 ---
 name: shadcn-ui-setup
-description: Install and configure Shadcn/ui component library with Radix UI primitives, set up components, and manage the component registry. Use when adding Shadcn/ui to a Next.js project or installing specific UI components for Phase 2.
-allowed-tools: Bash, Write, Read, Edit
+description: Install and configure Shadcn/ui component library with Radix UI primitives, Aceternity UI effects, set up components, and manage the component registry. Use when adding Shadcn/ui to a Next.js project or installing specific UI components for Phase 2.
+allowed-tools: Bash, Write, Read, Edit, Context7
 ---
 
-# Shadcn/ui Setup and Component Management
+# Shadcn/ui + Aceternity UI Setup and Component Management
 
-Quick reference for installing, configuring, and using Shadcn/ui components in Next.js projects.
+## ⚠️ MANDATORY FIRST STEP
+
+**BEFORE RUNNING ANY SETUP COMMANDS:**
+Use Context7 MCP to fetch latest documentation for:
+- `shadcn-ui` (initialization, components)
+- `aceternity-ui` (effects, installation)
+- `radix-ui` (primitives)
+
+---
+
+Quick reference for installing, configuring, and using Shadcn/ui components and Aceternity UI effects in Next.js projects.
 
 ## What is Shadcn/ui?
 
@@ -18,6 +28,18 @@ Shadcn/ui is NOT a traditional component library. It's a collection of **copy-pa
 - Customizable with Tailwind CSS
 - Accessible by default (Radix UI)
 - Type-safe with TypeScript
+
+## What is Aceternity UI?
+
+Aceternity UI provides **stunning visual effects** for landing pages and marketing sections. Like Shadcn/ui, you copy the component code into your project.
+
+**Available Effects**:
+- `BackgroundBeams` - Animated beam lines for hero sections
+- `TextGenerateEffect` - Typewriter text animation
+- `MovingBorder` - Animated gradient borders
+- `SparklesCore` - Particle sparkle effects
+- `BackgroundGradient` - Animated gradient backgrounds
+- `CardHoverEffect` - 3D card hover animations
 
 ## Quick Start
 
@@ -46,7 +68,17 @@ This creates:
 - `src/lib/utils.ts` - Utility functions (cn helper)
 - Updates `tailwind.config.ts` and `globals.css`
 
-### 2. Configuration File
+### 2. Setup Aceternity UI Directory
+
+```bash
+# Create Aceternity UI directory
+mkdir -p src/components/aceternity
+
+# Install required dependencies
+npm install framer-motion tailwind-merge clsx
+```
+
+### 3. Configuration File
 
 After init, `components.json` looks like:
 
@@ -487,6 +519,205 @@ export default async function TasksPage() {
       <h1 className="text-3xl font-bold mb-6">My Tasks</h1>
       <TaskList initialTasks={tasks} />
     </div>
+  )
+}
+```
+
+## Aceternity UI Components (Landing Page)
+
+Aceternity UI provides stunning visual effects. Copy these components into `src/components/aceternity/`.
+
+### BackgroundBeams Component
+
+```typescript
+// src/components/aceternity/background-beams.tsx
+'use client'
+
+import React from 'react'
+import { motion } from 'framer-motion'
+import { cn } from '@/lib/utils'
+
+export function BackgroundBeams({ className }: { className?: string }) {
+  const paths = [
+    'M-380 -189C-380 -189 -312 216 152 343C616 470 684 875 684 875',
+    'M-373 -197C-373 -197 -305 208 159 335C623 462 691 867 691 867',
+    // Add more paths for effect
+  ]
+
+  return (
+    <div className={cn('absolute inset-0 overflow-hidden', className)}>
+      <svg
+        className="pointer-events-none absolute inset-0 h-full w-full"
+        width="100%"
+        height="100%"
+        viewBox="0 0 696 316"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        {paths.map((path, index) => (
+          <motion.path
+            key={index}
+            d={path}
+            stroke="url(#beam-gradient)"
+            strokeOpacity="0.4"
+            strokeWidth="1"
+            initial={{ pathLength: 0 }}
+            animate={{ pathLength: 1 }}
+            transition={{ duration: 2, delay: index * 0.2, repeat: Infinity }}
+          />
+        ))}
+        <defs>
+          <linearGradient id="beam-gradient" gradientUnits="userSpaceOnUse">
+            <stop stopColor="#18CCFC" stopOpacity="0" />
+            <stop offset="0.5" stopColor="#6344F5" />
+            <stop offset="1" stopColor="#AE48FF" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+      </svg>
+    </div>
+  )
+}
+```
+
+### TextGenerateEffect Component
+
+```typescript
+// src/components/aceternity/text-generate-effect.tsx
+'use client'
+
+import { useEffect } from 'react'
+import { motion, stagger, useAnimate } from 'framer-motion'
+import { cn } from '@/lib/utils'
+
+interface TextGenerateEffectProps {
+  words: string
+  className?: string
+}
+
+export function TextGenerateEffect({ words, className }: TextGenerateEffectProps) {
+  const [scope, animate] = useAnimate()
+  const wordsArray = words.split(' ')
+
+  useEffect(() => {
+    animate(
+      'span',
+      { opacity: 1, filter: 'blur(0px)' },
+      { duration: 0.8, delay: stagger(0.1) }
+    )
+  }, [animate])
+
+  return (
+    <motion.div ref={scope} className={cn('font-bold', className)}>
+      {wordsArray.map((word, idx) => (
+        <motion.span
+          key={word + idx}
+          className="opacity-0"
+          style={{ filter: 'blur(10px)' }}
+        >
+          {word}{' '}
+        </motion.span>
+      ))}
+    </motion.div>
+  )
+}
+```
+
+### MovingBorder Component
+
+```typescript
+// src/components/aceternity/moving-border.tsx
+'use client'
+
+import React from 'react'
+import { motion } from 'framer-motion'
+import { cn } from '@/lib/utils'
+
+interface MovingBorderProps {
+  children: React.ReactNode
+  className?: string
+  containerClassName?: string
+  borderRadius?: string
+  duration?: number
+}
+
+export function MovingBorder({
+  children,
+  className,
+  containerClassName,
+  borderRadius = '1rem',
+  duration = 2000,
+}: MovingBorderProps) {
+  return (
+    <div
+      className={cn('relative overflow-hidden p-[1px]', containerClassName)}
+      style={{ borderRadius }}
+    >
+      <motion.div
+        className="absolute inset-0"
+        style={{
+          background: 'linear-gradient(90deg, #18CCFC, #6344F5, #AE48FF, #18CCFC)',
+          backgroundSize: '300% 100%',
+        }}
+        animate={{
+          backgroundPosition: ['0% 0%', '100% 0%', '0% 0%'],
+        }}
+        transition={{
+          duration: duration / 1000,
+          repeat: Infinity,
+          ease: 'linear',
+        }}
+      />
+      <div
+        className={cn('relative bg-background', className)}
+        style={{ borderRadius }}
+      >
+        {children}
+      </div>
+    </div>
+  )
+}
+```
+
+### Landing Page Hero Example
+
+```typescript
+// components/landing/hero-section.tsx
+'use client'
+
+import { BackgroundBeams } from '@/components/aceternity/background-beams'
+import { TextGenerateEffect } from '@/components/aceternity/text-generate-effect'
+import { MovingBorder } from '@/components/aceternity/moving-border'
+import { Button } from '@/components/ui/button'
+import Link from 'next/link'
+
+export function HeroSection() {
+  return (
+    <section className="relative min-h-screen flex items-center justify-center bg-slate-950">
+      <BackgroundBeams />
+      
+      <div className="relative z-10 text-center max-w-4xl mx-auto px-4">
+        <TextGenerateEffect
+          words="Organize your life, one task at a time"
+          className="text-4xl md:text-6xl text-white mb-6"
+        />
+        
+        <p className="text-lg text-gray-400 mb-8">
+          The simplest way to manage your tasks and boost productivity
+        </p>
+        
+        <div className="flex gap-4 justify-center">
+          <MovingBorder containerClassName="rounded-full">
+            <Button size="lg" className="rounded-full" asChild>
+              <Link href="/signup">Get Started Free</Link>
+            </Button>
+          </MovingBorder>
+          
+          <Button variant="outline" size="lg" className="rounded-full" asChild>
+            <Link href="#features">Learn More</Link>
+          </Button>
+        </div>
+      </div>
+    </section>
   )
 }
 ```

@@ -6,6 +6,99 @@ You are an expert AI assistant specializing in Spec-Driven Development (SDD). Yo
 
 ---
 
+## ⚠️ CRITICAL: Pre-Implementation Requirements
+
+### 🔍 Context7 MCP - ALWAYS USE FIRST
+
+**BEFORE writing ANY code or making implementation decisions, you MUST:**
+
+1. **Fetch latest documentation** using Context7 MCP for ALL technologies:
+   ```
+   Use: mcp_context7_resolve-library-id → mcp_context7_get-library-docs
+   ```
+
+2. **Required Context7 lookups for Phase 2:**
+   - `nextjs` - Next.js 16+ App Router patterns
+   - `fastapi` - FastAPI 0.115+ best practices
+   - `sqlmodel` - SQLModel ORM usage
+   - `better-auth` - Authentication patterns
+   - `shadcn-ui` - Component library
+   - `framer-motion` - Animation patterns
+   - `tailwindcss` - Tailwind CSS 4.0
+   - `zustand` - State management (MANDATORY for frontend)
+   - `axios` - HTTP client (MANDATORY for frontend)
+   - `aceternity-ui` - Visual effects (MANDATORY for landing page)
+
+3. **Never assume** - Always verify current API patterns from Context7
+
+### 📋 Constitution & Specs - MANDATORY READING
+
+**Before ANY implementation task, read these in order:**
+
+| Order | Document | Purpose | Path |
+|-------|----------|---------|------|
+| 1 | Constitution | Project laws & principles | `constitution-prompt-phase-2.md` |
+| 2 | Specification | User stories & acceptance | `spec-prompt-phase-2.md` |
+| 3 | Plan | Architecture & approach | `plan-prompt-phase-2.md` |
+| 4 | Feature Spec | Specific feature details | `specs/features/*.md` |
+| 5 | API Spec | Endpoint contracts | `specs/api/rest-endpoints.md` |
+| 6 | DB Schema | Database design | `specs/database/schema.md` |
+
+**Enforcement:** If you haven't read the relevant specs, STOP and read them first.
+
+---
+
+## 🤖 Subagent & Skill Enforcement
+
+### MANDATORY Agent Delegation
+
+You MUST delegate to specialized agents based on task type:
+
+| Task Type | Agent | Trigger |
+|-----------|-------|--------|
+| FastAPI endpoints, services, middleware | `@backend-api-builder` | Any backend code |
+| React components, pages, hooks | `@frontend-ui-builder` | Any frontend code |
+| Database schema, models, migrations | `@database-designer` | Any DB work |
+
+**Rule:** Never write backend/frontend/database code directly. ALWAYS invoke the appropriate agent.
+
+### MANDATORY Skill Usage
+
+Before setup tasks, reference the appropriate skill:
+
+| Setup Task | Skill | Location |
+|------------|-------|----------|
+| Initialize FastAPI | `fastapi-setup` | `.claude/skills/fastapi-setup/SKILL.md` |
+| Initialize Next.js | `nextjs-setup` | `.claude/skills/nextjs-setup/SKILL.md` |
+| Add Shadcn components | `shadcn-ui-setup` | `.claude/skills/shadcn-ui-setup/SKILL.md` |
+| Configure Neon DB | `neon-db-setup` | `.claude/skills/neon-db-setup/SKILL.md` |
+| Implement auth | `better-auth-integration` | `.claude/skills/better-auth-integration/SKILL.md` |
+
+---
+
+## 🔌 MCP Server Integration
+
+### Available MCP Tools
+
+| MCP Server | Purpose | When to Use |
+|------------|---------|-------------|
+| **Context7** | Fetch latest library docs | Before ANY implementation |
+| **GitHub** | Repo management, PRs | Code commits, PR creation |
+| **Filesystem** | File operations | Reading/writing project files |
+
+### MCP Workflow
+
+```
+1. Context7: Resolve library ID → Get documentation
+2. Read: Constitution → Spec → Plan → Feature specs
+3. Delegate: Use appropriate agent (@backend/@frontend/@database)
+4. Reference: Use skill for setup tasks
+5. Implement: Generate code following specs
+6. Record: Create PHR in history/prompts/
+```
+
+---
+
 ## 🎯 Phase 2: Full-Stack Web Application
 
 **Current Phase**: Phase 2 - Full-Stack Web Application  

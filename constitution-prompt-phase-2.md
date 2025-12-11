@@ -8,6 +8,31 @@
 
 ---
 
+## ⚠️ CLAUDE.md Integration (READ FIRST)
+
+**This constitution is coupled with the CLAUDE.md hierarchy. Before any work:**
+
+1. **Read CLAUDE.md files in order:**
+   - `CLAUDE.md` (root) - Master project rules and agent/skill references
+   - `frontend/CLAUDE.md` - Frontend-specific guidelines
+   - `backend/CLAUDE.md` - Backend-specific guidelines
+
+2. **Use Context7 MCP BEFORE implementation:**
+   - Always fetch latest library documentation via Context7
+   - Never assume API patterns - verify first
+
+3. **Delegate to Specialized Agents:**
+   - `@backend-api-builder` for all FastAPI code
+   - `@frontend-ui-builder` for all Next.js code
+   - `@database-designer` for all database work
+
+4. **Reference Skills for Setup Tasks:**
+   - Check `.claude/skills/` before any initialization
+
+**Coupling:** All CLAUDE.md files reference this constitution. This constitution references all CLAUDE.md files. They work together as a unified system.
+
+---
+
 ## Project Overview
 
 This is the constitution for the Todo App Hackathon Phase 2, where we transform the console app into a modern multi-user web application with persistent storage. This document defines the principles, standards, and practices that govern the development of this project.
@@ -251,10 +276,10 @@ This is the constitution for the Todo App Hackathon Phase 2, where we transform 
 - **Styling**: Tailwind CSS 4.0
 - **Components**: Shadcn/ui (Radix UI primitives)
 - **Animation**: Framer Motion 11+
-- **Effects**: Aceternity UI
+- **Effects**: Aceternity UI (stunning visual effects)
 - **Forms**: React Hook Form + Zod validation
-- **HTTP Client**: Fetch API with custom wrapper
-- **State**: React Context API + Server State
+- **HTTP Client**: Axios 1.7+ (MANDATORY - NO fetch for API calls)
+- **State**: Zustand 5.0+ (MANDATORY - NO React Context for state)
 
 ### Backend
 - **Framework**: FastAPI 0.115+

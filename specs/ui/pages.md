@@ -1,6 +1,9 @@
 # UI Pages Specification
 
 **Framework**: Next.js 16+ with App Router  
+**State**: Zustand (MANDATORY)  
+**HTTP**: Axios (MANDATORY)  
+**Effects**: Aceternity UI (for landing page)  
 **Phase**: Phase 2  
 **Date**: December 2024
 
@@ -12,26 +15,21 @@ This document specifies all pages and their layouts for the Todo Web Application
 
 ---
 
-## Route Structure
+## Route Structure (6 Pages Total)
 
 ```
-app/
-├── (auth)/
-│   ├── layout.tsx           # Auth pages layout
-│   └── auth/
-│       ├── login/
-│       │   └── page.tsx     # /auth/login
-│       └── signup/
-│           └── page.tsx     # /auth/signup
-├── (dashboard)/
-│   ├── layout.tsx           # Dashboard layout (with header)
-│   └── dashboard/
-│       └── page.tsx         # /dashboard (main tasks page)
-├── layout.tsx               # Root layout
-├── page.tsx                 # / (landing page)
-├── not-found.tsx            # 404 page
-└── error.tsx                # Error boundary
-```
+app/\n├── layout.tsx               # Root layout with providers\n├── page.tsx                 # / (landing page with Aceternity effects)\n├── not-found.tsx            # 404 page\n├── error.tsx                # Error boundary\n├── loading.tsx              # Global loading state\n├── (auth)/\n│   ├── layout.tsx           # Auth pages layout (centered card)\n│   ├── login/\n│   │   └── page.tsx         # /login\n│   └── signup/\n│       └── page.tsx         # /signup\n└── (dashboard)/\n    ├── layout.tsx           # Dashboard layout (sidebar + header)\n    ├── dashboard/\n    │   └── page.tsx         # /dashboard (main tasks view)\n    └── settings/\n        └── page.tsx         # /settings (user preferences)\n```
+
+## Pages Summary
+
+| Route | Page | Auth | Aceternity | Description |
+|-------|------|------|------------|-------------|
+| `/` | Landing | Public | ✅ Required | Hero, features, CTA |
+| `/login` | Login | Public | Optional | User login form |
+| `/signup` | Signup | Public | Optional | User registration |
+| `/dashboard` | Dashboard | Protected | ❌ None | Main tasks view |
+| `/settings` | Settings | Protected | ❌ None | User preferences |
+| `/*` | 404 | Public | Optional | Not found page |
 
 ---
 
@@ -39,11 +37,21 @@ app/
 
 **Route**: `/`  
 **Auth Required**: No  
-**File**: `app/page.tsx`
+**File**: `app/page.tsx`  
+**Aceternity UI**: REQUIRED (BackgroundBeams, TextGenerateEffect)
 
 ### Purpose
 
-Welcome page with app introduction and call-to-action.
+Welcome page with app introduction and call-to-action. Uses Aceternity UI for stunning visual effects.
+
+### Aceternity UI Effects (MANDATORY)
+
+| Effect | Component | Usage |
+|--------|-----------|-------|
+| BackgroundBeams | `BackgroundBeams` | Hero section background animation |
+| TextGenerateEffect | `TextGenerateEffect` | Headline text animation |
+| MovingBorder | `MovingBorder` | CTA button animated border |
+| SparklesCore | `SparklesCore` | Features section sparkle effect |
 
 ### Layout
 
@@ -52,10 +60,19 @@ Welcome page with app introduction and call-to-action.
 │  Header (Logo, Login/Signup buttons)                   │
 ├────────────────────────────────────────────────────────┤
 │                                                        │
-│              Hero Section                              │
-│     "Organize your life, one task at a time"          │
-│                                                        │
-│          [Get Started]  [Learn More]                   │
+│     ╔════════════════════════════════════════════╗     │
+│     ║         BackgroundBeams Effect             ║     │
+│     ║                                            ║     │
+│     ║        Hero Section                        ║     │
+│     ║  <TextGenerateEffect>                      ║     │
+│     ║   "Organize your life, one task at a time" ║     │
+│     ║  </TextGenerateEffect>                     ║     │
+│     ║                                            ║     │
+│     ║   <MovingBorder>                           ║     │
+│     ║     [Get Started]                          ║     │
+│     ║   </MovingBorder>  [Learn More]            ║     │
+│     ║                                            ║     │
+│     ╚════════════════════════════════════════════╝     │
 │                                                        │
 ├────────────────────────────────────────────────────────┤
 │                                                        │
@@ -79,7 +96,7 @@ Welcome page with app introduction and call-to-action.
 ### Components
 
 - `LandingHeader` - Navigation with auth buttons
-- `HeroSection` - Main headline and CTA
+- `HeroSection` - Main headline with Aceternity effects
 - `FeaturesSection` - Feature highlights
 - `CTASection` - Final call to action
 - `Footer` - Site footer
@@ -89,6 +106,7 @@ Welcome page with app introduction and call-to-action.
 - If user is authenticated, redirect to `/dashboard`
 - Smooth scroll for "Learn More" button
 - Animated entrance with Framer Motion
+- Background effects with Aceternity UI
 
 ---
 

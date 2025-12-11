@@ -1,12 +1,23 @@
 ---
 name: nextjs-setup
-description: Initialize Next.js 16+ frontend projects with TypeScript, Tailwind CSS, App Router, and modern tooling. Use when setting up a new Next.js frontend or initializing the frontend directory for Phase 2.
-allowed-tools: Bash, Write, Read, Glob
+description: Initialize Next.js 16+ frontend projects with TypeScript, Tailwind CSS, Zustand state management, Axios HTTP client, Aceternity UI effects, and App Router. Use when setting up a new Next.js frontend or initializing the frontend directory for Phase 2.
+allowed-tools: Bash, Write, Read, Glob, Context7
 ---
 
 # Next.js Project Setup
 
-Quick reference for initializing Next.js 16+ projects with TypeScript, Tailwind CSS 4.0, and App Router.
+## ⚠️ MANDATORY FIRST STEP
+
+**BEFORE RUNNING ANY SETUP COMMANDS:**
+Use Context7 MCP to fetch latest documentation for:
+- `next.js` (App Router, installation)
+- `zustand` (store setup)
+- `axios` (configuration)
+- `shadcn-ui` (initialization)
+
+---
+
+Quick reference for initializing Next.js 16+ projects with TypeScript, Tailwind CSS 4.0, Zustand, Axios, and App Router.
 
 ## Quick Start
 
@@ -33,19 +44,25 @@ Options explained:
 - `--src-dir`: Use `src/` directory
 - `--import-alias "@/*"`: Use @ for imports from src/
 
-### 2. Install Core Dependencies
+### 2. Install Core Dependencies (MANDATORY)
 
 ```bash
 cd frontend
+
+# State management (MANDATORY)
+npm install zustand
+
+# HTTP client (MANDATORY)
+npm install axios
 
 # Animation library
 npm install framer-motion
 
 # Form handling
-npm install react-hook-form zod @hookform/resolvers/zod
+npm install react-hook-form zod @hookform/resolvers
 
-# HTTP client (if not using fetch)
-npm install axios
+# Utilities for Aceternity UI
+npm install tailwind-merge clsx
 
 # Better Auth (for authentication)
 npm install better-auth
@@ -74,9 +91,12 @@ cd frontend
 
 # Create directory structure
 mkdir -p src/components/ui
+mkdir -p src/components/aceternity    # Aceternity UI effects
 mkdir -p src/components/auth
 mkdir -p src/components/tasks
 mkdir -p src/components/layout
+mkdir -p src/stores                   # Zustand stores (MANDATORY)
+mkdir -p src/lib/api                  # Axios API modules
 mkdir -p src/lib
 mkdir -p src/hooks
 mkdir -p src/styles
@@ -262,93 +282,315 @@ export interface ApiResponse<T> {
 }
 ```
 
-### 9. Create API Client
+### 9. Create Zustand Stores (MANDATORY)
 
-Create `src/lib/api.ts`:
+Create `src/stores/auth-store.ts`:
 
 ```typescript
-import { Task, ApiResponse } from './types'
+import { create } from 'zustand'
+import { persist, createJSONStorage } from 'zustand/middleware'
+import type { User } from '@/lib/types'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
-
-async function getAuthHeaders(): Promise<HeadersInit> {
-  // TODO: Get JWT token from Better Auth session
-  const token = '' // Get from Better Auth
-
-  return {
-    'Authorization': `Bearer ${token}`,
-    'Content-Type': 'application/json',
-  }
+interface AuthState {
+  user: User | null
+  token: string | null
+  isAuthenticated: boolean
+  isLoading: boolean
 }
 
-export async function getTasks(userId: string): Promise<Task[]> {
-  const headers = await getAuthHeaders()
-
-  const response = await fetch(`${API_URL}/api/${userId}/tasks`, {
-    headers,
-    cache: 'no-store',
-  })
-
-  if (!response.ok) {
-    throw new Error('Failed to fetch tasks')
-  }
-
-  const data: ApiResponse<Task[]> = await response.json()
-  return data.data || []
+interface AuthActions {
+  setUser: (user: User | null) => void
+  setToken: (token: string | null) => void
+  login: (user: User, token: string) => void
+  logout: () => void
+  setLoading: (loading: boolean) => void
 }
 
-export async function createTask(
-  userId: string,
-  task: { title: string; description?: string }
-): Promise<Task> {
-  const headers = await getAuthHeaders()
+export const useAuthStore = create<AuthState & AuthActions>()(
+  persist(
+    (set) => ({
+      user: null,
+      token: null,
+      isAuthenticated: false,
+      isLoading: true,
 
-  const response = await fetch(`${API_URL}/api/${userId}/tasks`, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify(task),
-  })
+      setUser: (user) => set({ user, isAuthenticated: !!user }),
+      setToken: (token) => set({ token }),
+      login: (user, token) => set({ user, token, isAuthenticated: true, isLoading: false }),
+      logout: () => set({ user: null, token: null, isAuthenticated: false }),
+      setLoading: (isLoading) => set({ isLoading }),
+    }),
+    {
+      name: 'auth-storage',
+      storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({ token: state.token }),
+    }
+  )
+)
+```
 
-  if (!response.ok) {
-    const error = await response.json()
-    throw new Error(error.error?.message || 'Failed to create task')
-  }
+Create `src/stores/task-store.ts`:
 
-  const data: ApiResponse<Task> = await response.json()
-  return data.data!
+```typescript
+import { create } from 'zustand'
+import { taskApi } from '@/lib/api/tasks'
+import type { Task } from '@/lib/types'
+
+interface TaskState {
+  tasks: Task[]
+  isLoading: boolean
+  error: string | null
+  filter: 'all' | 'active' | 'completed'
 }
 
-export async function toggleTask(userId: string, taskId: number): Promise<Task> {
-  const headers = await getAuthHeaders()
-
-  const response = await fetch(`${API_URL}/api/${userId}/tasks/${taskId}/complete`, {
-    method: 'PATCH',
-    headers,
-  })
-
-  if (!response.ok) {
-    throw new Error('Failed to toggle task')
-  }
-
-  const data: ApiResponse<Task> = await response.json()
-  return data.data!
+interface TaskActions {
+  fetchTasks: () => Promise<void>
+  addTask: (title: string, description?: string) => Promise<void>
+  toggleTask: (id: number) => Promise<void>
+  deleteTask: (id: number) => Promise<void>
+  setFilter: (filter: TaskState['filter']) => void
 }
 
-export async function deleteTask(userId: string, taskId: number): Promise<void> {
-  const headers = await getAuthHeaders()
+export const useTaskStore = create<TaskState & TaskActions>((set, get) => ({
+  tasks: [],
+  isLoading: false,
+  error: null,
+  filter: 'all',
 
-  const response = await fetch(`${API_URL}/api/${userId}/tasks/${taskId}`, {
-    method: 'DELETE',
-    headers,
+  fetchTasks: async () => {
+    set({ isLoading: true, error: null })
+    try {
+      const tasks = await taskApi.getAll()
+      set({ tasks, isLoading: false })
+    } catch (error) {
+      set({ error: 'Failed to fetch tasks', isLoading: false })
+    }
+  },
+
+  addTask: async (title, description) => {
+    const tempId = Date.now()
+    const optimisticTask: Task = { 
+      id: tempId, title, description, completed: false, 
+      created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+      user_id: '' 
+    }
+    
+    set((state) => ({ tasks: [optimisticTask, ...state.tasks] }))
+    
+    try {
+      const newTask = await taskApi.create({ title, description })
+      set((state) => ({
+        tasks: state.tasks.map((t) => (t.id === tempId ? newTask : t)),
+      }))
+    } catch (error) {
+      set((state) => ({ tasks: state.tasks.filter((t) => t.id !== tempId) }))
+      throw error
+    }
+  },
+
+  toggleTask: async (id) => {
+    const task = get().tasks.find((t) => t.id === id)
+    if (!task) return
+    
+    set((state) => ({
+      tasks: state.tasks.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t)),
+    }))
+    
+    try {
+      await taskApi.toggle(id)
+    } catch (error) {
+      set((state) => ({
+        tasks: state.tasks.map((t) => (t.id === id ? { ...t, completed: task.completed } : t)),
+      }))
+      throw error
+    }
+  },
+
+  deleteTask: async (id) => {
+    const tasks = get().tasks
+    set((state) => ({ tasks: state.tasks.filter((t) => t.id !== id) }))
+    
+    try {
+      await taskApi.delete(id)
+    } catch (error) {
+      set({ tasks })
+      throw error
+    }
+  },
+
+  setFilter: (filter) => set({ filter }),
+}))
+
+// Selector for filtered tasks
+export const useFilteredTasks = () => {
+  return useTaskStore((state) => {
+    switch (state.filter) {
+      case 'active':
+        return state.tasks.filter((t) => !t.completed)
+      case 'completed':
+        return state.tasks.filter((t) => t.completed)
+      default:
+        return state.tasks
+    }
   })
-
-  if (!response.ok) {
-    throw new Error('Failed to delete task')
-  }
 }
 ```
 
-### 10. Environment Variables
+Create `src/stores/ui-store.ts`:
+
+```typescript
+import { create } from 'zustand'
+
+interface UIState {
+  sidebarOpen: boolean
+  activeModal: string | null
+  theme: 'light' | 'dark' | 'system'
+}
+
+interface UIActions {
+  toggleSidebar: () => void
+  setSidebarOpen: (open: boolean) => void
+  openModal: (modalId: string) => void
+  closeModal: () => void
+  setTheme: (theme: UIState['theme']) => void
+}
+
+export const useUIStore = create<UIState & UIActions>((set) => ({
+  sidebarOpen: true,
+  activeModal: null,
+  theme: 'system',
+
+  toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
+  setSidebarOpen: (sidebarOpen) => set({ sidebarOpen }),
+  openModal: (activeModal) => set({ activeModal }),
+  closeModal: () => set({ activeModal: null }),
+  setTheme: (theme) => set({ theme }),
+}))
+```
+
+### 10. Create Axios API Client (MANDATORY)
+
+Create `src/lib/api/client.ts`:
+
+```typescript
+import axios from 'axios'
+import { useAuthStore } from '@/stores/auth-store'
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+
+export const apiClient = axios.create({
+  baseURL: API_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  timeout: 10000,
+})
+
+// Request interceptor - add auth token
+apiClient.interceptors.request.use(
+  (config) => {
+    const token = useAuthStore.getState().token
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
+    return config
+  },
+  (error) => Promise.reject(error)
+)
+
+// Response interceptor - handle errors
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      useAuthStore.getState().logout()
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login'
+      }
+    }
+    return Promise.reject(error)
+  }
+)
+```
+
+Create `src/lib/api/tasks.ts`:
+
+```typescript
+import { apiClient } from './client'
+import type { Task } from '@/lib/types'
+
+interface CreateTaskInput {
+  title: string
+  description?: string
+}
+
+export const taskApi = {
+  getAll: async (): Promise<Task[]> => {
+    const { data } = await apiClient.get('/api/tasks')
+    return data.data
+  },
+
+  create: async (input: CreateTaskInput): Promise<Task> => {
+    const { data } = await apiClient.post('/api/tasks', input)
+    return data.data
+  },
+
+  toggle: async (id: number): Promise<Task> => {
+    const { data } = await apiClient.patch(`/api/tasks/${id}/toggle`)
+    return data.data
+  },
+
+  delete: async (id: number): Promise<void> => {
+    await apiClient.delete(`/api/tasks/${id}`)
+  },
+}
+```
+
+Create `src/lib/api/auth.ts`:
+
+```typescript
+import { apiClient } from './client'
+import type { User } from '@/lib/types'
+
+interface LoginInput {
+  email: string
+  password: string
+}
+
+interface SignupInput {
+  email: string
+  password: string
+  name?: string
+}
+
+interface AuthResponse {
+  user: User
+  token: string
+}
+
+export const authApi = {
+  login: async (input: LoginInput): Promise<AuthResponse> => {
+    const { data } = await apiClient.post('/api/auth/login', input)
+    return data.data
+  },
+
+  signup: async (input: SignupInput): Promise<AuthResponse> => {
+    const { data } = await apiClient.post('/api/auth/signup', input)
+    return data.data
+  },
+
+  logout: async (): Promise<void> => {
+    await apiClient.post('/api/auth/logout')
+  },
+
+  me: async (): Promise<User> => {
+    const { data } = await apiClient.get('/api/auth/me')
+    return data.data
+  },
+}
+```
+
+### 11. Environment Variables
 
 Create `.env.local`:
 
