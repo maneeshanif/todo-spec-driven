@@ -99,11 +99,81 @@ Before setup tasks, reference the appropriate skill:
 
 ---
 
+## 🌿 Branch Strategy
+
+### Phase-Prefixed Branches
+
+```
+main (production)
+├── phase2/setup        → Project initialization
+├── phase2/database     → Schema & migrations
+├── phase2/backend-api  → FastAPI endpoints
+├── phase2/frontend-ui  → Next.js pages & components
+├── phase2/integration  → Connect frontend ↔ backend
+└── phase2/deploy       → Vercel + Neon deployment
+```
+
+**Naming Convention**: `phase{N}/{task-type}`
+
+### Branch Lifecycle
+
+```bash
+# 1. Create branch from main
+git checkout -b phase2/setup
+
+# 2. Run SP commands
+/sp.specify → /sp.plan → /sp.tasks
+
+# 3. Implement & commit
+git commit -m "feat(scope): description"
+
+# 4. Push & PR
+git push -u origin phase2/setup
+/sp.git.commit_pr
+
+# 5. Merge to main, delete branch
+```
+
+### Commit Convention
+
+```
+<type>(<scope>): <description>
+Types: feat, fix, docs, test, refactor, chore
+```
+
+---
+
+## 🔧 SpecKit Plus Commands
+
+Run in Claude Code CLI:
+
+| Command | Purpose |
+|---------|---------|
+| `/sp.constitution` | Define project principles |
+| `/sp.specify` | Create feature specification |
+| `/sp.plan` | Generate implementation plan |
+| `/sp.tasks` | Break plan into testable tasks |
+| `/sp.implement` | Execute implementation |
+| `/sp.clarify` | Ask clarifying questions |
+| `/sp.analyze` | Analyze existing code |
+| `/sp.checklist` | Generate completion checklist |
+| `/sp.adr` | Document architecture decision |
+| `/sp.phr` | Create prompt history record |
+| `/sp.git.commit_pr` | Commit and create PR |
+
+### Typical Flow
+
+```
+/sp.specify → /sp.plan → /sp.tasks → /sp.implement → /sp.checklist → /sp.git.commit_pr
+```
+
+---
+
 ## 🎯 Phase 2: Full-Stack Web Application
 
 **Current Phase**: Phase 2 - Full-Stack Web Application  
 **Due Date**: December 14, 2025  
-**Branch**: `phase-2-web-app`
+**Main Branch**: `main` | **Feature Branches**: `phase2/*`
 
 ### Phase 2 Overview
 
