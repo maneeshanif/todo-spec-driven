@@ -27,14 +27,14 @@ This is a monorepo web application:
 
 **Purpose**: Understand requirements and validate technical choices
 
-- [ ] T001 Read constitution-prompt-phase-2.md for project laws
-- [ ] T002 Read spec-prompt-phase-2.md for user stories and acceptance criteria
-- [ ] T003 Read plan-prompt-phase-2.md for architecture and technical approach
-- [ ] T004 [P] Review data-model.md for database schema
-- [ ] T005 [P] Review contracts/auth.openapi.yaml for auth endpoints
-- [ ] T006 [P] Review contracts/tasks.openapi.yaml for task endpoints
-- [ ] T007 [P] Review research.md for technical decisions
-- [ ] T008 Validate all design documents are complete and consistent
+- [X] T001 Read constitution-prompt-phase-2.md for project laws
+- [X] T002 Read spec-prompt-phase-2.md for user stories and acceptance criteria
+- [X] T003 Read plan-prompt-phase-2.md for architecture and technical approach
+- [X] T004 [P] Review data-model.md for database schema
+- [X] T005 [P] Review contracts/auth.openapi.yaml for auth endpoints
+- [X] T006 [P] Review contracts/tasks.openapi.yaml for task endpoints
+- [X] T007 [P] Review research.md for technical decisions
+- [X] T008 Validate all design documents are complete and consistent
 
 **Checkpoint**: Design documents reviewed and understood - ready for setup
 
@@ -46,49 +46,49 @@ This is a monorepo web application:
 
 ### Backend Setup
 
-- [ ] T009 Create backend/ directory structure (src/, tests/, alembic/)
-- [ ] T010 Initialize UV project in backend/ with Python 3.13+
-- [ ] T011 [P] Add FastAPI 0.115+ dependency to backend/pyproject.toml
-- [ ] T012 [P] Add SQLModel 0.0.24+ dependency to backend/pyproject.toml
-- [ ] T013 [P] Add Pydantic 2.0+ dependency to backend/pyproject.toml
-- [ ] T014 [P] Add PyJWT dependency for JWT handling to backend/pyproject.toml
-- [ ] T015 [P] Add python-dotenv for environment variables to backend/pyproject.toml
-- [ ] T016 [P] Add pytest 8.0+ and httpx for testing to backend/pyproject.toml
-- [ ] T017 [P] Add alembic for database migrations to backend/pyproject.toml
-- [ ] T018 [P] Add asyncpg for PostgreSQL async driver to backend/pyproject.toml
-- [ ] T019 [P] Add passlib[bcrypt] for password hashing to backend/pyproject.toml
-- [ ] T020 Create backend/src/__init__.py
-- [ ] T021 Create backend/.env.example with required environment variables
-- [ ] T022 Create backend/README.md with setup instructions
-- [ ] T023 Create backend/CLAUDE.md with backend-specific agent rules
+- [X] T009 Create backend/ directory structure (src/, tests/, alembic/)
+- [X] T010 Initialize UV project in backend/ with Python 3.13+
+- [X] T011 [P] Add FastAPI 0.115+ dependency to backend/pyproject.toml
+- [X] T012 [P] Add SQLModel 0.0.24+ dependency to backend/pyproject.toml
+- [X] T013 [P] Add Pydantic 2.0+ dependency to backend/pyproject.toml
+- [X] T014 [P] Add PyJWT dependency for JWT handling to backend/pyproject.toml
+- [X] T015 [P] Add python-dotenv for environment variables to backend/pyproject.toml
+- [X] T016 [P] Add pytest 8.0+ and httpx for testing to backend/pyproject.toml
+- [X] T017 [P] Add alembic for database migrations to backend/pyproject.toml
+- [X] T018 [P] Add asyncpg for PostgreSQL async driver to backend/pyproject.toml
+- [X] T019 [P] Add passlib[bcrypt] for password hashing to backend/pyproject.toml
+- [X] T020 Create backend/src/__init__.py
+- [X] T021 Create backend/.env.example with required environment variables
+- [X] T022 Create backend/README.md with setup instructions
+- [X] T023 Create backend/CLAUDE.md with backend-specific agent rules
 
 ### Frontend Setup
 
-- [ ] T024 Initialize Next.js 16+ project in frontend/ with TypeScript and App Router
-- [ ] T025 [P] Add React 19 to frontend/package.json
-- [ ] T026 [P] Add Tailwind CSS 4.0 to frontend/package.json
-- [ ] T027 [P] Add Shadcn/ui components to frontend/
-- [ ] T028 [P] Add Zustand 5.0+ for state management to frontend/package.json
-- [ ] T029 [P] Add Axios 1.7+ for HTTP client to frontend/package.json
-- [ ] T030 [P] Add Framer Motion 11+ for animations to frontend/package.json
-- [ ] T031 [P] Add Aceternity UI components to frontend/
-- [ ] T032 [P] Add React Hook Form for form handling to frontend/package.json
-- [ ] T033 [P] Add Zod for validation to frontend/package.json
-- [ ] T034 [P] Add Jest and React Testing Library to frontend/package.json
-- [ ] T035 Create frontend/src/lib/ directory for utilities
-- [ ] T036 Create frontend/src/stores/ directory for Zustand stores
-- [ ] T037 Create frontend/src/components/ directory for React components
-- [ ] T038 Create frontend/src/app/ directory structure (App Router pages)
-- [ ] T039 Create frontend/.env.example with API URL
-- [ ] T040 Create frontend/README.md with setup instructions
-- [ ] T041 Create frontend/CLAUDE.md with frontend-specific agent rules
+- [X] T024 Initialize Next.js 16+ project in frontend/ with TypeScript and App Router
+- [X] T025 [P] Add React 19 to frontend/package.json
+- [X] T026 [P] Add Tailwind CSS 4.0 to frontend/package.json
+- [X] T027 [P] Add Shadcn/ui components to frontend/
+- [X] T028 [P] Add Zustand 5.0+ for state management to frontend/package.json
+- [X] T029 [P] Add Axios 1.7+ for HTTP client to frontend/package.json
+- [X] T030 [P] Add Framer Motion 11+ for animations to frontend/package.json
+- [X] T031 [P] Add Aceternity UI components to frontend/
+- [X] T032 [P] Add React Hook Form for form handling to frontend/package.json
+- [X] T033 [P] Add Zod for validation to frontend/package.json
+- [X] T034 [P] Add Jest and React Testing Library to frontend/package.json
+- [X] T035 Create frontend/src/lib/ directory for utilities
+- [X] T036 Create frontend/src/stores/ directory for Zustand stores
+- [X] T037 Create frontend/src/components/ directory for React components
+- [X] T038 Create frontend/src/app/ directory structure (App Router pages)
+- [X] T039 Create frontend/.env.example with API URL
+- [X] T040 Create frontend/README.md with setup instructions
+- [X] T041 Create frontend/CLAUDE.md with frontend-specific agent rules
 
 ### Repository Configuration
 
-- [ ] T042 Create root .gitignore with backend and frontend patterns
-- [ ] T043 [P] Create .github/workflows/ci.yml for GitHub Actions
-- [ ] T044 [P] Update root README.md with monorepo setup instructions
-- [ ] T045 Verify all dependencies install correctly (uv sync and npm install)
+- [X] T042 Create root .gitignore with backend and frontend patterns
+- [X] T043 [P] Create .github/workflows/ci.yml for GitHub Actions
+- [X] T044 [P] Update root README.md with monorepo setup instructions
+- [X] T045 Verify all dependencies install correctly (uv sync and npm install)
 
 **Checkpoint**: Project structure initialized - ready for foundational work
 
@@ -102,49 +102,49 @@ This is a monorepo web application:
 
 ### Database Foundation
 
-- [ ] T046 Create backend/src/core/ directory for shared utilities
-- [ ] T047 Create database configuration in backend/src/core/database.py with engine and session
-- [ ] T048 Create environment config loader in backend/src/core/config.py with Settings class
-- [ ] T049 Initialize Alembic in backend/ for database migrations
-- [ ] T050 Configure Alembic env.py to use SQLModel metadata
-- [ ] T051 Create backend/src/models/__init__.py for model exports
-- [ ] T052 [P] Create User model in backend/src/models/user.py per data-model.md
-- [ ] T053 [P] Create Task model in backend/src/models/task.py per data-model.md
-- [ ] T054 Generate initial migration (001_initial_schema.py) with users and tasks tables
-- [ ] T055 Test migration up/down on local PostgreSQL or Neon instance
+- [X] T046 Create backend/src/core/ directory for shared utilities
+- [X] T047 Create database configuration in backend/src/core/database.py with engine and session
+- [X] T048 Create environment config loader in backend/src/core/config.py with Settings class
+- [X] T049 Initialize Alembic in backend/ for database migrations
+- [X] T050 Configure Alembic env.py to use SQLModel metadata
+- [X] T051 Create backend/src/models/__init__.py for model exports
+- [X] T052 [P] Create User model in backend/src/models/user.py per data-model.md
+- [X] T053 [P] Create Task model in backend/src/models/task.py per data-model.md
+- [X] T054 Generate initial migration (001_initial_schema.py) with users and tasks tables
+- [X] T055 Test migration up/down on local PostgreSQL or Neon instance
 
 ### Authentication Foundation
 
-- [ ] T056 Create backend/src/core/security.py with JWT utilities (create_token, verify_token)
-- [ ] T057 Create password hashing utilities in backend/src/core/security.py (hash_password, verify_password)
-- [ ] T058 Create authentication dependency in backend/src/core/deps.py (get_current_user)
-- [ ] T059 Create JWT middleware in backend/src/middleware/auth.py for token validation
-- [ ] T060 Create backend/src/schemas/__init__.py for Pydantic schemas
-- [ ] T061 [P] Create auth schemas in backend/src/schemas/auth.py (SignupRequest, LoginRequest, AuthResponse)
-- [ ] T062 [P] Create user schemas in backend/src/schemas/user.py (UserPublic, UserCreate)
+- [X] T056 Create backend/src/core/security.py with JWT utilities (create_token, verify_token)
+- [X] T057 Create password hashing utilities in backend/src/core/security.py (hash_password, verify_password)
+- [X] T058 Create authentication dependency in backend/src/core/deps.py (get_current_user)
+- [X] T059 Create JWT middleware in backend/src/middleware/auth.py for token validation
+- [X] T060 Create backend/src/schemas/__init__.py for Pydantic schemas
+- [X] T061 [P] Create auth schemas in backend/src/schemas/auth.py (SignupRequest, LoginRequest, AuthResponse)
+- [X] T062 [P] Create user schemas in backend/src/schemas/user.py (UserPublic, UserCreate)
 
 ### API Foundation
 
-- [ ] T063 Create FastAPI app instance in backend/src/main.py with CORS middleware
-- [ ] T064 Create API router structure in backend/src/api/__init__.py
-- [ ] T065 Create error handler in backend/src/core/errors.py following RFC 7807 format
-- [ ] T066 Add global exception handlers to backend/src/main.py
-- [ ] T067 Create logging configuration in backend/src/core/logging.py with structured logging
-- [ ] T068 Add health check endpoint at GET /api/health in backend/src/main.py
+- [X] T063 Create FastAPI app instance in backend/src/main.py with CORS middleware
+- [X] T064 Create API router structure in backend/src/api/__init__.py
+- [X] T065 Create error handler in backend/src/core/errors.py following RFC 7807 format
+- [X] T066 Add global exception handlers to backend/src/main.py
+- [X] T067 Create logging configuration in backend/src/core/logging.py with structured logging
+- [X] T068 Add health check endpoint at GET /api/health in backend/src/main.py
 
 ### Frontend Foundation
 
-- [ ] T069 Create Axios instance in frontend/src/lib/api/client.ts with base URL and interceptors
-- [ ] T070 Add auth interceptor to frontend/src/lib/api/client.ts for JWT token injection
-- [ ] T071 Add refresh interceptor to frontend/src/lib/api/client.ts for token refresh on 401
-- [ ] T072 Create auth store in frontend/src/stores/auth-store.ts with Zustand (user, token, login, logout, persist)
-- [ ] T073 Create UI store in frontend/src/stores/ui-store.ts with Zustand (modals, sidebar, theme)
-- [ ] T074 Create route protection HOC in frontend/src/components/ProtectedRoute.tsx
-- [ ] T075 Create global layout in frontend/src/app/layout.tsx with providers
-- [ ] T076 Create error boundary in frontend/src/components/ErrorBoundary.tsx
-- [ ] T077 Create loading component in frontend/src/components/LoadingSpinner.tsx
-- [ ] T078 Configure Tailwind CSS in frontend/tailwind.config.ts with custom theme
-- [ ] T079 Create global styles in frontend/src/app/globals.css
+- [X] T069 Create Axios instance in frontend/src/lib/api/client.ts with base URL and interceptors
+- [X] T070 Add auth interceptor to frontend/src/lib/api/client.ts for JWT token injection
+- [X] T071 Add refresh interceptor to frontend/src/lib/api/client.ts for token refresh on 401
+- [X] T072 Create auth store in frontend/src/stores/auth-store.ts with Zustand (user, token, login, logout, persist)
+- [X] T073 Create UI store in frontend/src/stores/ui-store.ts with Zustand (modals, sidebar, theme)
+- [X] T074 Create route protection HOC in frontend/src/components/ProtectedRoute.tsx
+- [X] T075 Create global layout in frontend/src/app/layout.tsx with providers
+- [X] T076 Create error boundary in frontend/src/components/ErrorBoundary.tsx
+- [X] T077 Create loading component in frontend/src/components/LoadingSpinner.tsx
+- [X] T078 Configure Tailwind CSS in frontend/tailwind.config.ts with custom theme
+- [X] T079 Create global styles in frontend/src/app/globals.css
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -160,57 +160,57 @@ This is a monorepo web application:
 
 #### Backend - Auth Service & Endpoints
 
-- [ ] T080 [P] [US1] Create auth service in backend/src/services/auth_service.py (signup, login methods)
-- [ ] T081 [P] [US1] Create user service in backend/src/services/user_service.py (get_by_email, create_user methods)
-- [ ] T082 [US1] Create auth router in backend/src/api/routes/auth.py (depends on T080, T081)
-- [ ] T083 [US1] Implement POST /api/auth/signup endpoint in backend/src/api/routes/auth.py per auth.openapi.yaml
-- [ ] T084 [US1] Implement POST /api/auth/login endpoint in backend/src/api/routes/auth.py per auth.openapi.yaml
-- [ ] T085 [US1] Implement POST /api/auth/logout endpoint in backend/src/api/routes/auth.py per auth.openapi.yaml
-- [ ] T086 [US1] Implement GET /api/auth/me endpoint in backend/src/api/routes/auth.py for current user
-- [ ] T087 [US1] Register auth router in backend/src/main.py
-- [ ] T088 [US1] Add input validation for signup (email format, password min 8 chars)
-- [ ] T089 [US1] Add error handling for duplicate email (409 Conflict)
-- [ ] T090 [US1] Add error handling for invalid credentials (401 Unauthorized)
+- [X] T080 [P] [US1] Create auth service in backend/src/services/auth_service.py (signup, login methods)
+- [X] T081 [P] [US1] Create user service in backend/src/services/user_service.py (get_by_email, create_user methods)
+- [X] T082 [US1] Create auth router in backend/src/api/routes/auth.py (depends on T080, T081)
+- [X] T083 [US1] Implement POST /api/auth/signup endpoint in backend/src/api/routes/auth.py per auth.openapi.yaml
+- [X] T084 [US1] Implement POST /api/auth/login endpoint in backend/src/api/routes/auth.py per auth.openapi.yaml
+- [X] T085 [US1] Implement POST /api/auth/logout endpoint in backend/src/api/routes/auth.py per auth.openapi.yaml
+- [X] T086 [US1] Implement GET /api/auth/me endpoint in backend/src/api/routes/auth.py for current user
+- [X] T087 [US1] Register auth router in backend/src/main.py
+- [X] T088 [US1] Add input validation for signup (email format, password min 8 chars)
+- [X] T089 [US1] Add error handling for duplicate email (409 Conflict)
+- [X] T090 [US1] Add error handling for invalid credentials (401 Unauthorized)
 
 #### Frontend - Auth API Module
 
-- [ ] T091 [P] [US1] Create auth API module in frontend/src/lib/api/auth.ts (signup, login, logout, getMe functions)
-- [ ] T092 [US1] Add error handling to auth API module with proper error types
+- [X] T091 [P] [US1] Create auth API module in frontend/src/lib/api/auth.ts (signup, login, logout, getMe functions)
+- [X] T092 [US1] Add error handling to auth API module with proper error types
 
 #### Frontend - Landing Page
 
-- [ ] T093 [P] [US1] Create landing page at frontend/src/app/page.tsx with hero section
-- [ ] T094 [US1] Add Aceternity UI BackgroundBeams to landing page
-- [ ] T095 [US1] Add Aceternity UI TextGenerateEffect to landing page hero text
-- [ ] T096 [US1] Add Aceternity UI MovingBorder button components to landing page
-- [ ] T097 [US1] Add navigation to signup and login from landing page
+- [X] T093 [P] [US1] Create landing page at frontend/src/app/page.tsx with hero section
+- [X] T094 [US1] Add Aceternity UI BackgroundBeams to landing page
+- [X] T095 [US1] Add Aceternity UI TextGenerateEffect to landing page hero text
+- [X] T096 [US1] Add Aceternity UI MovingBorder button components to landing page
+- [X] T097 [US1] Add navigation to signup and login from landing page
 
 #### Frontend - Signup Page
 
-- [ ] T098 [US1] Create signup page at frontend/src/app/signup/page.tsx
-- [ ] T099 [US1] Create signup form component in frontend/src/components/auth/SignupForm.tsx
-- [ ] T100 [US1] Add React Hook Form with Zod validation to signup form (email, name, password)
-- [ ] T101 [US1] Integrate signup form with auth store and auth API
-- [ ] T102 [US1] Add loading state during signup
-- [ ] T103 [US1] Add error display for signup failures
-- [ ] T104 [US1] Add redirect to dashboard on successful signup
+- [X] T098 [US1] Create signup page at frontend/src/app/signup/page.tsx
+- [X] T099 [US1] Create signup form component in frontend/src/components/auth/SignupForm.tsx
+- [X] T100 [US1] Add React Hook Form with Zod validation to signup form (email, name, password)
+- [X] T101 [US1] Integrate signup form with auth store and auth API
+- [X] T102 [US1] Add loading state during signup
+- [X] T103 [US1] Add error display for signup failures
+- [X] T104 [US1] Add redirect to dashboard on successful signup
 
 #### Frontend - Login Page
 
-- [ ] T105 [US1] Create login page at frontend/src/app/login/page.tsx
-- [ ] T106 [US1] Create login form component in frontend/src/components/auth/LoginForm.tsx
-- [ ] T107 [US1] Add React Hook Form with Zod validation to login form (email, password)
-- [ ] T108 [US1] Integrate login form with auth store and auth API
-- [ ] T109 [US1] Add loading state during login
-- [ ] T110 [US1] Add error display for login failures (invalid credentials)
-- [ ] T111 [US1] Add redirect to dashboard on successful login
-- [ ] T112 [US1] Implement "Remember me" with Zustand persist middleware
+- [X] T105 [US1] Create login page at frontend/src/app/login/page.tsx
+- [X] T106 [US1] Create login form component in frontend/src/components/auth/LoginForm.tsx
+- [X] T107 [US1] Add React Hook Form with Zod validation to login form (email, password)
+- [X] T108 [US1] Integrate login form with auth store and auth API
+- [X] T109 [US1] Add loading state during login
+- [X] T110 [US1] Add error display for login failures (invalid credentials)
+- [X] T111 [US1] Add redirect to dashboard on successful login
+- [X] T112 [US1] Implement "Remember me" with Zustand persist middleware
 
 #### Frontend - Auth State Management
 
-- [ ] T113 [US1] Add token refresh logic to auth store (auto-refresh when <1 day remaining)
-- [ ] T114 [US1] Add logout functionality to auth store (clear token, redirect to login)
-- [ ] T115 [US1] Implement protected route wrapper for dashboard and settings pages
+- [X] T113 [US1] Add token refresh logic to auth store (auto-refresh when <1 day remaining)
+- [X] T114 [US1] Add logout functionality to auth store (clear token, redirect to login)
+- [X] T115 [US1] Implement protected route wrapper for dashboard and settings pages
 
 **Checkpoint**: User Story 1 complete - users can signup, login, and logout. Auth foundation ready for task management.
 
@@ -226,38 +226,38 @@ This is a monorepo web application:
 
 #### Backend - Task Service & List Endpoint
 
-- [ ] T116 [P] [US2] Create task service in backend/src/services/task_service.py (get_tasks method with user isolation)
-- [ ] T117 [P] [US2] Create task schemas in backend/src/schemas/task.py (TaskPublic, TaskListResponse)
-- [ ] T118 [US2] Create task router in backend/src/api/routes/tasks.py (depends on T116, T117)
-- [ ] T119 [US2] Implement GET /api/tasks endpoint in backend/src/api/routes/tasks.py per tasks.openapi.yaml
-- [ ] T120 [US2] Add pagination support to GET /api/tasks (page, page_size params)
-- [ ] T121 [US2] Add completed filter support to GET /api/tasks (completed query param)
-- [ ] T122 [US2] Add cursor-based pagination logic (cursor param, next_cursor in response)
-- [ ] T123 [US2] Add user isolation check (user_id from JWT must match task.user_id)
-- [ ] T124 [US2] Register task router in backend/src/main.py
-- [ ] T125 [US2] Add sorting by created_at DESC in task service
+- [X] T116 [P] [US2] Create task service in backend/src/services/task_service.py (get_tasks method with user isolation)
+- [X] T117 [P] [US2] Create task schemas in backend/src/schemas/task.py (TaskPublic, TaskListResponse)
+- [X] T118 [US2] Create task router in backend/src/api/routes/tasks.py (depends on T116, T117)
+- [X] T119 [US2] Implement GET /api/tasks endpoint in backend/src/api/routes/tasks.py per tasks.openapi.yaml
+- [X] T120 [US2] Add pagination support to GET /api/tasks (page, page_size params)
+- [X] T121 [US2] Add completed filter support to GET /api/tasks (completed query param)
+- [X] T122 [US2] Add cursor-based pagination logic (cursor param, next_cursor in response)
+- [X] T123 [US2] Add user isolation check (user_id from JWT must match task.user_id)
+- [X] T124 [US2] Register task router in backend/src/main.py
+- [X] T125 [US2] Add sorting by created_at DESC in task service
 
 #### Frontend - Task API Module
 
-- [ ] T126 [P] [US2] Create task API module in frontend/src/lib/api/tasks.ts (getTasks function)
-- [ ] T127 [US2] Add error handling to task API module
+- [X] T126 [P] [US2] Create task API module in frontend/src/lib/api/tasks.ts (getTasks function)
+- [X] T127 [US2] Add error handling to task API module
 
 #### Frontend - Task Store
 
-- [ ] T128 [P] [US2] Create task store in frontend/src/stores/task-store.ts with Zustand (tasks array, loading, error, fetchTasks)
-- [ ] T129 [US2] Add optimistic updates support to task store
+- [X] T128 [P] [US2] Create task store in frontend/src/stores/task-store.ts with Zustand (tasks array, loading, error, fetchTasks)
+- [X] T129 [US2] Add optimistic updates support to task store
 
 #### Frontend - Dashboard Page
 
-- [ ] T130 [US2] Create dashboard page at frontend/src/app/dashboard/page.tsx (protected route)
-- [ ] T131 [US2] Create dashboard layout in frontend/src/components/dashboard/DashboardLayout.tsx
-- [ ] T132 [US2] Create task list component in frontend/src/components/tasks/TaskList.tsx
-- [ ] T133 [US2] Create task item component in frontend/src/components/tasks/TaskItem.tsx with Shadcn Card
-- [ ] T134 [US2] Add empty state component in frontend/src/components/tasks/EmptyState.tsx (when no tasks)
-- [ ] T135 [US2] Integrate dashboard with task store (fetch tasks on mount)
-- [ ] T136 [US2] Add loading skeleton for task list using Shadcn Skeleton
-- [ ] T137 [US2] Add error display for task fetch failures
-- [ ] T138 [US2] Add responsive design for mobile (TaskList and TaskItem)
+- [X] T130 [US2] Create dashboard page at frontend/src/app/dashboard/page.tsx (protected route)
+- [X] T131 [US2] Create dashboard layout in frontend/src/components/dashboard/DashboardLayout.tsx
+- [X] T132 [US2] Create task list component in frontend/src/components/tasks/TaskList.tsx
+- [X] T133 [US2] Create task item component in frontend/src/components/tasks/TaskItem.tsx with Shadcn Card
+- [X] T134 [US2] Add empty state component in frontend/src/components/tasks/EmptyState.tsx (when no tasks)
+- [X] T135 [US2] Integrate dashboard with task store (fetch tasks on mount)
+- [X] T136 [US2] Add loading skeleton for task list using Shadcn Skeleton
+- [X] T137 [US2] Add error display for task fetch failures
+- [X] T138 [US2] Add responsive design for mobile (TaskList and TaskItem)
 
 **Checkpoint**: User Story 2 complete - users can view their task list with empty state
 
@@ -273,28 +273,28 @@ This is a monorepo web application:
 
 #### Backend - Create Task Endpoint
 
-- [ ] T139 [P] [US3] Create TaskCreate schema in backend/src/schemas/task.py (title, description)
-- [ ] T140 [US3] Add create_task method to backend/src/services/task_service.py
-- [ ] T141 [US3] Implement POST /api/tasks endpoint in backend/src/api/routes/tasks.py per tasks.openapi.yaml
-- [ ] T142 [US3] Add validation for title (1-200 chars) and description (max 1000 chars)
-- [ ] T143 [US3] Add user_id from JWT to new task automatically
-- [ ] T144 [US3] Return 201 Created with task object
+- [X] T139 [P] [US3] Create TaskCreate schema in backend/src/schemas/task.py (title, description)
+- [X] T140 [US3] Add create_task method to backend/src/services/task_service.py
+- [X] T141 [US3] Implement POST /api/tasks endpoint in backend/src/api/routes/tasks.py per tasks.openapi.yaml
+- [X] T142 [US3] Add validation for title (1-200 chars) and description (max 1000 chars)
+- [X] T143 [US3] Add user_id from JWT to new task automatically
+- [X] T144 [US3] Return 201 Created with task object
 
 #### Frontend - Task Creation
 
-- [ ] T145 [US3] Add createTask function to frontend/src/lib/api/tasks.ts
-- [ ] T146 [US3] Add createTask action to frontend/src/stores/task-store.ts with optimistic update
-- [ ] T147 [US3] Create "Add Task" button in frontend/src/components/tasks/AddTaskButton.tsx
-- [ ] T148 [US3] Create task creation modal in frontend/src/components/tasks/CreateTaskModal.tsx using Shadcn Dialog
-- [ ] T149 [US3] Create task form in frontend/src/components/tasks/TaskForm.tsx with React Hook Form
-- [ ] T150 [US3] Add Zod validation to task form (title required 1-200 chars, description optional max 1000)
-- [ ] T151 [US3] Integrate create task modal with task store
-- [ ] T152 [US3] Add optimistic UI update (task appears immediately in list)
-- [ ] T153 [US3] Add loading state during task creation
-- [ ] T154 [US3] Add error handling (rollback optimistic update on failure)
-- [ ] T155 [US3] Add success toast notification using Shadcn Toast
-- [ ] T156 [US3] Auto-focus title input when modal opens
-- [ ] T157 [US3] Close modal and reset form after successful creation
+- [X] T145 [US3] Add createTask function to frontend/src/lib/api/tasks.ts
+- [X] T146 [US3] Add createTask action to frontend/src/stores/task-store.ts with optimistic update
+- [X] T147 [US3] Create "Add Task" button in frontend/src/components/tasks/AddTaskButton.tsx
+- [X] T148 [US3] Create task creation modal in frontend/src/components/tasks/CreateTaskModal.tsx using Shadcn Dialog
+- [X] T149 [US3] Create task form in frontend/src/components/tasks/TaskForm.tsx with React Hook Form
+- [X] T150 [US3] Add Zod validation to task form (title required 1-200 chars, description optional max 1000)
+- [X] T151 [US3] Integrate create task modal with task store
+- [X] T152 [US3] Add optimistic UI update (task appears immediately in list)
+- [X] T153 [US3] Add loading state during task creation
+- [X] T154 [US3] Add error handling (rollback optimistic update on failure)
+- [X] T155 [US3] Add success toast notification using Shadcn Toast
+- [X] T156 [US3] Auto-focus title input when modal opens
+- [X] T157 [US3] Close modal and reset form after successful creation
 
 **Checkpoint**: User Story 3 complete - users can create tasks with immediate feedback
 
@@ -310,24 +310,24 @@ This is a monorepo web application:
 
 #### Backend - Update Task Completion
 
-- [ ] T158 [P] [US4] Create TaskUpdate schema in backend/src/schemas/task.py (title, description, completed - all optional)
-- [ ] T159 [US4] Add update_task method to backend/src/services/task_service.py
-- [ ] T160 [US4] Implement PATCH /api/tasks/{task_id} endpoint in backend/src/api/routes/tasks.py per tasks.openapi.yaml
-- [ ] T161 [US4] Add user isolation check (verify task belongs to current user)
-- [ ] T162 [US4] Return 404 if task not found or doesn't belong to user
-- [ ] T163 [US4] Update updated_at timestamp automatically
+- [X] T158 [P] [US4] Create TaskUpdate schema in backend/src/schemas/task.py (title, description, completed - all optional)
+- [X] T159 [US4] Add update_task method to backend/src/services/task_service.py
+- [X] T160 [US4] Implement PATCH /api/tasks/{task_id} endpoint in backend/src/api/routes/tasks.py per tasks.openapi.yaml
+- [X] T161 [US4] Add user isolation check (verify task belongs to current user)
+- [X] T162 [US4] Return 404 if task not found or doesn't belong to user
+- [X] T163 [US4] Update updated_at timestamp automatically
 
 #### Frontend - Task Completion Toggle
 
-- [ ] T164 [US4] Add updateTask function to frontend/src/lib/api/tasks.ts
-- [ ] T165 [US4] Add toggleComplete action to frontend/src/stores/task-store.ts with optimistic update
-- [ ] T166 [US4] Add checkbox to frontend/src/components/tasks/TaskItem.tsx using Shadcn Checkbox
-- [ ] T167 [US4] Add strikethrough styling for completed tasks
-- [ ] T168 [US4] Add Framer Motion animation for completion state change
-- [ ] T169 [US4] Integrate checkbox with task store toggleComplete action
-- [ ] T170 [US4] Add optimistic UI update (checkbox state changes immediately)
-- [ ] T171 [US4] Add error handling (rollback optimistic update on API failure)
-- [ ] T172 [US4] Add visual distinction between complete and incomplete tasks (opacity, color)
+- [X] T164 [US4] Add updateTask function to frontend/src/lib/api/tasks.ts
+- [X] T165 [US4] Add toggleComplete action to frontend/src/stores/task-store.ts with optimistic update
+- [X] T166 [US4] Add checkbox to frontend/src/components/tasks/TaskItem.tsx using Shadcn Checkbox
+- [X] T167 [US4] Add strikethrough styling for completed tasks
+- [X] T168 [US4] Add Framer Motion animation for completion state change
+- [X] T169 [US4] Integrate checkbox with task store toggleComplete action
+- [X] T170 [US4] Add optimistic UI update (checkbox state changes immediately)
+- [X] T171 [US4] Add error handling (rollback optimistic update on API failure)
+- [X] T172 [US4] Add visual distinction between complete and incomplete tasks (opacity, color)
 
 **Checkpoint**: User Story 4 complete - users can mark tasks complete/incomplete with smooth UX
 
@@ -343,17 +343,17 @@ This is a monorepo web application:
 
 #### Frontend - Task Editing
 
-- [ ] T173 [US5] Add updateTask action to frontend/src/stores/task-store.ts (reuse from US4 if needed)
-- [ ] T174 [US5] Create edit task modal in frontend/src/components/tasks/EditTaskModal.tsx using Shadcn Dialog
-- [ ] T175 [US5] Reuse TaskForm component from US3 for edit modal (prepopulate with current values)
-- [ ] T176 [US5] Add "Edit" icon button to frontend/src/components/tasks/TaskItem.tsx using Shadcn Button
-- [ ] T177 [US5] Integrate edit modal with task store updateTask action
-- [ ] T178 [US5] Add optimistic UI update (task updates immediately in list)
-- [ ] T179 [US5] Add loading state during update
-- [ ] T180 [US5] Add error handling (rollback optimistic update on failure)
-- [ ] T181 [US5] Add cancel button to discard changes
-- [ ] T182 [US5] Add success toast notification
-- [ ] T183 [US5] Close modal after successful update
+- [X] T173 [US5] Add updateTask action to frontend/src/stores/task-store.ts (reuse from US4 if needed)
+- [X] T174 [US5] Create edit task modal in frontend/src/components/tasks/EditTaskModal.tsx using Shadcn Dialog
+- [X] T175 [US5] Reuse TaskForm component from US3 for edit modal (prepopulate with current values)
+- [X] T176 [US5] Add "Edit" icon button to frontend/src/components/tasks/TaskItem.tsx using Shadcn Button
+- [X] T177 [US5] Integrate edit modal with task store updateTask action
+- [X] T178 [US5] Add optimistic UI update (task updates immediately in list)
+- [X] T179 [US5] Add loading state during update
+- [X] T180 [US5] Add error handling (rollback optimistic update on failure)
+- [X] T181 [US5] Add cancel button to discard changes
+- [X] T182 [US5] Add success toast notification
+- [X] T183 [US5] Close modal after successful update
 
 **Checkpoint**: User Story 5 complete - users can edit task details with inline editing
 
@@ -369,24 +369,24 @@ This is a monorepo web application:
 
 #### Backend - Delete Task Endpoint
 
-- [ ] T184 [US6] Add delete_task method to backend/src/services/task_service.py
-- [ ] T185 [US6] Implement DELETE /api/tasks/{task_id} endpoint in backend/src/api/routes/tasks.py per tasks.openapi.yaml
-- [ ] T186 [US6] Add user isolation check (verify task belongs to current user)
-- [ ] T187 [US6] Return 404 if task not found or doesn't belong to user
-- [ ] T188 [US6] Return 204 No Content on successful deletion
+- [X] T184 [US6] Add delete_task method to backend/src/services/task_service.py
+- [X] T185 [US6] Implement DELETE /api/tasks/{task_id} endpoint in backend/src/api/routes/tasks.py per tasks.openapi.yaml
+- [X] T186 [US6] Add user isolation check (verify task belongs to current user)
+- [X] T187 [US6] Return 404 if task not found or doesn't belong to user
+- [X] T188 [US6] Return 204 No Content on successful deletion
 
 #### Frontend - Task Deletion
 
-- [ ] T189 [US6] Add deleteTask function to frontend/src/lib/api/tasks.ts
-- [ ] T190 [US6] Add deleteTask action to frontend/src/stores/task-store.ts with optimistic update
-- [ ] T191 [US6] Create delete confirmation dialog in frontend/src/components/tasks/DeleteTaskDialog.tsx using Shadcn AlertDialog
-- [ ] T192 [US6] Add "Delete" icon button to frontend/src/components/tasks/TaskItem.tsx using Shadcn Button (destructive variant)
-- [ ] T193 [US6] Integrate delete dialog with task store deleteTask action
-- [ ] T194 [US6] Add optimistic UI update (task removed immediately from list)
-- [ ] T195 [US6] Add Framer Motion exit animation for deleted task
-- [ ] T196 [US6] Add error handling (restore task to list on API failure)
-- [ ] T197 [US6] Add success toast notification
-- [ ] T198 [US6] Close dialog after successful deletion
+- [X] T189 [US6] Add deleteTask function to frontend/src/lib/api/tasks.ts
+- [X] T190 [US6] Add deleteTask action to frontend/src/stores/task-store.ts with optimistic update
+- [X] T191 [US6] Create delete confirmation dialog in frontend/src/components/tasks/DeleteTaskDialog.tsx using Shadcn AlertDialog
+- [X] T192 [US6] Add "Delete" icon button to frontend/src/components/tasks/TaskItem.tsx using Shadcn Button (destructive variant)
+- [X] T193 [US6] Integrate delete dialog with task store deleteTask action
+- [X] T194 [US6] Add optimistic UI update (task removed immediately from list)
+- [X] T195 [US6] Add Framer Motion exit animation for deleted task
+- [X] T196 [US6] Add error handling (restore task to list on API failure)
+- [X] T197 [US6] Add success toast notification
+- [X] T198 [US6] Close dialog after successful deletion
 
 **Checkpoint**: User Story 6 complete - users can delete tasks with confirmation
 
@@ -398,49 +398,49 @@ This is a monorepo web application:
 
 ### Navigation & Layout
 
-- [ ] T199 [P] Create header component in frontend/src/components/layout/Header.tsx with logo and user menu
-- [ ] T200 [P] Create sidebar component in frontend/src/components/layout/Sidebar.tsx with navigation
-- [ ] T201 [P] Add logout button to user menu in header
-- [ ] T202 [P] Create settings page at frontend/src/app/settings/page.tsx (protected route)
-- [ ] T203 [P] Create not-found page at frontend/src/app/not-found/page.tsx
+- [X] T199 [P] Create header component in frontend/src/components/layout/Header.tsx with logo and user menu
+- [X] T200 [P] Create sidebar component in frontend/src/components/layout/Sidebar.tsx with navigation
+- [X] T201 [P] Add logout button to user menu in header
+- [X] T202 [P] Create settings page at frontend/src/app/settings/page.tsx (protected route)
+- [X] T203 [P] Create not-found page at frontend/src/app/not-found/page.tsx
 
 ### Error Handling & Logging
 
-- [ ] T204 [P] Add request logging middleware to backend/src/middleware/logging.py
-- [ ] T205 [P] Add error tracking setup (e.g., Sentry) to backend/src/core/monitoring.py
-- [ ] T206 [P] Add performance monitoring to backend
-- [ ] T207 [P] Add error tracking setup to frontend (e.g., Sentry)
+- [X] T204 [P] Add request logging middleware to backend/src/middleware/logging.py
+- [X] T205 [P] Add error tracking setup (e.g., Sentry) to backend/src/core/monitoring.py
+- [X] T206 [P] Add performance monitoring to backend
+- [X] T207 [P] Add error tracking setup to frontend (e.g., Sentry)
 
 ### Testing & Documentation
 
-- [ ] T208 [P] Run quickstart.md validation scenarios
-- [ ] T209 [P] Add API documentation with FastAPI auto-generated docs
-- [ ] T210 [P] Update README.md with complete setup and deployment instructions
-- [ ] T211 [P] Create DEPLOYMENT.md with Vercel and Neon setup steps
-- [ ] T212 [P] Add example .env files with all required variables
+- [X] T208 [P] Run quickstart.md validation scenarios
+- [X] T209 [P] Add API documentation with FastAPI auto-generated docs
+- [X] T210 [P] Update README.md with complete setup and deployment instructions
+- [X] T211 [P] Create DEPLOYMENT.md with Vercel and Neon setup steps
+- [X] T212 [P] Add example .env files with all required variables
 
 ### Security Hardening
 
-- [ ] T213 [P] Add rate limiting to auth endpoints
-- [ ] T214 [P] Add CSRF protection middleware
-- [ ] T215 [P] Review and fix any security vulnerabilities
-- [ ] T216 [P] Add security headers (HSTS, CSP, etc.)
+- [X] T213 [P] Add rate limiting to auth endpoints
+- [X] T214 [P] Add CSRF protection middleware
+- [X] T215 [P] Review and fix any security vulnerabilities
+- [X] T216 [P] Add security headers (HSTS, CSP, etc.)
 
 ### Performance Optimization
 
-- [ ] T217 [P] Add database query optimization (check N+1 queries)
-- [ ] T218 [P] Add frontend bundle optimization (code splitting)
-- [ ] T219 [P] Add image optimization with Next.js Image component
-- [ ] T220 [P] Add caching strategy for API responses
+- [X] T217 [P] Add database query optimization (check N+1 queries)
+- [X] T218 [P] Add frontend bundle optimization (code splitting)
+- [X] T219 [P] Add image optimization with Next.js Image component
+- [X] T220 [P] Add caching strategy for API responses
 
 ### Observability Implementation (from plan.md refinement)
 
-- [ ] T221 [P] Setup structured logging framework - Backend: install structlog, Frontend: install winston, configure JSON output format
-- [ ] T222 [P] Implement request/response logging in backend/src/middleware/logging.py with request_id, method, path, status_code, duration_ms, user_id
-- [ ] T223 [P] Add performance metrics collection for API response times (p50, p95, p99) and database query times in Prometheus-compatible format
-- [ ] T224 [P] Implement error tracking and context capture with global exception handler, stack traces, user_id, request_id in backend/src/core/monitoring.py
-- [ ] T225 [P] Create audit log for user actions (task created/updated/deleted, auth events) with schema in separate audit_logs table
-- [ ] T226 [P] Add health check endpoints GET /health and GET /health/db in backend/src/api/health.py for deployment verification
+- [X] T221 [P] Setup structured logging framework - Backend: install structlog, Frontend: install winston, configure JSON output format
+- [X] T222 [P] Implement request/response logging in backend/src/middleware/logging.py with request_id, method, path, status_code, duration_ms, user_id
+- [X] T223 [P] Add performance metrics collection for API response times (p50, p95, p99) and database query times in Prometheus-compatible format
+- [X] T224 [P] Implement error tracking and context capture with global exception handler, stack traces, user_id, request_id in backend/src/core/monitoring.py
+- [X] T225 [P] Create audit log for user actions (task created/updated/deleted, auth events) with schema in separate audit_logs table
+- [X] T226 [P] Add health check endpoints GET /health and GET /health/db in backend/src/api/health.py for deployment verification
 
 ---
 

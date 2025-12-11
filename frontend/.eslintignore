@@ -1,0 +1,25 @@
+# ESLint ignore patterns for Next.js frontend
+
+# Dependencies
+node_modules/
+
+# Build outputs
+.next/
+out/
+build/
+dist/
+
+# Coverage
+coverage/
+
+# Lock files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Minified files
+*.min.js
+*.min.css
+
+# Generated files
+next-env.d.ts

@@ -1,0 +1,70 @@
+# Root .gitignore for Todo Web Application
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Testing
+coverage/
+.nyc_output
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+ENV/
+env/
+
+# Backend specific
+backend/.env
+backend/.venv
+backend/dist
+backend/build
+backend/*.egg-info
+backend/.pytest_cache
+
+# Frontend specific
+frontend/.next/
+frontend/out/
+frontend/build/
+frontend/dist/
+frontend/.env.local
+frontend/.vercel
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# OS
+Thumbs.db
+.DS_Store
