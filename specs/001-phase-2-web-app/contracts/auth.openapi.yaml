@@ -1,0 +1,391 @@
+openapi: 3.0.3
+info:
+  title: Todo App Authentication API
+  description: |
+    Authentication and authorization endpoints for the Todo Web Application.
+    Uses Better Auth with JWT tokens for secure user authentication.
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@todoapp.example.com
+
+servers:
+  - url: http://localhost:8000
+    description: Local development server
+  - url: https://api.todoapp.example.com
+    description: Production server
+
+tags:
+  - name: Authentication
+    description: User authentication and authorization operations
+
+paths:
+  /api/auth/signup:
+    post:
+      summary: Register a new user
+      description: Creates a new user account with email and password
+      operationId: signupUser
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignupRequest'
+            examples:
+              newUser:
+                summary: New user registration
+                value:
+                  email: john.doe@example.com
+                  name: John Doe
+                  password: SecurePass123!
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthSuccessResponse'
+              examples:
+                success:
+                  value:
+                    success: true
+                    data:
+                      user:
+                        id: usr_abc123xyz
+                        email: john.doe@example.com
+                        name: John Doe
+                        created_at: '2025-12-11T10:30:00Z'
+                      token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                      expires_at: '2025-12-18T10:30:00Z'
+        '400':
+          description: Validation error or user already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                userExists:
+                  summary: Email already registered
+                  value:
+                    success: false
+                    error:
+                      type: https://todoapp.example.com/errors/user-exists
+                      title: User Already Exists
+                      status: 400
+                      detail: A user with this email address already exists
+                      instance: /api/auth/signup
+                validationError:
+                  summary: Invalid input
+                  value:
+                    success: false
+                    error:
+                      type: https://todoapp.example.com/errors/validation
+                      title: Validation Error
+                      status: 400
+                      detail: Password must be at least 8 characters
+                      instance: /api/auth/signup
+
+  /api/auth/login:
+    post:
+      summary: Authenticate user
+      description: Authenticates user with email and password, returns JWT token
+      operationId: loginUser
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            examples:
+              validLogin:
+                summary: Valid credentials
+                value:
+                  email: john.doe@example.com
+                  password: SecurePass123!
+      responses:
+        '200':
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthSuccessResponse'
+              examples:
+                success:
+                  value:
+                    success: true
+                    data:
+                      user:
+                        id: usr_abc123xyz
+                        email: john.doe@example.com
+                        name: John Doe
+                        created_at: '2025-12-10T08:00:00Z'
+                      token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                      expires_at: '2025-12-18T10:30:00Z'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidCredentials:
+                  value:
+                    success: false
+                    error:
+                      type: https://todoapp.example.com/errors/unauthorized
+                      title: Unauthorized
+                      status: 401
+                      detail: Invalid email or password
+                      instance: /api/auth/login
+
+  /api/auth/logout:
+    post:
+      summary: Logout user
+      description: Invalidates the current JWT token (client-side deletion)
+      operationId: logoutUser
+      tags:
+        - Authentication
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: Logged out successfully
+        '401':
+          description: Invalid or missing token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/auth/me:
+    get:
+      summary: Get current user
+      description: Returns the currently authenticated user's information
+      operationId: getCurrentUser
+      tags:
+        - Authentication
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Current user retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/UserPublic'
+              examples:
+                success:
+                  value:
+                    success: true
+                    data:
+                      id: usr_abc123xyz
+                      email: john.doe@example.com
+                      name: John Doe
+                      created_at: '2025-12-10T08:00:00Z'
+        '401':
+          description: Invalid or expired token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidToken:
+                  value:
+                    success: false
+                    error:
+                      type: https://todoapp.example.com/errors/unauthorized
+                      title: Unauthorized
+                      status: 401
+                      detail: Invalid or expired authentication token
+                      instance: /api/auth/me
+
+  /api/auth/refresh:
+    post:
+      summary: Refresh JWT token
+      description: Issues a new JWT token when the current one is close to expiration
+      operationId: refreshToken
+      tags:
+        - Authentication
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Token refreshed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      token:
+                        type: string
+                        description: New JWT token
+                        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                      expires_at:
+                        type: string
+                        format: date-time
+                        description: Token expiration timestamp
+                        example: '2025-12-18T10:30:00Z'
+        '401':
+          description: Invalid or expired token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token obtained from /api/auth/login or /api/auth/signup
+
+  schemas:
+    SignupRequest:
+      type: object
+      required:
+        - email
+        - name
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          description: User's email address
+          example: john.doe@example.com
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: User's display name
+          example: John Doe
+        password:
+          type: string
+          minLength: 8
+          maxLength: 255
+          description: User's password (min 8 characters)
+          example: SecurePass123!
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          description: User's email address
+          example: john.doe@example.com
+        password:
+          type: string
+          description: User's password
+          example: SecurePass123!
+
+    UserPublic:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique user identifier (UUID from Better Auth)
+          example: usr_abc123xyz
+        email:
+          type: string
+          format: email
+          description: User's email address
+          example: john.doe@example.com
+        name:
+          type: string
+          description: User's display name
+          example: John Doe
+        created_at:
+          type: string
+          format: date-time
+          description: Account creation timestamp
+          example: '2025-12-10T08:00:00Z'
+
+    AuthSuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            user:
+              $ref: '#/components/schemas/UserPublic'
+            token:
+              type: string
+              description: JWT authentication token
+              example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+            expires_at:
+              type: string
+              format: date-time
+              description: Token expiration timestamp (7 days from issue)
+              example: '2025-12-18T10:30:00Z'
+
+    ErrorResponse:
+      type: object
+      description: RFC 7807 Problem Details format
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            type:
+              type: string
+              format: uri
+              description: URI reference identifying the problem type
+              example: https://todoapp.example.com/errors/validation
+            title:
+              type: string
+              description: Short, human-readable summary
+              example: Validation Error
+            status:
+              type: integer
+              description: HTTP status code
+              example: 400
+            detail:
+              type: string
+              description: Human-readable explanation specific to this occurrence
+              example: Email address is required
+            instance:
+              type: string
+              description: URI reference identifying the specific occurrence
+              example: /api/auth/signup
+
+security:
+  - BearerAuth: []

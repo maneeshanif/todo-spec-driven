@@ -433,6 +433,15 @@ This is a monorepo web application:
 - [ ] T219 [P] Add image optimization with Next.js Image component
 - [ ] T220 [P] Add caching strategy for API responses
 
+### Observability Implementation (from plan.md refinement)
+
+- [ ] T221 [P] Setup structured logging framework - Backend: install structlog, Frontend: install winston, configure JSON output format
+- [ ] T222 [P] Implement request/response logging in backend/src/middleware/logging.py with request_id, method, path, status_code, duration_ms, user_id
+- [ ] T223 [P] Add performance metrics collection for API response times (p50, p95, p99) and database query times in Prometheus-compatible format
+- [ ] T224 [P] Implement error tracking and context capture with global exception handler, stack traces, user_id, request_id in backend/src/core/monitoring.py
+- [ ] T225 [P] Create audit log for user actions (task created/updated/deleted, auth events) with schema in separate audit_logs table
+- [ ] T226 [P] Add health check endpoints GET /health and GET /health/db in backend/src/api/health.py for deployment verification
+
 ---
 
 ## Dependencies & Execution Order
@@ -562,7 +571,7 @@ With 3 developers:
 
 ### Task Count
 
-- **Total Tasks**: 220 tasks
+- **Total Tasks**: 226 tasks
 - **Phase 0 (Research)**: 8 tasks
 - **Phase 1 (Setup)**: 37 tasks
 - **Phase 2 (Foundation)**: 34 tasks ⚠️ BLOCKER
@@ -572,14 +581,14 @@ With 3 developers:
 - **Phase 6 (US4: Complete)**: 15 tasks
 - **Phase 7 (US5: Update)**: 11 tasks
 - **Phase 8 (US6: Delete)**: 15 tasks
-- **Phase 9 (Polish)**: 22 tasks
+- **Phase 9 (Polish)**: 28 tasks (includes 6 new observability tasks T221-T226)
 
 ### Parallel Opportunities
 
 - **Phase 1**: 28 parallelizable tasks (backend deps, frontend deps, configs)
 - **Phase 2**: 16 parallelizable tasks (models, schemas, API modules)
 - **Phase 3-8**: Most frontend and backend tasks within each story can run in parallel
-- **Phase 9**: All 22 polish tasks can run in parallel
+- **Phase 9**: 28 polish tasks can run in parallel (includes 6 observability tasks)
 
 ### Independent Test Criteria
 
