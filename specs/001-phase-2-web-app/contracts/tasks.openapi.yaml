@@ -1,0 +1,604 @@
+openapi: 3.0.3
+info:
+  title: Todo App Tasks API
+  description: |
+    Task management endpoints for the Todo Web Application.
+    Supports CRUD operations, completion toggling, and cursor-based pagination.
+    All endpoints require JWT authentication.
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@todoapp.example.com
+
+servers:
+  - url: http://localhost:8000
+    description: Local development server
+  - url: https://api.todoapp.example.com
+    description: Production server
+
+tags:
+  - name: Tasks
+    description: Task management operations (CRUD)
+
+paths:
+  /api/tasks:
+    get:
+      summary: List user's tasks
+      description: |
+        Retrieves all tasks for the authenticated user with cursor-based pagination.
+        Tasks are sorted by creation date (newest first).
+      operationId: listTasks
+      tags:
+        - Tasks
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: completed
+          in: query
+          description: Filter by completion status (omit for all tasks)
+          required: false
+          schema:
+            type: boolean
+          examples:
+            incomplete:
+              summary: Only incomplete tasks
+              value: false
+            completed:
+              summary: Only completed tasks
+              value: true
+        - name: page
+          in: query
+          description: Page number (1-indexed)
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+          example: 1
+        - name: page_size
+          in: query
+          description: Number of tasks per page
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+          example: 50
+        - name: cursor
+          in: query
+          description: Cursor for pagination (opaque token from previous response)
+          required: false
+          schema:
+            type: string
+          example: eyJjcmVhdGVkX2F0IjoiMjAyNS0xMi0xMVQxMDozMDowMFoiLCJpZCI6MTIzfQ==
+      responses:
+        '200':
+          description: Tasks retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskListResponse'
+              examples:
+                success:
+                  value:
+                    success: true
+                    data:
+                      tasks:
+                        - id: 1
+                          user_id: usr_abc123xyz
+                          title: Buy groceries
+                          description: Milk, eggs, bread
+                          completed: false
+                          created_at: '2025-12-11T10:30:00Z'
+                          updated_at: '2025-12-11T10:30:00Z'
+                        - id: 2
+                          user_id: usr_abc123xyz
+                          title: Finish project report
+                          description: null
+                          completed: true
+                          created_at: '2025-12-10T15:00:00Z'
+                          updated_at: '2025-12-11T09:00:00Z'
+                      pagination:
+                        total: 25
+                        page: 1
+                        page_size: 50
+                        has_next: false
+                        next_cursor: null
+        '401':
+          description: Unauthorized - invalid or missing token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      summary: Create a new task
+      description: Creates a new task for the authenticated user
+      operationId: createTask
+      tags:
+        - Tasks
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskCreate'
+            examples:
+              withDescription:
+                summary: Task with description
+                value:
+                  title: Buy groceries
+                  description: Milk, eggs, bread, cheese
+              withoutDescription:
+                summary: Task without description
+                value:
+                  title: Call dentist
+      responses:
+        '201':
+          description: Task created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
+              examples:
+                success:
+                  value:
+                    success: true
+                    data:
+                      id: 42
+                      user_id: usr_abc123xyz
+                      title: Buy groceries
+                      description: Milk, eggs, bread, cheese
+                      completed: false
+                      created_at: '2025-12-11T10:30:00Z'
+                      updated_at: '2025-12-11T10:30:00Z'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                missingTitle:
+                  summary: Title is required
+                  value:
+                    success: false
+                    error:
+                      type: https://todoapp.example.com/errors/validation
+                      title: Validation Error
+                      status: 400
+                      detail: Title is required and cannot be empty
+                      instance: /api/tasks
+                titleTooLong:
+                  summary: Title exceeds max length
+                  value:
+                    success: false
+                    error:
+                      type: https://todoapp.example.com/errors/validation
+                      title: Validation Error
+                      status: 400
+                      detail: Title must be between 1 and 200 characters
+                      instance: /api/tasks
+        '401':
+          description: Unauthorized - invalid or missing token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/tasks/{task_id}:
+    get:
+      summary: Get a specific task
+      description: Retrieves a single task by ID (user isolation enforced)
+      operationId: getTask
+      tags:
+        - Tasks
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: task_id
+          in: path
+          description: Task ID
+          required: true
+          schema:
+            type: integer
+          example: 42
+      responses:
+        '200':
+          description: Task retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
+              examples:
+                success:
+                  value:
+                    success: true
+                    data:
+                      id: 42
+                      user_id: usr_abc123xyz
+                      title: Buy groceries
+                      description: Milk, eggs, bread
+                      completed: false
+                      created_at: '2025-12-11T10:30:00Z'
+                      updated_at: '2025-12-11T10:30:00Z'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Task not found or doesn't belong to user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                notFound:
+                  value:
+                    success: false
+                    error:
+                      type: https://todoapp.example.com/errors/not-found
+                      title: Not Found
+                      status: 404
+                      detail: Task not found or you don't have permission to access it
+                      instance: /api/tasks/42
+
+    put:
+      summary: Update a task
+      description: Updates an existing task (full update)
+      operationId: updateTask
+      tags:
+        - Tasks
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: task_id
+          in: path
+          description: Task ID
+          required: true
+          schema:
+            type: integer
+          example: 42
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskUpdate'
+            examples:
+              fullUpdate:
+                summary: Update all fields
+                value:
+                  title: Buy groceries (updated)
+                  description: Milk, eggs, bread, butter
+                  completed: true
+              partialUpdate:
+                summary: Update only title
+                value:
+                  title: Buy groceries tomorrow
+      responses:
+        '200':
+          description: Task updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
+              examples:
+                success:
+                  value:
+                    success: true
+                    data:
+                      id: 42
+                      user_id: usr_abc123xyz
+                      title: Buy groceries (updated)
+                      description: Milk, eggs, bread, butter
+                      completed: true
+                      created_at: '2025-12-11T10:30:00Z'
+                      updated_at: '2025-12-11T11:45:00Z'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      summary: Delete a task
+      description: Permanently deletes a task
+      operationId: deleteTask
+      tags:
+        - Tasks
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: task_id
+          in: path
+          description: Task ID
+          required: true
+          schema:
+            type: integer
+          example: 42
+      responses:
+        '200':
+          description: Task deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: Task deleted successfully
+                      deleted_id:
+                        type: integer
+                        example: 42
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/tasks/{task_id}/toggle:
+    patch:
+      summary: Toggle task completion status
+      description: Toggles the completed status of a task (true ↔ false)
+      operationId: toggleTaskCompletion
+      tags:
+        - Tasks
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: task_id
+          in: path
+          description: Task ID
+          required: true
+          schema:
+            type: integer
+          example: 42
+      responses:
+        '200':
+          description: Task completion status toggled successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
+              examples:
+                toggledToComplete:
+                  summary: Task marked as complete
+                  value:
+                    success: true
+                    data:
+                      id: 42
+                      user_id: usr_abc123xyz
+                      title: Buy groceries
+                      description: Milk, eggs, bread
+                      completed: true
+                      created_at: '2025-12-11T10:30:00Z'
+                      updated_at: '2025-12-11T14:22:00Z'
+                toggledToIncomplete:
+                  summary: Task marked as incomplete
+                  value:
+                    success: true
+                    data:
+                      id: 42
+                      user_id: usr_abc123xyz
+                      title: Buy groceries
+                      description: Milk, eggs, bread
+                      completed: false
+                      created_at: '2025-12-11T10:30:00Z'
+                      updated_at: '2025-12-11T14:25:00Z'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token obtained from /api/auth/login or /api/auth/signup
+
+  schemas:
+    TaskCreate:
+      type: object
+      required:
+        - title
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: Task title (required)
+          example: Buy groceries
+        description:
+          type: string
+          maxLength: 1000
+          nullable: true
+          description: Optional task description
+          example: Milk, eggs, bread, cheese
+
+    TaskUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: Updated task title
+          example: Buy groceries tomorrow
+        description:
+          type: string
+          maxLength: 1000
+          nullable: true
+          description: Updated task description
+          example: Milk, eggs, bread, butter, cheese
+        completed:
+          type: boolean
+          description: Updated completion status
+          example: true
+
+    TaskPublic:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique task identifier
+          example: 42
+        user_id:
+          type: string
+          description: Owner user ID
+          example: usr_abc123xyz
+        title:
+          type: string
+          description: Task title
+          example: Buy groceries
+        description:
+          type: string
+          nullable: true
+          description: Task description (can be null)
+          example: Milk, eggs, bread
+        completed:
+          type: boolean
+          description: Completion status
+          example: false
+        created_at:
+          type: string
+          format: date-time
+          description: Task creation timestamp
+          example: '2025-12-11T10:30:00Z'
+        updated_at:
+          type: string
+          format: date-time
+          description: Last update timestamp
+          example: '2025-12-11T10:30:00Z'
+
+    TaskResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/TaskPublic'
+
+    PaginationMeta:
+      type: object
+      properties:
+        total:
+          type: integer
+          description: Total number of tasks
+          example: 25
+        page:
+          type: integer
+          description: Current page number
+          example: 1
+        page_size:
+          type: integer
+          description: Number of items per page
+          example: 50
+        has_next:
+          type: boolean
+          description: Whether there are more pages
+          example: false
+        next_cursor:
+          type: string
+          nullable: true
+          description: Cursor for next page (null if no more pages)
+          example: null
+
+    TaskListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            tasks:
+              type: array
+              items:
+                $ref: '#/components/schemas/TaskPublic'
+            pagination:
+              $ref: '#/components/schemas/PaginationMeta'
+
+    ErrorResponse:
+      type: object
+      description: RFC 7807 Problem Details format
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            type:
+              type: string
+              format: uri
+              description: URI reference identifying the problem type
+              example: https://todoapp.example.com/errors/validation
+            title:
+              type: string
+              description: Short, human-readable summary
+              example: Validation Error
+            status:
+              type: integer
+              description: HTTP status code
+              example: 400
+            detail:
+              type: string
+              description: Human-readable explanation specific to this occurrence
+              example: Title must be between 1 and 200 characters
+            instance:
+              type: string
+              description: URI reference identifying the specific occurrence
+              example: /api/tasks
+
+security:
+  - BearerAuth: []
