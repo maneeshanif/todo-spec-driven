@@ -1,17 +1,18 @@
 "use client";
 
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { useTaskStore } from "@/stores/task-store";
-import { toast } from "sonner";
+import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { useTaskStore } from '@/stores/task-store';
+import { toast } from 'sonner';
+
+// Luxury color palette
+const colors = {
+  goldDark: "#a08339",
+  text: "#1a1a1a",
+  textMuted: "#666666",
+  border: "#e5dfd5",
+  textLight: "#ffffff",
+  red: "#8b2635",
+};
 
 interface DeleteTaskDialogProps {
   taskId: number;
@@ -20,18 +21,13 @@ interface DeleteTaskDialogProps {
   onClose: () => void;
 }
 
-export default function DeleteTaskDialog({
-  taskId,
-  taskTitle,
-  open,
-  onClose,
-}: DeleteTaskDialogProps) {
+export default function DeleteTaskDialog({ taskId, taskTitle, open, onClose }: DeleteTaskDialogProps) {
   const removeTask = useTaskStore((s) => s.removeTask);
 
   const handleDelete = async () => {
     try {
       await removeTask(taskId);
-      toast.success("Task deleted successfully!");
+      toast.success("Task deleted successfully");
       onClose();
     } catch (error: any) {
       toast.error(error?.message || "Failed to delete task");
@@ -40,23 +36,30 @@ export default function DeleteTaskDialog({
 
   return (
     <AlertDialog open={open} onOpenChange={onClose}>
-      <AlertDialogContent className="bg-neutral-900 border-neutral-800">
+      <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle className="text-white">Delete Task</AlertDialogTitle>
-          <AlertDialogDescription className="text-neutral-400">
-            Are you sure you want to delete "{taskTitle}"? This action cannot be undone.
+          <AlertDialogTitle className="font-light" style={{ fontFamily: "serif", color: colors.text }}>
+            Are you sure?
+          </AlertDialogTitle>
+          <AlertDialogDescription style={{ color: colors.textMuted }}>
+            This will permanently delete the task "<strong style={{ color: colors.text }}>{taskTitle}</strong>". This action cannot be undone.
           </AlertDialogDescription>
         </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel className="bg-neutral-800 text-white border-neutral-700 hover:bg-neutral-700">
+        <AlertDialogFooter className="gap-3">
+          <button
+            onClick={onClose}
+            className="px-6 py-2 text-xs tracking-[0.2em] uppercase border transition-all duration-300 hover:opacity-80"
+            style={{ borderColor: colors.border, color: colors.text, backgroundColor: "transparent" }}
+          >
             Cancel
-          </AlertDialogCancel>
-          <AlertDialogAction
+          </button>
+          <button
             onClick={handleDelete}
-            className="bg-red-600 text-white hover:bg-red-700"
+            className="px-6 py-2 text-xs tracking-[0.2em] uppercase transition-all duration-300 hover:opacity-90"
+            style={{ backgroundColor: colors.red, color: colors.textLight }}
           >
             Delete
-          </AlertDialogAction>
+          </button>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

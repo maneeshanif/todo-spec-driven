@@ -14,6 +14,7 @@ export interface LoginData {
 
 export interface AuthResponse {
   access_token: string;
+  refresh_token?: string;
   token_type: string;
   user: {
     id: string;
@@ -40,7 +41,19 @@ export async function signup(data: SignupData): Promise<AuthResponse> {
     const response = await apiClient.post<AuthResponse>('/api/auth/signup', data);
     return response.data;
   } catch (error: any) {
-    throw new Error(error.response?.data?.detail || 'Signup failed');
+    // Handle error response properly
+    if (error.response) {
+      // Server responded with error status
+      const errorData = error.response.data;
+      const errorMessage = errorData.detail || errorData.message || 'Signup failed';
+      throw new Error(errorMessage);
+    } else if (error.request) {
+      // Request was made but no response received
+      throw new Error('Network error: Unable to reach the server');
+    } else {
+      // Something else happened
+      throw new Error(error.message || 'Signup failed');
+    }
   }
 }
 
@@ -52,7 +65,19 @@ export async function login(data: LoginData): Promise<AuthResponse> {
     const response = await apiClient.post<AuthResponse>('/api/auth/login', data);
     return response.data;
   } catch (error: any) {
-    throw new Error(error.response?.data?.detail || 'Login failed');
+    // Handle error response properly
+    if (error.response) {
+      // Server responded with error status
+      const errorData = error.response.data;
+      const errorMessage = errorData.detail || errorData.message || 'Login failed';
+      throw new Error(errorMessage);
+    } else if (error.request) {
+      // Request was made but no response received
+      throw new Error('Network error: Unable to reach the server');
+    } else {
+      // Something else happened
+      throw new Error(error.message || 'Login failed');
+    }
   }
 }
 

@@ -65,6 +65,10 @@ const nextConfig: NextConfig = {
     // Enable optimistic UI updates
     optimisticClientCache: true,
   },
+
+  // Turbopack configuration (Next.js 16+)
+  // Empty config to acknowledge Turbopack usage and silence warnings
+  turbopack: {},
 };
 
 export default nextConfig;

@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { toast } from "sonner";
-import TaskForm, { TaskFormValues } from "@/components/tasks/TaskForm";
-import { useTaskStore } from "@/stores/task-store";
-import { Task } from "@/lib/api/tasks";
+import { useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import TaskForm, { TaskFormValues } from './TaskForm';
+import { useTaskStore } from '@/stores/task-store';
+import { Task } from '@/lib/api/tasks';
+import { toast } from 'sonner';
 
 interface EditTaskModalProps {
   task: Task;
@@ -13,55 +14,36 @@ interface EditTaskModalProps {
 }
 
 export default function EditTaskModal({ task, open, onClose }: EditTaskModalProps) {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
+  const [loading, setLoading] = useState(false);
   const updateTaskData = useTaskStore((s) => s.updateTaskData);
 
-  async function handleSubmit(data: TaskFormValues) {
-    setIsLoading(true);
-    setError(null);
+  const handleSubmit = async (data: TaskFormValues) => {
+    setLoading(true);
     try {
-      await updateTaskData(task.id, data.title, data.description || undefined);
-      toast.success("Task updated successfully!");
+      await updateTaskData(task.id, data.title, data.description);
+      toast.success("Task updated successfully");
       onClose();
-    } catch (err: any) {
-      const errorMsg = err?.message || "Failed to update task";
-      setError(errorMsg);
-      toast.error(errorMsg);
+    } catch (error: any) {
+      toast.error(error?.message || "Failed to update task");
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
-  }
-
-  if (!open) return null;
+  };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-        onClick={onClose}
-        aria-hidden
-      />
-
-      <div className="relative z-10 w-full max-w-lg mx-4">
-        <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-6">
-          <h2 className="text-lg font-semibold text-white mb-4">Edit Task</h2>
-          {error && (
-            <div className="mb-3 text-sm text-red-400">{error}</div>
-          )}
-          <TaskForm
-            onSubmit={handleSubmit}
-            onCancel={onClose}
-            isLoading={isLoading}
-            submitLabel={isLoading ? "Saving..." : "Save Changes"}
-            defaultValues={{
-              title: task.title,
-              description: task.description || '',
-            }}
-          />
-        </div>
-      </div>
-    </div>
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Edit Task</DialogTitle>
+        </DialogHeader>
+        <TaskForm
+          defaultValues={{ title: task.title, description: task.description || undefined }}
+          onSubmit={handleSubmit}
+          onCancel={onClose}
+          isLoading={loading}
+          submitLabel="Update Task"
+        />
+      </DialogContent>
+    </Dialog>
   );
 }

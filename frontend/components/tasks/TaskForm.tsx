@@ -4,9 +4,17 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+
+// Luxury color palette
+const colors = {
+  bg: "#f8f5f0",
+  bgAlt: "#f0ebe3",
+  goldDark: "#a08339",
+  text: "#1a1a1a",
+  textMuted: "#666666",
+  border: "#e5dfd5",
+  textLight: "#ffffff",
+};
 
 const taskFormSchema = z.object({
   title: z
@@ -48,51 +56,78 @@ export default function TaskForm({
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div>
-        <label htmlFor="title" className="block text-sm font-medium mb-2">
+        <label
+          htmlFor="title"
+          className="block text-xs tracking-wider uppercase mb-2"
+          style={{ color: colors.textMuted }}
+        >
           Title *
         </label>
-        <Input
+        <input
           id="title"
           {...register("title")}
           placeholder="Enter task title"
           autoFocus
           disabled={isLoading}
+          className="w-full px-4 py-3 border transition-all duration-200 focus:outline-none focus:ring-1"
+          style={{
+            backgroundColor: colors.bgAlt,
+            borderColor: colors.border,
+            color: colors.text,
+            fontFamily: "serif",
+          }}
         />
         {errors.title && (
-          <p className="text-sm text-red-500 mt-1">{errors.title.message}</p>
+          <p className="text-sm mt-1" style={{ color: "#dc2626" }}>{errors.title.message}</p>
         )}
       </div>
 
       <div>
-        <label htmlFor="description" className="block text-sm font-medium mb-2">
+        <label
+          htmlFor="description"
+          className="block text-xs tracking-wider uppercase mb-2"
+          style={{ color: colors.textMuted }}
+        >
           Description
         </label>
-        <Textarea
+        <textarea
           id="description"
           {...register("description")}
           placeholder="Enter task description (optional)"
           rows={4}
           disabled={isLoading}
+          className="w-full px-4 py-3 border transition-all duration-200 focus:outline-none focus:ring-1 resize-none"
+          style={{
+            backgroundColor: colors.bgAlt,
+            borderColor: colors.border,
+            color: colors.text,
+          }}
         />
         {errors.description && (
-          <p className="text-sm text-red-500 mt-1">
+          <p className="text-sm mt-1" style={{ color: "#dc2626" }}>
             {errors.description.message}
           </p>
         )}
       </div>
 
-      <div className="flex justify-end gap-2 pt-4">
-        <Button
+      <div className="flex justify-end gap-3 pt-4">
+        <button
           type="button"
-          variant="outline"
           onClick={onCancel}
           disabled={isLoading}
+          className="px-6 py-2 text-xs tracking-[0.2em] uppercase border transition-all duration-300 hover:opacity-80 disabled:opacity-50"
+          style={{ borderColor: colors.border, color: colors.text, backgroundColor: "transparent" }}
         >
           Cancel
-        </Button>
-        <Button type="submit" disabled={isLoading}>
+        </button>
+        <button
+          type="submit"
+          disabled={isLoading}
+          className="px-6 py-2 text-xs tracking-[0.2em] uppercase transition-all duration-300 hover:opacity-90 disabled:opacity-50"
+          style={{ backgroundColor: colors.goldDark, color: colors.textLight }}
+        >
           {isLoading ? "Saving..." : submitLabel}
-        </Button>
+        </button>
       </div>
     </form>
   );

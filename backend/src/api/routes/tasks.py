@@ -1,5 +1,6 @@
 """Task routes."""
 from typing import Optional
+from datetime import datetime
 from fastapi import APIRouter, Depends, Query, Request, Response, status
 from sqlmodel.ext.asyncio.session import AsyncSession
 from src.core.database import get_session
@@ -20,25 +21,42 @@ router = APIRouter(prefix="/tasks", tags=["Tasks"])
     "",
     response_model=TaskListResponse,
     summary="Get all tasks",
-    description="Get all tasks for the authenticated user with optional filtering and pagination."
+    description="Get all tasks for the authenticated user with optional filtering, search, sorting, and pagination."
 )
 async def get_tasks(
     request: Request,
     response: Response,
     completed: Optional[bool] = Query(None, description="Filter by completion status"),
+    priority: Optional[str] = Query(None, description="Filter by priority (low, medium, high)"),
+    category_id: Optional[int] = Query(None, description="Filter by category ID"),
+    search: Optional[str] = Query(None, description="Search in title and description"),
+    due_date_start: Optional[datetime] = Query(None, description="Filter by due date range start"),
+    due_date_end: Optional[datetime] = Query(None, description="Filter by due date range end"),
+    sort_by: str = Query("created_at", description="Sort by field (created_at, due_date, priority, title, updated_at)"),
+    sort_order: str = Query("desc", description="Sort order (asc or desc)"),
     page: int = Query(1, ge=1, description="Page number (1-indexed)"),
     page_size: int = Query(50, ge=1, le=100, description="Items per page (max 100)"),
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session)
 ):
     """
-    Get all tasks for the current user.
+    Get all tasks for the current user with comprehensive filtering and sorting.
 
-    - **completed**: Optional filter by completion status (true/false)
+    **Filters:**
+    - **completed**: Filter by completion status (true/false)
+    - **priority**: Filter by priority level (low, medium, high)
+    - **category_id**: Filter by category ID
+    - **search**: Search term for title and description
+    - **due_date_start**: Filter tasks due after this date
+    - **due_date_end**: Filter tasks due before this date
+
+    **Sorting:**
+    - **sort_by**: Field to sort by (created_at, due_date, priority, title, updated_at)
+    - **sort_order**: Sort order (asc or desc)
+
+    **Pagination:**
     - **page**: Page number (default 1)
     - **page_size**: Items per page (default 50, max 100)
-
-    Returns paginated list of tasks sorted by creation date (newest first).
 
     **Caching**: Results are cached for 60 seconds with ETag support.
     """
@@ -46,6 +64,13 @@ async def get_tasks(
         session=session,
         user_id=current_user.id,
         completed=completed,
+        priority=priority,
+        category_id=category_id,
+        search=search,
+        due_date_start=due_date_start,
+        due_date_end=due_date_end,
+        sort_by=sort_by,
+        sort_order=sort_order,
         page=page,
         page_size=page_size
     )
@@ -77,7 +102,7 @@ async def get_tasks(
     response_model=TaskPublic,
     status_code=status.HTTP_201_CREATED,
     summary="Create a new task",
-    description="Create a new task for the authenticated user."
+    description="Create a new task for the authenticated user with all supported fields."
 )
 async def create_task(
     task_data: TaskCreate,
@@ -90,6 +115,11 @@ async def create_task(
 
     - **title**: Task title (required, max 200 chars)
     - **description**: Task description (optional, max 1000 chars)
+    - **priority**: Task priority (low, medium, high) - default: medium
+    - **due_date**: Due date (optional)
+    - **category_ids**: List of category IDs to associate (optional)
+    - **is_recurring**: Whether task is recurring (default: false)
+    - **recurrence_pattern**: Recurrence pattern if recurring (daily, weekly, monthly, yearly)
 
     Returns the created task.
     """
@@ -97,7 +127,12 @@ async def create_task(
         session=session,
         user_id=current_user.id,
         title=task_data.title,
-        description=task_data.description
+        description=task_data.description,
+        priority=task_data.priority,
+        due_date=task_data.due_date,
+        category_ids=task_data.category_ids,
+        is_recurring=task_data.is_recurring,
+        recurrence_pattern=task_data.recurrence_pattern
     )
 
     # Disable caching for mutations
@@ -154,7 +189,7 @@ async def get_task(
     "/{task_id}",
     response_model=TaskPublic,
     summary="Update a task",
-    description="Update a task's title, description, or completion status."
+    description="Update any task fields including title, description, completion status, priority, due date, and categories."
 )
 async def update_task(
     task_id: int,
@@ -169,6 +204,11 @@ async def update_task(
     - **title**: New task title (optional)
     - **description**: New task description (optional)
     - **completed**: New completion status (optional)
+    - **priority**: New priority (low, medium, high) (optional)
+    - **due_date**: New due date (optional)
+    - **category_ids**: New list of category IDs (optional)
+    - **is_recurring**: New recurring status (optional)
+    - **recurrence_pattern**: New recurrence pattern (optional)
 
     Returns the updated task. Returns 404 if task not found or not owned by current user.
     """
@@ -186,7 +226,12 @@ async def update_task(
         task=task,
         title=task_data.title,
         description=task_data.description,
-        completed=task_data.completed
+        completed=task_data.completed,
+        priority=task_data.priority,
+        due_date=task_data.due_date,
+        category_ids=task_data.category_ids,
+        is_recurring=task_data.is_recurring,
+        recurrence_pattern=task_data.recurrence_pattern
     )
 
     # Disable caching for mutations

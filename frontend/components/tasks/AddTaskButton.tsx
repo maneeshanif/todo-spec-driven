@@ -1,21 +1,23 @@
-// Add Task Button Component
 "use client";
 
-import { Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
+import CreateTaskModal from './CreateTaskModal';
 
-interface AddTaskButtonProps {
-  onClick: () => void;
-}
+export default function AddTaskButton() {
+  const [modalOpen, setModalOpen] = useState(false);
 
-export default function AddTaskButton({ onClick }: AddTaskButtonProps) {
   return (
-    <Button
-      onClick={onClick}
-      size="lg"
-      className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-all"
-    >
-      <Plus className="h-6 w-6" />
-    </Button>
+    <>
+      <Button onClick={() => setModalOpen(true)}>
+        <Plus className="h-4 w-4 mr-2" />
+        Add Task
+      </Button>
+      <CreateTaskModal 
+        open={modalOpen} 
+        onClose={() => setModalOpen(false)} 
+      />
+    </>
   );
 }

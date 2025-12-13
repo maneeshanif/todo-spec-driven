@@ -1,6 +1,7 @@
 // Task state management with Zustand
 import { create } from 'zustand';
-import { getTasks, createTask, updateTask, deleteTask, Task } from '@/lib/api/tasks';
+import { taskApi } from '@/lib/api/tasks';
+import { Task } from '@/types';
 
 interface TaskState {
   tasks: Task[];
@@ -24,10 +25,12 @@ export const useTaskStore = create<TaskState>((set, get) => ({
   fetchTasks: async (completed?: boolean) => {
     set({ loading: true, error: null });
     try {
-      const response = await getTasks(completed);
-      set({ tasks: response.tasks, loading: false });
+      const response = await taskApi.getAll({ completed });
+      console.log('Fetched tasks:', response.data);
+      set({ tasks: response.data || [], loading: false });
     } catch (error: any) {
-      set({ error: error.message, loading: false });
+      console.error('Failed to fetch tasks:', error);
+      set({ error: error.message, loading: false, tasks: [] });
     }
   },
   
@@ -35,12 +38,17 @@ export const useTaskStore = create<TaskState>((set, get) => ({
     // Create optimistic task (temporary ID will be replaced with real ID from server)
     const optimisticTask: Task = {
       id: Date.now(), // Temporary ID
+      user_id: '', // Will be set by server
       title,
       description: description || '',
       completed: false,
+      priority: 'medium', // Default priority
+      due_date: undefined, // No due date by default
+      category_ids: [],
+      is_recurring: false,
+      recurrence_pattern: undefined,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
-      user_id: '', // Will be set by server
     };
 
     // Optimistic update - add task immediately
@@ -51,13 +59,15 @@ export const useTaskStore = create<TaskState>((set, get) => ({
     }));
 
     try {
-      const newTask = await createTask({ title, description });
+      const newTask = await taskApi.create({ title, description });
+      console.log('Task created:', newTask);
       // Replace optimistic task with real task from server
       set((state) => ({
         tasks: state.tasks.map((t) => (t.id === optimisticTask.id ? newTask : t)),
         loading: false,
       }));
     } catch (error: any) {
+      console.error('Failed to create task:', error);
       // Rollback optimistic update on failure
       set((state) => ({
         tasks: state.tasks.filter((t) => t.id !== optimisticTask.id),
@@ -80,7 +90,7 @@ export const useTaskStore = create<TaskState>((set, get) => ({
     }));
     
     try {
-      await updateTask(taskId, { completed: !task.completed });
+      await taskApi.update(taskId, { completed: !task.completed });
     } catch (error: any) {
       // Revert on error
       set((state) => ({
@@ -95,7 +105,7 @@ export const useTaskStore = create<TaskState>((set, get) => ({
   updateTaskData: async (taskId: number, title?: string, description?: string) => {
     set({ loading: true, error: null });
     try {
-      const updatedTask = await updateTask(taskId, { title, description });
+      const updatedTask = await taskApi.update(taskId, { title, description });
       set((state) => ({
         tasks: state.tasks.map((t) => (t.id === taskId ? updatedTask : t)),
         loading: false,
@@ -114,7 +124,7 @@ export const useTaskStore = create<TaskState>((set, get) => ({
     }));
     
     try {
-      await deleteTask(taskId);
+      await taskApi.delete(taskId);
     } catch (error: any) {
       // Revert on error
       set({ tasks: previousTasks, error: error.message });

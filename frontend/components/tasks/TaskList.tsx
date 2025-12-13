@@ -3,8 +3,12 @@
 import { Task } from '@/lib/api/tasks';
 import TaskItem from './TaskItem';
 import EmptyState from './EmptyState';
-import { Skeleton } from '@/components/ui/skeleton';
 import { AnimatePresence } from 'framer-motion';
+
+// Luxury color palette
+const colors = {
+  border: "#e5dfd5",
+};
 
 interface TaskListProps {
   tasks: Task[];
@@ -17,14 +21,18 @@ export default function TaskList({ tasks, loading }: TaskListProps) {
     return (
       <div className="space-y-4">
         {[...Array(5)].map((_, i) => (
-          <Skeleton key={i} className="h-24 w-full bg-neutral-800/50" />
+          <div
+            key={i}
+            className="h-24 w-full animate-pulse"
+            style={{ backgroundColor: colors.border }}
+          />
         ))}
       </div>
     );
   }
 
-  // Empty state
-  if (tasks.length === 0) {
+  // Empty state - handle undefined or empty tasks
+  if (!tasks || tasks.length === 0) {
     return <EmptyState />;
   }
 
