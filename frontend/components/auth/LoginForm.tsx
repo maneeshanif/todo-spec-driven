@@ -4,8 +4,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { login } from '@/lib/api/auth';
-import { useAuthStore } from '@/stores/auth-store';
+import { useAuthStore } from '@/stores/authStore';
 import { LoadingButton } from '@/components/LoadingSpinner';
 
 // Luxury color palette
@@ -49,8 +48,8 @@ export default function LoginForm({ onSuccess, isLoading, setIsLoading }: LoginF
     setError('');
 
     try {
-      const response = await login(data);
-      loginToStore(response.user, response.access_token, response.refresh_token);
+      // Use the auth store's login which uses Better Auth
+      await loginToStore(data.email, data.password);
       onSuccess();
     } catch (err: any) {
       setError(err.message || 'Login failed. Please try again.');

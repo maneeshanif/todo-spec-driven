@@ -4,11 +4,10 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, Query, Request, Response, status
 from sqlmodel.ext.asyncio.session import AsyncSession
 from src.core.database import get_session
-from src.core.deps import get_current_user
+from src.core.auth_deps import get_current_user
 from src.core.errors import NotFoundError
 from src.schemas.task import TaskPublic, TaskListResponse, TaskCreate, TaskUpdate
 from src.services.task_service import TaskService
-from src.models.user import User
 from src.core.logging import get_logger
 from src.utils.caching import generate_etag, check_etag_match, set_cache_headers, no_cache
 
@@ -36,7 +35,7 @@ async def get_tasks(
     sort_order: str = Query("desc", description="Sort order (asc or desc)"),
     page: int = Query(1, ge=1, description="Page number (1-indexed)"),
     page_size: int = Query(50, ge=1, le=100, description="Items per page (max 100)"),
-    current_user: User = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
     session: AsyncSession = Depends(get_session)
 ):
     """
@@ -62,7 +61,7 @@ async def get_tasks(
     """
     tasks = await TaskService.get_tasks(
         session=session,
-        user_id=current_user.id,
+        user_id=current_user['id'],
         completed=completed,
         priority=priority,
         category_id=category_id,
@@ -107,7 +106,7 @@ async def get_tasks(
 async def create_task(
     task_data: TaskCreate,
     response: Response,
-    current_user: User = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
     session: AsyncSession = Depends(get_session)
 ):
     """
@@ -125,7 +124,7 @@ async def create_task(
     """
     task = await TaskService.create_task(
         session=session,
-        user_id=current_user.id,
+        user_id=current_user['id'],
         title=task_data.title,
         description=task_data.description,
         priority=task_data.priority,
@@ -151,7 +150,7 @@ async def get_task(
     task_id: int,
     request: Request,
     response: Response,
-    current_user: User = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
     session: AsyncSession = Depends(get_session)
 ):
     """
@@ -164,7 +163,7 @@ async def get_task(
     task = await TaskService.get_task_by_id(
         session=session,
         task_id=task_id,
-        user_id=current_user.id
+        user_id=current_user['id']
     )
 
     if not task:
@@ -195,7 +194,7 @@ async def update_task(
     task_id: int,
     task_data: TaskUpdate,
     response: Response,
-    current_user: User = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
     session: AsyncSession = Depends(get_session)
 ):
     """
@@ -215,7 +214,7 @@ async def update_task(
     task = await TaskService.get_task_by_id(
         session=session,
         task_id=task_id,
-        user_id=current_user.id
+        user_id=current_user['id']
     )
 
     if not task:
@@ -249,7 +248,7 @@ async def update_task(
 async def delete_task(
     task_id: int,
     response: Response,
-    current_user: User = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
     session: AsyncSession = Depends(get_session)
 ):
     """
@@ -261,7 +260,7 @@ async def delete_task(
     task = await TaskService.get_task_by_id(
         session=session,
         task_id=task_id,
-        user_id=current_user.id
+        user_id=current_user['id']
     )
 
     if not task:

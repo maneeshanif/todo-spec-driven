@@ -31,14 +31,8 @@ interface SidebarItem {
 interface Category {
   id: number;
   name: string;
-  taskCount: number;
-}
-
-interface Category {
-  id: number;
-  name: string;
-  color: string;
-  taskCount?: number; // Make taskCount optional
+  color?: string;
+  taskCount?: number;
 }
 
 interface SidebarProps {

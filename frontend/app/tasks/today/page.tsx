@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Sun } from "lucide-react";
 import { useTaskStore } from "@/stores/task-store";
@@ -20,17 +20,11 @@ const colors = {
 
 export default function TodayPage() {
   const { fetchTasks, loading, error, tasks } = useTaskStore();
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   useEffect(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-
-    fetchTasks({
-      due_date_start: today.toISOString(),
-      due_date_end: tomorrow.toISOString(),
-    });
+    // Fetch all tasks, then filter on client side
+    fetchTasks();
   }, [fetchTasks]);
 
   const todayTasks = tasks.filter((task) => {
@@ -92,7 +86,7 @@ export default function TodayPage() {
         </div>
       </main>
 
-      <CreateTaskModal />
+      <CreateTaskModal open={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} />
     </div>
   );
 }

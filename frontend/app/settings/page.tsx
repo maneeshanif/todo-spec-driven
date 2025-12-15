@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { User, Bell, Palette, Shield, Save } from "lucide-react";
-import { useAuthStore } from "@/stores/auth-store";
+import { useAuthStore } from "@/stores/authStore";
 import Sidebar from "@/components/dashboard/Sidebar";
 
 // Luxury color palette

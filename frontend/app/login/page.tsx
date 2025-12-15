@@ -1,92 +1,238 @@
 'use client';
 
-import { useState } from 'react';
-import Link from 'next/link';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import LoginForm from '@/components/auth/LoginForm';
+import { authClient, generateAndStoreJwtToken } from '@/lib/auth-client';
+import { useAuthStore } from '@/stores/authStore';
+import { useAuth } from '@/contexts/AuthContext';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Mail, Lock, Chrome, Github } from 'lucide-react';
+import Link from 'next/link';
+import { toast } from 'sonner';
 
-// Luxury color palette (Cream theme)
 const colors = {
   bg: "#f8f5f0",
   bgAlt: "#f0ebe3",
   goldDark: "#a08339",
+  gold: "#c9a962",
   text: "#1a1a1a",
   textMuted: "#666666",
   border: "#e5dfd5",
+  textLight: "#ffffff",
 };
 
 export default function LoginPage() {
   const router = useRouter();
+  const { setUser } = useAuthStore();
+  const { user, isLoading: authLoading } = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleLoginSuccess = () => {
-    router.push('/dashboard');
+  // Redirect to dashboard if already logged in
+  useEffect(() => {
+    if (!authLoading && user) {
+      router.replace('/dashboard');
+    }
+  }, [user, authLoading, router]);
+
+  const handleEmailLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      const response = await authClient.signIn.email({
+        email,
+        password,
+      });
+
+      if (response.error) {
+        toast.error(response.error.message || 'Login failed');
+        setIsLoading(false);
+        return;
+      }
+
+      // Get session and update store immediately
+      const session = await authClient.getSession();
+      console.log('Login session:', session); // Debug log
+
+      // Better Auth returns { data: { user, session }, error }
+      const sessionUser = session?.data?.user;
+
+      if (sessionUser) {
+        // Generate JWT token for backend API authentication BEFORE updating user
+        console.log('[Login] Generating JWT token...');
+        const token = await generateAndStoreJwtToken();
+        console.log('[Login] JWT token generated:', token ? 'SUCCESS' : 'FAILED');
+
+        setUser({
+          id: sessionUser.id,
+          email: sessionUser.email,
+          name: sessionUser.name,
+          image: sessionUser.image || undefined,
+        });
+      }
+
+      toast.success('Login successful!');
+      // Use replace to prevent back navigation to login
+      router.replace('/dashboard');
+    } catch (error: any) {
+      toast.error(error.message || 'An error occurred');
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    try {
+      await authClient.signIn.social({
+        provider: 'google',
+        callbackURL: '/dashboard',
+      });
+    } catch (error: any) {
+      toast.error(error.message || 'Google login failed');
+    }
+  };
+
+  const handleGithubLogin = async () => {
+    try {
+      await authClient.signIn.social({
+        provider: 'github',
+        callbackURL: '/dashboard',
+      });
+    } catch (error: any) {
+      toast.error(error.message || 'GitHub login failed');
+    }
   };
 
   return (
-    <div className="min-h-screen relative w-full antialiased" style={{ backgroundColor: colors.bg }}>
-      {/* Decorative corners */}
-      <div className="absolute top-8 left-8 w-16 h-16 border-l-2 border-t-2" style={{ borderColor: colors.goldDark, opacity: 0.3 }} />
-      <div className="absolute top-8 right-8 w-16 h-16 border-r-2 border-t-2" style={{ borderColor: colors.goldDark, opacity: 0.3 }} />
-      <div className="absolute bottom-8 left-8 w-16 h-16 border-l-2 border-b-2" style={{ borderColor: colors.goldDark, opacity: 0.3 }} />
-      <div className="absolute bottom-8 right-8 w-16 h-16 border-r-2 border-b-2" style={{ borderColor: colors.goldDark, opacity: 0.3 }} />
+    <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: colors.bg }}>
+      <div className="w-full max-w-md">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 
+            className="text-4xl font-light mb-2" 
+            style={{ color: colors.goldDark, fontFamily: 'serif' }}
+          >
+            Welcome Back
+          </h1>
+          <p className="text-sm tracking-wide" style={{ color: colors.textMuted }}>
+            Sign in to continue to TaskFlow
+          </p>
+        </div>
 
-      {/* Background orbs */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full blur-3xl opacity-10" style={{ backgroundColor: colors.goldDark }} />
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full blur-3xl opacity-10" style={{ backgroundColor: "#8b2635" }} />
-      </div>
+        {/* Card */}
+        <div 
+          className="rounded-lg p-8 shadow-lg border"
+          style={{ 
+            backgroundColor: colors.textLight, 
+            borderColor: colors.border 
+          }}
+        >
+          {/* Email/Password Form */}
+          <form onSubmit={handleEmailLogin} className="space-y-4">
+            <div>
+              <Label htmlFor="email" className="text-sm tracking-wide" style={{ color: colors.text }}>
+                Email Address
+              </Label>
+              <div className="relative mt-1">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: colors.textMuted }} />
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  required
+                  className="pl-10"
+                  style={{ borderColor: colors.border }}
+                />
+              </div>
+            </div>
 
-      <div className="relative z-10 flex flex-col items-center justify-center min-h-screen px-4 py-12">
-        <div className="w-full max-w-md">
-          {/* Header */}
-          <div className="text-center mb-8">
-            <Link
-              href="/"
-              className="text-sm tracking-[0.3em] uppercase transition-colors hover:opacity-70"
-              style={{ color: colors.goldDark }}
+            <div>
+              <Label htmlFor="password" className="text-sm tracking-wide" style={{ color: colors.text }}>
+                Password
+              </Label>
+              <div className="relative mt-1">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: colors.textMuted }} />
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  required
+                  className="pl-10"
+                  style={{ borderColor: colors.border }}
+                />
+              </div>
+            </div>
+
+            <Button
+              type="submit"
+              disabled={isLoading}
+              className="w-full tracking-wide uppercase text-sm"
+              style={{ 
+                backgroundColor: colors.goldDark, 
+                color: colors.textLight 
+              }}
             >
-              ← TaskFlow®
-            </Link>
-            <h1
-              className="text-4xl md:text-5xl font-extralight mt-8 mb-4"
-              style={{ color: colors.text, fontFamily: "serif" }}
-            >
-              Welcome Back
-            </h1>
-            <p className="text-sm tracking-wide" style={{ color: colors.textMuted, fontFamily: "serif", fontStyle: "italic" }}>
-              Sign in to continue your journey
-            </p>
+              {isLoading ? 'Signing in...' : 'Sign In'}
+            </Button>
+          </form>
+
+          {/* Divider */}
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t" style={{ borderColor: colors.border }} />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="px-2" style={{ backgroundColor: colors.textLight, color: colors.textMuted }}>
+                Or continue with
+              </span>
+            </div>
           </div>
 
-          {/* Login Form */}
-          <div
-            className="backdrop-blur-sm border p-8"
-            style={{ backgroundColor: `${colors.bgAlt}80`, borderColor: colors.border }}
-          >
-            <LoginForm
-              onSuccess={handleLoginSuccess}
-              isLoading={isLoading}
-              setIsLoading={setIsLoading}
-            />
+          {/* OAuth Buttons */}
+          <div className="space-y-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleGoogleLogin}
+              className="w-full"
+              style={{ borderColor: colors.border }}
+            >
+              <Chrome className="w-4 h-4 mr-2" />
+              Google
+            </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleGithubLogin}
+              className="w-full"
+              style={{ borderColor: colors.border }}
+            >
+              <Github className="w-4 h-4 mr-2" />
+              GitHub
+            </Button>
           </div>
 
           {/* Footer */}
-          <p className="text-center mt-8 text-sm" style={{ color: colors.textMuted }}>
-            Don't have an account?{' '}
-            <Link
-              href="/signup"
-              className="font-medium transition-colors hover:opacity-70"
-              style={{ color: colors.goldDark }}
-            >
-              Create one
-            </Link>
-          </p>
-
-          {/* Credit */}
-          <p className="text-center mt-12 text-xs tracking-[0.3em] uppercase" style={{ color: colors.goldDark }}>
-            By: maneeshanif
-          </p>
+          <div className="mt-6 text-center">
+            <p className="text-sm" style={{ color: colors.textMuted }}>
+              Don't have an account?{' '}
+              <Link 
+                href="/signup" 
+                className="font-medium hover:underline"
+                style={{ color: colors.goldDark }}
+              >
+                Sign up
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
     </div>

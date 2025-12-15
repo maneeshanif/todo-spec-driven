@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { CalendarDays } from "lucide-react";
 import { useTaskStore } from "@/stores/task-store";
@@ -20,19 +20,11 @@ const colors = {
 
 export default function UpcomingPage() {
   const { fetchTasks, loading, error, tasks } = useTaskStore();
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   useEffect(() => {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    tomorrow.setHours(0, 0, 0, 0);
-
-    const nextWeek = new Date(tomorrow);
-    nextWeek.setDate(nextWeek.getDate() + 7);
-
-    fetchTasks({
-      due_date_start: tomorrow.toISOString(),
-      due_date_end: nextWeek.toISOString(),
-    });
+    // Fetch all tasks, then filter on client side
+    fetchTasks();
   }, [fetchTasks]);
 
   const upcomingTasks = tasks.filter((task) => {
@@ -40,6 +32,7 @@ export default function UpcomingPage() {
     const dueDate = new Date(task.due_date);
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(0, 0, 0, 0);
     const nextWeek = new Date(tomorrow);
     nextWeek.setDate(nextWeek.getDate() + 7);
     return dueDate >= tomorrow && dueDate <= nextWeek;
@@ -92,7 +85,7 @@ export default function UpcomingPage() {
         </div>
       </main>
 
-      <CreateTaskModal />
+      <CreateTaskModal open={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} />
     </div>
   );
 }

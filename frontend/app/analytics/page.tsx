@@ -1,9 +1,11 @@
 "use client";
 
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { BarChart3, TrendingUp, Calendar, Target } from "lucide-react";
 import Sidebar from "@/components/dashboard/Sidebar";
 import StatsCards from "@/components/dashboard/StatsCards";
+import { useTaskStore } from "@/stores/task-store";
 
 // Luxury color palette
 const colors = {
@@ -16,6 +18,12 @@ const colors = {
 };
 
 export default function AnalyticsPage() {
+  const { fetchTasks } = useTaskStore();
+
+  useEffect(() => {
+    fetchTasks();
+  }, [fetchTasks]);
+
   return (
     <div className="min-h-screen flex" style={{ backgroundColor: colors.bg }}>
       <Sidebar />

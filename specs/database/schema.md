@@ -1,9 +1,10 @@
 # Database Schema Specification
 
-**Database**: Neon PostgreSQL (Serverless)  
-**ORM**: SQLModel (SQLAlchemy + Pydantic)  
-**Migration Tool**: Alembic  
-**Phase**: Phase 2  
+**Database**: Neon PostgreSQL (Serverless)
+**ORM**: SQLModel (SQLAlchemy + Pydantic)
+**Migration Tool**: Alembic
+**Authentication**: Better Auth (manages its own tables)
+**Phase**: Phase 2
 **Date**: December 2024
 
 ---
@@ -11,6 +12,10 @@
 ## Overview
 
 This document specifies the database schema for the Todo Web Application, including tables, relationships, indexes, and migration strategy.
+
+### Implementation Status: ✅ COMPLETE
+
+**Note**: User authentication is handled by Better Auth, which manages its own tables (`user`, `session`, `account`, `verification`). The application's `tasks` table references `user.id` from Better Auth.
 
 ---
 
@@ -40,67 +45,75 @@ DATABASE_URL_DIRECT=postgresql://user:password@ep-xyz.region.aws.neon.tech/dbnam
 
 ## Tables
 
-### users
+### user (Better Auth)
 
-Stores user account information.
+**Managed by Better Auth** - User account information.
 
 | Column | Type | Nullable | Default | Description |
 |--------|------|----------|---------|-------------|
-| id | VARCHAR(36) | NO | uuid_generate_v4() | Primary key |
+| id | VARCHAR(36) | NO | uuid | Primary key |
 | email | VARCHAR(255) | NO | - | Unique email |
-| password_hash | VARCHAR(255) | NO | - | Bcrypt hash |
-| name | VARCHAR(100) | NO | - | Display name |
-| created_at | TIMESTAMP | NO | NOW() | Creation time |
-| updated_at | TIMESTAMP | NO | NOW() | Last update |
+| emailVerified | BOOLEAN | NO | FALSE | Email verified |
+| name | VARCHAR(100) | YES | - | Display name |
+| image | TEXT | YES | - | Profile image URL |
+| createdAt | TIMESTAMP | NO | NOW() | Creation time |
+| updatedAt | TIMESTAMP | NO | NOW() | Last update |
 
-**Indexes:**
-```sql
-CREATE UNIQUE INDEX idx_users_email ON users(email);
-CREATE INDEX idx_users_created_at ON users(created_at DESC);
-```
+**Note**: This table is created and managed by Better Auth. Do NOT modify directly.
 
-**Constraints:**
-- `pk_users` PRIMARY KEY (`id`)
-- `uq_users_email` UNIQUE (`email`)
+---
 
-**SQLModel:**
-```python
-from sqlmodel import SQLModel, Field
-from datetime import datetime
-from uuid import uuid4
+### session (Better Auth)
 
-class User(SQLModel, table=True):
-    __tablename__ = "users"
-    
-    id: str = Field(
-        default_factory=lambda: str(uuid4()),
-        primary_key=True,
-        max_length=36
-    )
-    email: str = Field(
-        unique=True,
-        index=True,
-        max_length=255
-    )
-    password_hash: str = Field(max_length=255)
-    name: str = Field(max_length=100)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
-```
+**Managed by Better Auth** - User sessions.
+
+| Column | Type | Nullable | Default | Description |
+|--------|------|----------|---------|-------------|
+| id | VARCHAR(36) | NO | uuid | Primary key |
+| userId | VARCHAR(36) | NO | - | FK to user.id |
+| token | TEXT | NO | - | Session token |
+| expiresAt | TIMESTAMP | NO | - | Expiration time |
+| ipAddress | VARCHAR(45) | YES | - | Client IP |
+| userAgent | TEXT | YES | - | Browser info |
+| createdAt | TIMESTAMP | NO | NOW() | Creation time |
+| updatedAt | TIMESTAMP | NO | NOW() | Last update |
+
+---
+
+### account (Better Auth)
+
+**Managed by Better Auth** - OAuth accounts.
+
+| Column | Type | Nullable | Default | Description |
+|--------|------|----------|---------|-------------|
+| id | VARCHAR(36) | NO | uuid | Primary key |
+| userId | VARCHAR(36) | NO | - | FK to user.id |
+| accountId | VARCHAR(255) | NO | - | Provider account ID |
+| providerId | VARCHAR(255) | NO | - | OAuth provider |
+| accessToken | TEXT | YES | - | OAuth access token |
+| refreshToken | TEXT | YES | - | OAuth refresh token |
+| expiresAt | TIMESTAMP | YES | - | Token expiration |
+| password | TEXT | YES | - | Hashed password (email auth) |
+| createdAt | TIMESTAMP | NO | NOW() | Creation time |
+| updatedAt | TIMESTAMP | NO | NOW() | Last update |
 
 ---
 
 ### tasks
 
-Stores user tasks.
+Stores user tasks (references Better Auth `user` table).
 
 | Column | Type | Nullable | Default | Description |
 |--------|------|----------|---------|-------------|
 | id | SERIAL | NO | auto | Primary key |
-| user_id | VARCHAR(36) | NO | - | Foreign key to users |
+| user_id | VARCHAR(36) | NO | - | Foreign key to user.id (Better Auth) |
 | title | VARCHAR(200) | NO | - | Task title |
 | description | TEXT | YES | NULL | Task description |
 | completed | BOOLEAN | NO | FALSE | Completion status |
+| priority | VARCHAR(10) | NO | 'medium' | Priority level (low, medium, high) |
+| due_date | TIMESTAMP | YES | NULL | Task due date |
+| is_recurring | BOOLEAN | NO | FALSE | Is recurring task |
+| recurrence_pattern | VARCHAR(20) | YES | NULL | Recurrence pattern |
 | created_at | TIMESTAMP | NO | NOW() | Creation time |
 | updated_at | TIMESTAMP | NO | NOW() | Last update |
 
@@ -110,11 +123,13 @@ CREATE INDEX idx_tasks_user_id ON tasks(user_id);
 CREATE INDEX idx_tasks_user_completed ON tasks(user_id, completed);
 CREATE INDEX idx_tasks_user_created ON tasks(user_id, created_at DESC);
 CREATE INDEX idx_tasks_completed ON tasks(completed);
+CREATE INDEX idx_tasks_due_date ON tasks(due_date);
+CREATE INDEX idx_tasks_priority ON tasks(priority);
 ```
 
 **Constraints:**
 - `pk_tasks` PRIMARY KEY (`id`)
-- `fk_tasks_user` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
+- `fk_tasks_user` FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON DELETE CASCADE
 
 **SQLModel:**
 ```python
@@ -124,73 +139,73 @@ from typing import Optional
 
 class Task(SQLModel, table=True):
     __tablename__ = "tasks"
-    
+
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: str = Field(
-        foreign_key="users.id",
+        foreign_key="user.id",  # References Better Auth user table
         index=True,
         max_length=36
     )
     title: str = Field(max_length=200)
     description: Optional[str] = Field(default=None, max_length=1000)
     completed: bool = Field(default=False, index=True)
+    priority: str = Field(default="medium", max_length=10)
+    due_date: Optional[datetime] = Field(default=None)
+    is_recurring: bool = Field(default=False)
+    recurrence_pattern: Optional[str] = Field(default=None, max_length=20)
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 ```
 
 ---
 
-### sessions (Optional)
-
-Stores active user sessions for token management.
-
-| Column | Type | Nullable | Default | Description |
-|--------|------|----------|---------|-------------|
-| id | VARCHAR(36) | NO | uuid_generate_v4() | Primary key |
-| user_id | VARCHAR(36) | NO | - | Foreign key to users |
-| token_hash | VARCHAR(255) | NO | - | Hashed refresh token |
-| expires_at | TIMESTAMP | NO | - | Expiration time |
-| created_at | TIMESTAMP | NO | NOW() | Creation time |
-
-**Indexes:**
-```sql
-CREATE INDEX idx_sessions_user_id ON sessions(user_id);
-CREATE INDEX idx_sessions_expires_at ON sessions(expires_at);
-```
-
-**Constraints:**
-- `pk_sessions` PRIMARY KEY (`id`)
-- `fk_sessions_user` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
-
----
-
 ## Entity Relationship Diagram
 
 ```
-┌─────────────────────────────────────────────────────┐
-│                       users                          │
-├─────────────────────────────────────────────────────┤
-│ id (PK)         VARCHAR(36)                         │
-│ email           VARCHAR(255)  UNIQUE                │
-│ password_hash   VARCHAR(255)                        │
-│ name            VARCHAR(100)                        │
-│ created_at      TIMESTAMP                           │
-│ updated_at      TIMESTAMP                           │
-└─────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────────┐
+│                    BETTER AUTH TABLES                              │
+├───────────────────────────────────────────────────────────────────┤
+│                                                                    │
+│  ┌─────────────────────────────┐    ┌─────────────────────────┐   │
+│  │          user               │    │        session          │   │
+│  ├─────────────────────────────┤    ├─────────────────────────┤   │
+│  │ id (PK)     VARCHAR(36)     │◄───│ userId (FK) VARCHAR(36) │   │
+│  │ email       VARCHAR(255)    │    │ token       TEXT        │   │
+│  │ name        VARCHAR(100)    │    │ expiresAt   TIMESTAMP   │   │
+│  │ createdAt   TIMESTAMP       │    └─────────────────────────┘   │
+│  │ updatedAt   TIMESTAMP       │                                  │
+│  └─────────────────────────────┘    ┌─────────────────────────┐   │
+│                │                     │        account          │   │
+│                │                     ├─────────────────────────┤   │
+│                └────────────────────►│ userId (FK) VARCHAR(36) │   │
+│                                      │ providerId  VARCHAR(255)│   │
+│                                      │ password    TEXT        │   │
+│                                      └─────────────────────────┘   │
+└───────────────────────────────────────────────────────────────────┘
                            │
-                           │ 1:N
+                           │ 1:N (user.id → tasks.user_id)
                            ▼
-┌─────────────────────────────────────────────────────┐
-│                       tasks                          │
-├─────────────────────────────────────────────────────┤
-│ id (PK)         SERIAL                              │
-│ user_id (FK)    VARCHAR(36)  → users.id             │
-│ title           VARCHAR(200)                        │
-│ description     TEXT                                │
-│ completed       BOOLEAN      DEFAULT FALSE          │
-│ created_at      TIMESTAMP                           │
-│ updated_at      TIMESTAMP                           │
-└─────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────────┐
+│                    APPLICATION TABLE                               │
+├───────────────────────────────────────────────────────────────────┤
+│                                                                    │
+│  ┌─────────────────────────────────────────────────────────────┐  │
+│  │                         tasks                                │  │
+│  ├─────────────────────────────────────────────────────────────┤  │
+│  │ id (PK)              SERIAL                                  │  │
+│  │ user_id (FK)         VARCHAR(36)  → user.id                  │  │
+│  │ title                VARCHAR(200)                            │  │
+│  │ description          TEXT                                    │  │
+│  │ completed            BOOLEAN      DEFAULT FALSE              │  │
+│  │ priority             VARCHAR(10)  DEFAULT 'medium'           │  │
+│  │ due_date             TIMESTAMP    NULLABLE                   │  │
+│  │ is_recurring         BOOLEAN      DEFAULT FALSE              │  │
+│  │ recurrence_pattern   VARCHAR(20)  NULLABLE                   │  │
+│  │ created_at           TIMESTAMP                               │  │
+│  │ updated_at           TIMESTAMP                               │  │
+│  └─────────────────────────────────────────────────────────────┘  │
+│                                                                    │
+└───────────────────────────────────────────────────────────────────┘
 ```
 
 ---

@@ -1,0 +1,63 @@
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+
+// This function can be marked `async` if using `await` inside
+export default async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // Get the session token from cookies
+  const sessionToken = request.cookies.get('better-auth.session_token')?.value;
+
+  // Public routes that don't require authentication
+  const publicRoutes = ['/login', '/signup', '/api/auth'];
+  const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route));
+
+  // Root path
+  const isRootPath = pathname === '/';
+
+  // Protected routes
+  const isProtectedRoute = pathname.startsWith('/dashboard') || 
+                          pathname.startsWith('/tasks') || 
+                          pathname.startsWith('/settings') ||
+                          pathname.startsWith('/analytics') ||
+                          pathname.startsWith('/categories') ||
+                          pathname.startsWith('/voice') ||
+                          pathname.startsWith('/ai-chat');
+
+  // If user is authenticated and trying to access login/signup, redirect to dashboard
+  if (sessionToken && (pathname === '/login' || pathname === '/signup')) {
+    return NextResponse.redirect(new URL('/dashboard', request.url));
+  }
+
+  // If user is not authenticated and trying to access protected routes, redirect to login
+  if (!sessionToken && isProtectedRoute) {
+    const loginUrl = new URL('/login', request.url);
+    loginUrl.searchParams.set('redirect', pathname);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  // If user is authenticated and on root path, redirect to dashboard
+  if (sessionToken && isRootPath) {
+    return NextResponse.redirect(new URL('/dashboard', request.url));
+  }
+
+  // If user is not authenticated and on root path, redirect to login
+  if (!sessionToken && isRootPath) {
+    return NextResponse.redirect(new URL('/login', request.url));
+  }
+
+  return NextResponse.next();
+}
+
+export const config = {
+  matcher: [
+    /*
+     * Match all request paths except:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - public files (public folder)
+     */
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+  ],
+};

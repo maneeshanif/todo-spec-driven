@@ -1,11 +1,4 @@
 """Pydantic schemas for request/response validation."""
-from src.schemas.auth import SignupRequest, LoginRequest, AuthResponse
-from src.schemas.user import UserPublic, UserCreate
+# Note: Authentication schemas removed - using Better Auth
 
-__all__ = [
-    "SignupRequest",
-    "LoginRequest", 
-    "AuthResponse",
-    "UserPublic",
-    "UserCreate",
-]
+__all__ = []

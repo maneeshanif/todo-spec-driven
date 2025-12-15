@@ -4,8 +4,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { signup } from '@/lib/api/auth';
-import { useAuthStore } from '@/stores/auth-store';
+import { useAuthStore } from '@/stores/authStore';
 import { LoadingButton } from '@/components/LoadingSpinner';
 
 // Luxury color palette
@@ -35,7 +34,7 @@ interface SignupFormProps {
 
 export default function SignupForm({ onSuccess, isLoading, setIsLoading }: SignupFormProps) {
   const [error, setError] = useState<string>('');
-  const login = useAuthStore((state) => state.login);
+  const signupToStore = useAuthStore((state) => state.signup);
 
   const {
     register,
@@ -50,8 +49,8 @@ export default function SignupForm({ onSuccess, isLoading, setIsLoading }: Signu
     setError('');
 
     try {
-      const response = await signup(data);
-      login(response.user, response.access_token, response.refresh_token);
+      // Use the auth store's signup which uses Better Auth
+      await signupToStore(data.email, data.password, data.name);
       onSuccess();
     } catch (err: any) {
       setError(err.message || 'Signup failed. Please try again.');

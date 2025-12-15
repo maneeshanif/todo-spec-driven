@@ -9,6 +9,7 @@ FastAPI backend for the Todo Web Application.
 - **Database**: PostgreSQL (via asyncpg)
 - **Package Manager**: UV
 - **Python Version**: 3.13+
+- **Authentication**: Better Auth JWT validation via JWKS endpoint
 
 ## Setup
 

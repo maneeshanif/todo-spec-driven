@@ -2,8 +2,7 @@
 from fastapi import APIRouter, Depends, Request, Response
 from sqlmodel.ext.asyncio.session import AsyncSession
 from src.core.database import get_session
-from src.core.deps import get_current_user
-from src.models.user import User
+from src.core.auth_deps import get_current_user
 from src.schemas.stats import UserStatsResponse
 from src.services.stats_service import StatsService
 from src.core.logging import get_logger
@@ -23,7 +22,7 @@ router = APIRouter(prefix="/stats", tags=["Statistics"])
 async def get_user_stats(
     request: Request,
     response: Response,
-    current_user: User = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
     session: AsyncSession = Depends(get_session)
 ):
     """
@@ -42,7 +41,7 @@ async def get_user_stats(
 
     **Caching**: Results are cached for 60 seconds with ETag support.
     """
-    stats = await StatsService.get_user_stats(session, current_user.id)
+    stats = await StatsService.get_user_stats(session, current_user['id'])
 
     # Generate ETag from result
     etag = generate_etag(stats)

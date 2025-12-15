@@ -4,8 +4,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from typing import List
 
 from src.core.database import get_session
-from src.core.deps import get_current_user
-from src.models.user import User
+from src.core.auth_deps import get_current_user
 from src.schemas.category import CategoryCreate, CategoryUpdate, CategoryResponse
 from src.services.category_service import CategoryService
 from src.core.logging import get_logger
@@ -23,10 +22,10 @@ router = APIRouter(prefix="/categories", tags=["Categories"])
 )
 async def get_categories(
     session: AsyncSession = Depends(get_session),
-    current_user: User = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user)
 ):
     """Get all categories for the current user."""
-    categories = await CategoryService.get_categories(session, current_user.id)
+    categories = await CategoryService.get_categories(session, current_user['id'])
     return categories
 
 
@@ -40,12 +39,12 @@ async def get_categories(
 async def create_category(
     data: CategoryCreate,
     session: AsyncSession = Depends(get_session),
-    current_user: User = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user)
 ):
     """Create a new category."""
     category = await CategoryService.create_category(
         session,
-        current_user.id,
+        current_user['id'],
         data.name,
         data.color
     )
@@ -60,10 +59,10 @@ async def create_category(
 )
 async def create_default_categories(
     session: AsyncSession = Depends(get_session),
-    current_user: User = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user)
 ):
     """Create default categories for the user."""
-    categories = await CategoryService.get_default_categories(session, current_user.id)
+    categories = await CategoryService.get_default_categories(session, current_user['id'])
     return categories
 
 
@@ -76,10 +75,10 @@ async def create_default_categories(
 async def get_category(
     category_id: int,
     session: AsyncSession = Depends(get_session),
-    current_user: User = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user)
 ):
     """Get a specific category."""
-    category = await CategoryService.get_category(session, current_user.id, category_id)
+    category = await CategoryService.get_category(session, current_user['id'], category_id)
     return category
 
 
@@ -93,12 +92,12 @@ async def update_category(
     category_id: int,
     data: CategoryUpdate,
     session: AsyncSession = Depends(get_session),
-    current_user: User = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user)
 ):
     """Update a category."""
     category = await CategoryService.update_category(
         session,
-        current_user.id,
+        current_user['id'],
         category_id,
         data.name,
         data.color
@@ -115,8 +114,8 @@ async def update_category(
 async def delete_category(
     category_id: int,
     session: AsyncSession = Depends(get_session),
-    current_user: User = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user)
 ):
     """Delete a category."""
-    await CategoryService.delete_category(session, current_user.id, category_id)
+    await CategoryService.delete_category(session, current_user['id'], category_id)
     return None

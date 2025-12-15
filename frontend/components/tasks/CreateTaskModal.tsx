@@ -18,7 +18,14 @@ export default function CreateTaskModal({ open, onClose }: CreateTaskModalProps)
   const handleSubmit = async (data: TaskFormValues) => {
     setLoading(true);
     try {
-      await addTask(data.title, data.description);
+      await addTask({
+        title: data.title,
+        description: data.description,
+        priority: data.priority,
+        due_date: data.due_date,
+        is_recurring: data.is_recurring,
+        recurrence_pattern: data.recurrence_pattern,
+      });
       toast.success("Task created successfully");
       onClose();
     } catch (error: any) {

@@ -12,6 +12,7 @@ Next.js frontend for the Todo Web Application.
 - **HTTP Client**: Axios 1.7+
 - **Animations**: Framer Motion 11+
 - **Forms**: React Hook Form + Zod
+- **Authentication**: Better Auth (JWT + Session management)
 
 ## Setup
 

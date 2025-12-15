@@ -34,7 +34,12 @@ type TaskStatus = 'all' | 'completed' | 'pending';
 type SortField = 'created_at' | 'due_date' | 'priority' | 'title' | 'updated_at';
 
 export function TaskList() {
-  const { tasks, categories, fetchTasks, toggleTaskCompletion, deleteTask, setFilters, filters } = useTaskStore();
+  const { tasks, fetchTasks, toggleTask, removeTask } = useTaskStore();
+  const categories: { id: number; name: string; color: string }[] = []; // TODO: Add categories to store
+  const filters = { search: '', completed: undefined as boolean | undefined, priority: undefined as Priority | undefined, categoryId: undefined as number | undefined, sortBy: 'created_at', sortOrder: 'desc' as 'asc' | 'desc' };
+  const setFilters = (_: typeof filters) => {}; // TODO: Add setFilters to store
+  const toggleTaskCompletion = toggleTask;
+  const deleteTask = removeTask;
   const [showFilters, setShowFilters] = useState(false);
   const [searchTerm, setSearchTerm] = useState(filters.search || '');
   const [statusFilter, setStatusFilter] = useState<TaskStatus>(filters.completed === true ? 'completed' : filters.completed === false ? 'pending' : 'all');

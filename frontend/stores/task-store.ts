@@ -1,31 +1,49 @@
 // Task state management with Zustand
 import { create } from 'zustand';
 import { taskApi } from '@/lib/api/tasks';
-import { Task } from '@/types';
+import { Task, TaskFilters } from '@/types';
 
 interface TaskState {
   tasks: Task[];
   loading: boolean;
   error: string | null;
-  
+  filters: TaskFilters;
+
   // Actions
-  fetchTasks: (completed?: boolean) => Promise<void>;
-  addTask: (title: string, description?: string) => Promise<void>;
+  fetchTasks: (filters?: TaskFilters) => Promise<void>;
+  setFilters: (filters: Partial<TaskFilters>) => void;
+  clearFilters: () => void;
+  addTask: (data: {
+    title: string;
+    description?: string;
+    priority?: 'low' | 'medium' | 'high';
+    due_date?: Date | null;
+    is_recurring?: boolean;
+    recurrence_pattern?: 'daily' | 'weekly' | 'monthly' | 'yearly' | null;
+  }) => Promise<void>;
   toggleTask: (taskId: number) => Promise<void>;
+  completeTaskByName: (taskName: string) => Promise<{ success: boolean; taskTitle?: string }>;
   updateTaskData: (taskId: number, title?: string, description?: string) => Promise<void>;
   removeTask: (taskId: number) => Promise<void>;
   clearError: () => void;
 }
 
+const defaultFilters: TaskFilters = {
+  sortBy: 'created_at',
+  sortOrder: 'desc',
+};
+
 export const useTaskStore = create<TaskState>((set, get) => ({
   tasks: [],
   loading: false,
   error: null,
-  
-  fetchTasks: async (completed?: boolean) => {
+  filters: defaultFilters,
+
+  fetchTasks: async (filters?: TaskFilters) => {
     set({ loading: true, error: null });
     try {
-      const response = await taskApi.getAll({ completed });
+      const mergedFilters = { ...get().filters, ...filters };
+      const response = await taskApi.getAll(mergedFilters);
       console.log('Fetched tasks:', response.data);
       set({ tasks: response.data || [], loading: false });
     } catch (error: any) {
@@ -33,8 +51,29 @@ export const useTaskStore = create<TaskState>((set, get) => ({
       set({ error: error.message, loading: false, tasks: [] });
     }
   },
+
+  setFilters: (newFilters: Partial<TaskFilters>) => {
+    const updatedFilters = { ...get().filters, ...newFilters };
+    set({ filters: updatedFilters });
+    // Refetch with new filters
+    get().fetchTasks(updatedFilters);
+  },
+
+  clearFilters: () => {
+    set({ filters: defaultFilters });
+    get().fetchTasks(defaultFilters);
+  },
   
-  addTask: async (title: string, description?: string) => {
+  addTask: async (data: {
+    title: string;
+    description?: string;
+    priority?: 'low' | 'medium' | 'high';
+    due_date?: Date | null;
+    is_recurring?: boolean;
+    recurrence_pattern?: 'daily' | 'weekly' | 'monthly' | 'yearly' | null;
+  }) => {
+    const { title, description, priority = 'medium', due_date, is_recurring = false, recurrence_pattern } = data;
+    
     // Create optimistic task (temporary ID will be replaced with real ID from server)
     const optimisticTask: Task = {
       id: Date.now(), // Temporary ID
@@ -42,11 +81,11 @@ export const useTaskStore = create<TaskState>((set, get) => ({
       title,
       description: description || '',
       completed: false,
-      priority: 'medium', // Default priority
-      due_date: undefined, // No due date by default
+      priority,
+      due_date: due_date ? due_date.toISOString() : undefined,
       category_ids: [],
-      is_recurring: false,
-      recurrence_pattern: undefined,
+      is_recurring,
+      recurrence_pattern: recurrence_pattern || undefined,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
@@ -59,7 +98,14 @@ export const useTaskStore = create<TaskState>((set, get) => ({
     }));
 
     try {
-      const newTask = await taskApi.create({ title, description });
+      const newTask = await taskApi.create({
+        title,
+        description,
+        priority,
+        due_date: due_date ? due_date.toISOString() : undefined,
+        is_recurring,
+        recurrence_pattern: recurrence_pattern || undefined,
+      });
       console.log('Task created:', newTask);
       // Replace optimistic task with real task from server
       set((state) => ({
@@ -81,14 +127,14 @@ export const useTaskStore = create<TaskState>((set, get) => ({
   toggleTask: async (taskId: number) => {
     const task = get().tasks.find((t) => t.id === taskId);
     if (!task) return;
-    
+
     // Optimistic update
     set((state) => ({
       tasks: state.tasks.map((t) =>
         t.id === taskId ? { ...t, completed: !t.completed } : t
       ),
     }));
-    
+
     try {
       await taskApi.update(taskId, { completed: !task.completed });
     } catch (error: any) {
@@ -101,7 +147,40 @@ export const useTaskStore = create<TaskState>((set, get) => ({
       }));
     }
   },
-  
+
+  completeTaskByName: async (taskName: string) => {
+    const tasks = get().tasks;
+    // Find task by partial name match (case-insensitive)
+    const task = tasks.find((t) =>
+      !t.completed && t.title.toLowerCase().includes(taskName.toLowerCase())
+    );
+
+    if (!task) {
+      return { success: false };
+    }
+
+    // Optimistic update
+    set((state) => ({
+      tasks: state.tasks.map((t) =>
+        t.id === task.id ? { ...t, completed: true } : t
+      ),
+    }));
+
+    try {
+      await taskApi.update(task.id, { completed: true });
+      return { success: true, taskTitle: task.title };
+    } catch (error: any) {
+      // Revert on error
+      set((state) => ({
+        tasks: state.tasks.map((t) =>
+          t.id === task.id ? { ...t, completed: false } : t
+        ),
+        error: error.message,
+      }));
+      return { success: false };
+    }
+  },
+
   updateTaskData: async (taskId: number, title?: string, description?: string) => {
     set({ loading: true, error: null });
     try {

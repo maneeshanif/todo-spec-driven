@@ -1,16 +1,25 @@
 # Authentication Feature Specification
 
-**Feature**: User Authentication  
-**Version**: 1.0  
-**Phase**: Phase 2  
-**Author**: Spec-Driven Development  
+**Feature**: User Authentication
+**Version**: 2.0
+**Phase**: Phase 2
+**Author**: Spec-Driven Development
 **Date**: December 2024
 
 ---
 
 ## Overview
 
-This specification defines the authentication system for the Todo Web Application using Better Auth for JWT-based authentication across the Next.js frontend and FastAPI backend.
+This specification defines the authentication system for the Todo Web Application using **Better Auth** for JWT-based authentication across the Next.js frontend and FastAPI backend.
+
+### Implementation Status: ✅ COMPLETE
+
+**Technology**: Better Auth (https://www.better-auth.com/)
+
+**Architecture**:
+- **Frontend**: Better Auth client handles signup, login, logout, and session management
+- **Backend**: FastAPI validates JWT tokens via JWKS endpoint (`/api/auth/jwks`)
+- **Database**: Better Auth manages its own tables (user, session, account, verification)
 
 ---
 
@@ -238,35 +247,41 @@ Authorization: Bearer <access_token>
 
 ---
 
-## JWT Configuration
+## JWT Configuration (Better Auth)
 
 ### Access Token
 
 | Property | Value |
 |----------|-------|
-| Algorithm | HS256 |
-| Expiration | 7 days (604800 seconds) |
-| Issuer | `todo-app` |
+| Algorithm | EdDSA (Ed25519) |
+| Expiration | 7 days |
+| Issuer | Better Auth |
+| JWKS Endpoint | `/api/auth/jwks` |
 
-**Payload:**
+**Payload (Better Auth format):**
 ```json
 {
   "sub": "user-uuid",
   "email": "user@example.com",
   "name": "John Doe",
   "iat": 1234567890,
-  "exp": 1234567890,
-  "iss": "todo-app"
+  "exp": 1234567890
 }
 ```
 
-### Refresh Token
+### Token Storage
 
-| Property | Value |
-|----------|-------|
-| Algorithm | HS256 |
-| Expiration | 30 days |
-| Storage | HTTP-only cookie |
+| Token | Storage |
+|-------|---------|
+| Bearer Token | localStorage (`bearer_token`) |
+| Session Cookie | HTTP-only cookie (managed by Better Auth) |
+
+### Backend Validation
+
+The FastAPI backend validates JWT tokens by:
+1. Fetching JWKS from `http://localhost:3000/api/auth/jwks`
+2. Verifying token signature using public keys
+3. Extracting user info from token payload
 
 ---
 

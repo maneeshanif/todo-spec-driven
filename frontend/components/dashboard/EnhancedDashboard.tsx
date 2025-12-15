@@ -1,16 +1,24 @@
 "use client";
 
-import { useEffect } from "react";
-import { useAuthStore } from "@/stores/auth-store";
+import { useEffect, useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import { useTaskStore } from "@/stores/task-store";
 import { useUIStore } from "@/stores/ui-store";
 import Sidebar from "./Sidebar";
 import StatsCards from "./StatsCards";
 import TaskList from "@/components/tasks/TaskList";
 import CreateTaskModal from "@/components/tasks/CreateTaskModal";
-import { Plus } from "lucide-react";
+import { Plus, Filter, ArrowUpDown, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+} from "@/components/ui/dropdown-menu";
 
 // Luxury color palette (Cream theme)
 const colors = {
@@ -25,15 +33,47 @@ const colors = {
 };
 
 export default function EnhancedDashboard() {
-  const { user } = useAuthStore();
-  const { fetchTasks, loading, error, tasks } = useTaskStore();
+  const { user } = useAuth();
+  const { fetchTasks, loading, error, tasks, filters, setFilters, clearFilters } = useTaskStore();
   const { openModal, closeModal, modals } = useUIStore();
+  const [activeFilters, setActiveFilters] = useState<string[]>([]);
 
   const isCreateModalOpen = modals['create-task'] || false;
 
   useEffect(() => {
     fetchTasks();
   }, [fetchTasks]);
+
+  // Update active filter badges
+  useEffect(() => {
+    const badges: string[] = [];
+    if (filters.completed !== undefined) {
+      badges.push(filters.completed ? 'Completed' : 'Pending');
+    }
+    if (filters.priority) {
+      badges.push(`Priority: ${filters.priority}`);
+    }
+    if (filters.sortBy && filters.sortBy !== 'created_at') {
+      badges.push(`Sort: ${filters.sortBy}`);
+    }
+    setActiveFilters(badges);
+  }, [filters]);
+
+  const handleFilterByStatus = (status: boolean | undefined) => {
+    setFilters({ completed: status });
+  };
+
+  const handleFilterByPriority = (priority: string | undefined) => {
+    setFilters({ priority });
+  };
+
+  const handleSort = (sortBy: string, sortOrder: 'asc' | 'desc') => {
+    setFilters({ sortBy, sortOrder });
+  };
+
+  const handleClearFilters = () => {
+    clearFilters();
+  };
 
   return (
     <div className="min-h-screen flex" style={{ backgroundColor: colors.bg }}>
@@ -86,29 +126,122 @@ export default function EnhancedDashboard() {
             style={{ backgroundColor: `${colors.bgAlt}80`, borderColor: colors.border }}
           >
             <div className="flex items-center justify-between mb-6">
-              <h2
-                className="text-2xl font-light"
-                style={{ color: colors.text, fontFamily: "serif" }}
-              >
-                Your Tasks
-              </h2>
+              <div className="flex items-center gap-4">
+                <h2
+                  className="text-2xl font-light"
+                  style={{ color: colors.text, fontFamily: "serif" }}
+                >
+                  Your Tasks
+                </h2>
+                {/* Active filter badges */}
+                {activeFilters.length > 0 && (
+                  <div className="flex items-center gap-2">
+                    {activeFilters.map((badge, i) => (
+                      <span
+                        key={i}
+                        className="px-2 py-1 text-xs rounded"
+                        style={{ backgroundColor: `${colors.goldDark}20`, color: colors.goldDark }}
+                      >
+                        {badge}
+                      </span>
+                    ))}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleClearFilters}
+                      className="h-6 w-6 p-0"
+                    >
+                      <X className="w-3 h-3" style={{ color: colors.textMuted }} />
+                    </Button>
+                  </div>
+                )}
+              </div>
               <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="text-xs tracking-wider uppercase"
-                  style={{ borderColor: colors.border, color: colors.textMuted }}
-                >
-                  Filter
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="text-xs tracking-wider uppercase"
-                  style={{ borderColor: colors.border, color: colors.textMuted }}
-                >
-                  Sort
-                </Button>
+                {/* Filter Dropdown */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-xs tracking-wider uppercase"
+                      style={{ borderColor: colors.border, color: colors.textMuted }}
+                    >
+                      <Filter className="w-3 h-3 mr-2" />
+                      Filter
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuLabel>By Status</DropdownMenuLabel>
+                    <DropdownMenuItem onClick={() => handleFilterByStatus(undefined)}>
+                      All Tasks
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleFilterByStatus(false)}>
+                      Pending Only
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleFilterByStatus(true)}>
+                      Completed Only
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuLabel>By Priority</DropdownMenuLabel>
+                    <DropdownMenuItem onClick={() => handleFilterByPriority(undefined)}>
+                      All Priorities
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleFilterByPriority('high')}>
+                      High Priority
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleFilterByPriority('medium')}>
+                      Medium Priority
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleFilterByPriority('low')}>
+                      Low Priority
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                {/* Sort Dropdown */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-xs tracking-wider uppercase"
+                      style={{ borderColor: colors.border, color: colors.textMuted }}
+                    >
+                      <ArrowUpDown className="w-3 h-3 mr-2" />
+                      Sort
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuLabel>Sort By</DropdownMenuLabel>
+                    <DropdownMenuItem onClick={() => handleSort('created_at', 'desc')}>
+                      Newest First
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleSort('created_at', 'asc')}>
+                      Oldest First
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => handleSort('due_date', 'asc')}>
+                      Due Date (Earliest)
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleSort('due_date', 'desc')}>
+                      Due Date (Latest)
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => handleSort('priority', 'desc')}>
+                      Priority (High to Low)
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleSort('priority', 'asc')}>
+                      Priority (Low to High)
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => handleSort('title', 'asc')}>
+                      Title (A-Z)
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleSort('title', 'desc')}>
+                      Title (Z-A)
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
 

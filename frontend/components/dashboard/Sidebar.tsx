@@ -17,7 +17,7 @@ import {
   Mic
 } from "lucide-react";
 import { useState } from "react";
-import { useAuthStore } from "@/stores/auth-store";
+import { useAuthStore } from "@/stores/authStore";
 import { cn } from "@/lib/utils";
 
 // Luxury color palette (Cream theme)
@@ -48,8 +48,11 @@ export default function Sidebar() {
   const pathname = usePathname();
   const { user, logout } = useAuthStore();
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    // IMPORTANT: Wait for logout to complete before redirecting
+    await logout();
+    // Wait a bit more for localStorage to be cleared (async operation)
+    await new Promise(resolve => setTimeout(resolve, 150));
     window.location.href = "/login";
   };
 
@@ -67,19 +70,21 @@ export default function Sidebar() {
         style={{ borderBottom: `1px solid ${colors.border}` }}
       >
         {!collapsed && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex items-center gap-2"
-          >
-            <Sparkles className="w-5 h-5" style={{ color: colors.goldDark }} />
-            <span
-              className="text-sm tracking-[0.2em] uppercase"
-              style={{ color: colors.goldDark }}
+          <Link href="/dashboard">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
             >
-              TaskFlow®
-            </span>
-          </motion.div>
+              <Sparkles className="w-5 h-5" style={{ color: colors.goldDark }} />
+              <span
+                className="text-sm tracking-[0.2em] uppercase"
+                style={{ color: colors.goldDark }}
+              >
+                TaskFlow®
+              </span>
+            </motion.div>
+          </Link>
         )}
         <button
           onClick={() => setCollapsed(!collapsed)}

@@ -4,11 +4,11 @@ A modern, full-stack todo application built using **Spec-Driven Development** wi
 
 ## Phase 2: Full-Stack Web Application ✅ COMPLETE
 
-A production-ready web application with persistent storage, JWT authentication, and multi-user support.
+A production-ready web application with persistent storage, Better Auth authentication, and multi-user support.
 
 ### 🎯 Features Implemented
 
-- ✅ **User Authentication** - Signup, login, logout with JWT tokens
+- ✅ **User Authentication** - Better Auth with JWT tokens (signup, login, logout)
 - ✅ **Task Management** - Full CRUD operations (Create, Read, Update, Delete)
 - ✅ **Optimistic Updates** - Immediate UI feedback for all operations
 - ✅ **Smooth Animations** - Framer Motion transitions for state changes
@@ -16,6 +16,10 @@ A production-ready web application with persistent storage, JWT authentication, 
 - ✅ **Error Handling** - Toast notifications for success/error states
 - ✅ **Responsive Design** - Mobile-first Tailwind CSS styling
 - ✅ **User Isolation** - Tasks are private to each user
+- ✅ **Voice Assistant** - Voice commands to create and complete tasks
+- ✅ **Task Filtering** - Filter by status, priority
+- ✅ **Task Sorting** - Sort by date, priority, title
+- ✅ **Analytics Dashboard** - Task statistics and insights
 
 ### Tech Stack
 
@@ -27,13 +31,14 @@ A production-ready web application with persistent storage, JWT authentication, 
 - Axios (HTTP Client)
 - Shadcn/ui + Aceternity UI Components
 - Framer Motion Animations
+- Better Auth (Client-side authentication)
 
 **Backend:**
 - Python 3.13+ with UV
 - FastAPI 0.115+
 - SQLModel 0.0.24+ ORM
 - PostgreSQL (Neon Serverless)
-- JWT Authentication
+- Better Auth JWT Validation (JWKS)
 
 ### Project Structure
 

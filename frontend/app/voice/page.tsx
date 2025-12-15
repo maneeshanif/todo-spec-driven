@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Mic, MicOff, Volume2, Sparkles } from "lucide-react";
 import Sidebar from "@/components/dashboard/Sidebar";
+import { useTaskStore } from "@/stores/task-store";
+import { toast } from "sonner";
 
 // Luxury color palette
 const colors = {
@@ -23,12 +25,18 @@ export default function VoiceAssistantPage() {
   const [transcript, setTranscript] = useState("");
   const [response, setResponse] = useState("");
   const [supported, setSupported] = useState(true);
+  const addTask = useTaskStore((s) => s.addTask);
+  const tasks = useTaskStore((s) => s.tasks);
+  const fetchTasks = useTaskStore((s) => s.fetchTasks);
+  const completeTaskByName = useTaskStore((s) => s.completeTaskByName);
 
   useEffect(() => {
     if (!("webkitSpeechRecognition" in window) && !("SpeechRecognition" in window)) {
       setSupported(false);
     }
-  }, []);
+    // Fetch tasks on mount so voice commands have task data
+    fetchTasks();
+  }, [fetchTasks]);
 
   const startListening = () => {
     if (!supported) {
@@ -67,24 +75,70 @@ export default function VoiceAssistantPage() {
     recognition.start();
   };
 
-  const processCommand = (command: string) => {
-    setTimeout(() => {
-      const lowerCommand = command.toLowerCase();
-      let responseText = "";
+  const processCommand = async (command: string) => {
+    const lowerCommand = command.toLowerCase();
+    let responseText = "";
 
+    try {
       if (lowerCommand.includes("create") || lowerCommand.includes("add")) {
-        responseText = `I'll create that task for you: "${command}". Task created successfully!`;
+        // Extract task title from command
+        const taskTitle = command
+          .replace(/create task/i, '')
+          .replace(/add task/i, '')
+          .replace(/create/i, '')
+          .replace(/add/i, '')
+          .trim();
+        
+        if (taskTitle) {
+          await addTask({
+            title: taskTitle,
+            priority: 'medium',
+          });
+          responseText = `Task created successfully: "${taskTitle}"`;
+          toast.success("Task created via voice");
+        } else {
+          responseText = "Please specify a task title. For example, say 'Create task review project proposal'.";
+        }
       } else if (lowerCommand.includes("show") || lowerCommand.includes("list")) {
-        responseText = "Here are your tasks for today. You have 5 pending tasks.";
-      } else if (lowerCommand.includes("complete") || lowerCommand.includes("done")) {
-        responseText = "Task marked as complete!";
-      } else {
-        responseText = `I heard: "${command}". In production, this would be processed by an AI to understand your intent and perform the appropriate action.`;
-      }
+        const pendingTasks = tasks.filter(t => !t.completed);
+        responseText = `You have ${pendingTasks.length} pending task${pendingTasks.length !== 1 ? 's' : ''}${pendingTasks.length > 0 ? ': ' + pendingTasks.slice(0, 3).map(t => t.title).join(', ') : ''}.`;
+      } else if (lowerCommand.includes("complete") || lowerCommand.includes("done") || lowerCommand.includes("finish")) {
+        // Extract task name from command
+        const taskName = command
+          .replace(/complete task/i, '')
+          .replace(/mark .* as (complete|done)/i, '')
+          .replace(/finish task/i, '')
+          .replace(/complete/i, '')
+          .replace(/done/i, '')
+          .replace(/finish/i, '')
+          .trim();
 
-      setResponse(responseText);
-      speak(responseText);
-    }, 500);
+        if (taskName && taskName.length > 2) {
+          const result = await completeTaskByName(taskName);
+          if (result.success) {
+            responseText = `Task completed: "${result.taskTitle}"`;
+            toast.success(`Task "${result.taskTitle}" marked as complete`);
+          } else {
+            responseText = `I couldn't find a pending task matching "${taskName}". Your pending tasks are: ${tasks.filter(t => !t.completed).slice(0, 3).map(t => t.title).join(', ')}.`;
+          }
+        } else {
+          const pendingTasks = tasks.filter(t => !t.completed);
+          if (pendingTasks.length > 0) {
+            responseText = `Please specify which task to complete. Your pending tasks are: ${pendingTasks.slice(0, 5).map(t => t.title).join(', ')}.`;
+          } else {
+            responseText = "You have no pending tasks to complete.";
+          }
+        }
+      } else {
+        responseText = `I heard: "${command}". Try commands like 'Create task review project', 'Show my tasks', or 'List pending tasks'.`;
+      }
+    } catch (error: any) {
+      responseText = "Sorry, I encountered an error. Please try again.";
+      toast.error(error?.message || "Voice command failed");
+    }
+
+    setResponse(responseText);
+    speak(responseText);
   };
 
   const speak = (text: string) => {

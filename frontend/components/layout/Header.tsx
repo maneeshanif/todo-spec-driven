@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
-import { Moon, Sun, Menu, Search, Bell, User } from 'lucide-react';
+import { Moon, Sun, Menu, Search, Bell, User, LogOut } from 'lucide-react';
+import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -33,6 +34,14 @@ export function Header({ onSearch, onThemeToggle, user }: HeaderProps) {
   const { theme, setTheme } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { logout } = useAuthStore();
+
+  const handleLogout = async () => {
+    await logout();
+    // Wait a bit more for localStorage to be cleared (async operation)
+    await new Promise(resolve => setTimeout(resolve, 150));
+    window.location.href = "/login";
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -150,13 +159,9 @@ export function Header({ onSearch, onThemeToggle, user }: HeaderProps) {
                   <span>Settings</span>
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <button onClick={() => {
-                  // Handle logout
-                  console.log('Logout clicked');
-                }}>
-                  Logout
-                </button>
+              <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-600">
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Logout</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

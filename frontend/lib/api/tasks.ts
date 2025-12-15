@@ -1,6 +1,5 @@
 import apiClient from './client';
-import { Task, CreateTaskInput, UpdateTaskInput, TaskFilters } from '@/types/task';
-import { Category, CreateCategoryInput, UpdateCategoryInput } from '@/types/category';
+import { Task, CreateTaskInput, UpdateTaskInput, TaskFilters, Category, CreateCategoryInput, UpdateCategoryInput } from '@/types';
 
 // Task API functions
 export const taskApi = {
@@ -20,7 +19,14 @@ export const taskApi = {
         page_size: filters?.pageSize,
       }
     });
-    return response.data;
+    // Backend returns { tasks: [], total, page, page_size }
+    // Map to frontend expected format { data: [], total }
+    const backendResponse = response.data;
+    console.log('[taskApi] Backend response:', backendResponse);
+    return {
+      data: backendResponse.tasks || [],
+      total: backendResponse.total || 0
+    };
   },
 
   // Get a single task

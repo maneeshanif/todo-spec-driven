@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/stores/auth-store';
+import { authClient } from '@/lib/auth-client';
+import { useAuthStore } from '@/stores/authStore';
 
 // Luxury color palette (Cream theme)
 const colors = {
@@ -17,20 +18,54 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const { isAuthenticated, loading, _hasHydrated } = useAuthStore();
+  const { user, setUser } = useAuthStore();
+  const [isChecking, setIsChecking] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    // Wait for hydration before checking auth
-    if (!_hasHydrated) return;
+    // Always verify session with server on dashboard load
+    const checkAuth = async () => {
+      try {
+        // If we already have user in store, trust it
+        if (user) {
+          setIsAuthenticated(true);
+          setIsChecking(false);
+          return;
+        }
 
-    // Redirect to login if not authenticated
-    if (!loading && !isAuthenticated) {
-      router.push('/login');
-    }
-  }, [isAuthenticated, loading, router, _hasHydrated]);
+        // Otherwise check with server
+        const session = await authClient.getSession();
+        console.log('Dashboard session check:', session); // Debug log
 
-  // Show loading state while hydrating or checking auth
-  if (!_hasHydrated || loading) {
+        // Better Auth returns { data: { user, session }, error }
+        const sessionUser = session?.data?.user;
+
+        if (sessionUser) {
+          setUser({
+            id: sessionUser.id,
+            email: sessionUser.email,
+            name: sessionUser.name,
+            image: sessionUser.image || undefined,
+          });
+          setIsAuthenticated(true);
+        } else {
+          // No session, redirect to login
+          router.replace('/login');
+          return;
+        }
+      } catch (error) {
+        console.error('Auth check failed:', error);
+        router.replace('/login');
+        return;
+      }
+      setIsChecking(false);
+    };
+
+    checkAuth();
+  }, [user, setUser, router]);
+
+  // Show loading state while checking auth
+  if (isChecking) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: colors.bg }}>
         <div className="flex flex-col items-center gap-4">
@@ -41,7 +76,7 @@ export default function DashboardLayout({
     );
   }
 
-  // Don't render dashboard if not authenticated
+  // Don't render if not authenticated
   if (!isAuthenticated) {
     return null;
   }

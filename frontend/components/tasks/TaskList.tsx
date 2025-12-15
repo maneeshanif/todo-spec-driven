@@ -1,6 +1,6 @@
 "use client";
 
-import { Task } from '@/lib/api/tasks';
+import { Task } from '@/types';
 import TaskItem from './TaskItem';
 import EmptyState from './EmptyState';
 import { AnimatePresence } from 'framer-motion';

@@ -18,7 +18,7 @@ import {
   Plus, 
   Clock, 
   Tag,
-  Recurring,
+  Repeat,
   AlertTriangle
 } from 'lucide-react';
 import { 
@@ -275,7 +275,7 @@ export function TaskForm({ initialData, categories = DEFAULT_CATEGORIES, onSubmi
           <Label htmlFor="recurrencePattern">Recurrence Pattern</Label>
           <Select 
             value={formData.recurrencePattern || undefined} 
-            onValueChange={(value: RecurrencePattern) => handleChange('recurrencePattern', value)}
+            onValueChange={(value) => handleChange('recurrencePattern', value as RecurrencePattern)}
           >
             <SelectTrigger>
               <SelectValue placeholder="Select pattern" />

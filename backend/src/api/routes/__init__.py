@@ -1,4 +1,4 @@
 """Routes package initialization."""
-from src.api.routes.auth import router as auth_router
+# Note: Authentication handled by Better Auth via Next.js frontend
 
-__all__ = ["auth_router"]
+__all__ = []

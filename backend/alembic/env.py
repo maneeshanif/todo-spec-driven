@@ -7,7 +7,7 @@ from alembic import context
 import asyncio
 
 # Import models to register them with SQLModel metadata
-from src.models.user import User
+# Note: User model removed - using Better Auth user table
 from src.models.task import Task
 from src.models.audit_log import AuditLog
 from sqlmodel import SQLModel

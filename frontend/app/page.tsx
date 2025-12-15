@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import gsap from "gsap";
 import Link from "next/link";
+import RippleText from "@/components/RippleText";
 
 // Max Mara Untamed Heroine - Luxury color palette (Cream/Off-white theme)
 const colors = {
@@ -19,86 +20,32 @@ const colors = {
   textLight: "#ffffff",  // Light text for dark bg
   textMuted: "#666666",  // Muted text
   border: "#e5dfd5",     // Cream border
-};
+} as const;
+
+type Colors = typeof colors;
 
 export default function Home() {
   const [showIntro, setShowIntro] = useState(true);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
-  const titleRef = useRef<HTMLHeadingElement>(null);
-  const lettersRef = useRef<(HTMLSpanElement | null)[]>([]);
+  const titleRef = useRef<HTMLDivElement>(null);
 
   // Parallax scroll
   const { scrollY } = useScroll();
   const heroY = useTransform(scrollY, [0, 500], [0, 150]);
   const heroOpacity = useTransform(scrollY, [0, 300], [1, 0]);
 
-  // GSAP magnetic text effect
-  useEffect(() => {
-    if (!showIntro) return;
-
-    const handleMouseMove = (e: MouseEvent) => {
-      setMousePos({ x: e.clientX, y: e.clientY });
-
-      lettersRef.current.forEach((letter) => {
-        if (!letter) return;
-
-        const rect = letter.getBoundingClientRect();
-        const letterCenterX = rect.left + rect.width / 2;
-        const letterCenterY = rect.top + rect.height / 2;
-
-        const deltaX = e.clientX - letterCenterX;
-        const deltaY = e.clientY - letterCenterY;
-        const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-
-        const maxDistance = 300;
-        const strength = Math.max(0, 1 - distance / maxDistance);
-
-        gsap.to(letter, {
-          x: deltaX * strength * 0.25,
-          y: deltaY * strength * 0.25,
-          color: strength > 0.2 ? colors.gold : colors.cream,
-          duration: 0.4,
-          ease: "power2.out",
-        });
-      });
-    };
-
-    const handleMouseLeave = () => {
-      lettersRef.current.forEach((letter) => {
-        if (!letter) return;
-        gsap.to(letter, {
-          x: 0,
-          y: 0,
-          color: colors.cream,
-          duration: 0.6,
-          ease: "elastic.out(1, 0.4)"
-        });
-      });
-    };
-
-    window.addEventListener("mousemove", handleMouseMove);
-    window.addEventListener("mouseleave", handleMouseLeave);
-
-    return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseleave", handleMouseLeave);
-    };
-  }, [showIntro]);
-
   // Initial animation
   useEffect(() => {
-    if (!showIntro) return;
+    if (!showIntro || !titleRef.current) return;
 
     gsap.fromTo(
-      lettersRef.current.filter(Boolean),
-      { opacity: 0, y: 100, rotateX: -90 },
+      titleRef.current,
+      { opacity: 0, y: 50 },
       {
         opacity: 1,
         y: 0,
-        rotateX: 0,
-        duration: 1.4,
-        stagger: 0.04,
+        duration: 1.5,
         ease: "power4.out",
         delay: 0.5
       }
@@ -106,15 +53,15 @@ export default function Home() {
   }, [showIntro]);
 
   const handleEnter = useCallback(() => {
-    // Animate letters out
-    gsap.to(lettersRef.current.filter(Boolean), {
-      y: -80,
-      opacity: 0,
-      rotateX: 45,
-      stagger: 0.02,
-      duration: 0.5,
-      ease: "power3.in",
-    });
+    // Animate title out
+    if (titleRef.current) {
+        gsap.to(titleRef.current, {
+        y: -50,
+        opacity: 0,
+        duration: 0.8,
+        ease: "power3.in",
+        });
+    }
 
     // Slide curtain up
     gsap.to(containerRef.current, {
@@ -196,22 +143,16 @@ export default function Home() {
             {/* Main Content - Centered */}
             <main className="relative z-10 flex-1 flex flex-col justify-center items-center px-8">
               {/* Main Title with magnetic letters */}
-              <h1
-                ref={titleRef}
-                className="text-[18vw] md:text-[14vw] lg:text-[12vw] font-extralight leading-[0.85] tracking-[-0.03em] mb-8"
-                style={{ fontFamily: "serif" }}
-              >
-                {title.split("").map((char, i) => (
-                  <span
-                    key={i}
-                    ref={(el) => { lettersRef.current[i] = el; }}
-                    className="inline-block opacity-0"
-                    style={{ color: colors.cream }}
-                  >
-                    {char}
-                  </span>
-                ))}
-              </h1>
+              {/* Main Title with liquid ripple effect */}
+              <div ref={titleRef} className="w-full h-[30vh] md:h-[40vh] mb-8 relative z-20">
+                <RippleText 
+                  text={title}
+                  className="w-full h-full"
+                  fontSize={120}
+                  color={colors.goldDark}
+                  fontFamily="serif"
+                />
+              </div>
 
               {/* Tagline */}
               <motion.p
@@ -307,7 +248,7 @@ export default function Home() {
   );
 }
 
-function MainContent({ colors }: { colors: typeof import("./page").default extends () => infer R ? never : any }) {
+function MainContent({ colors }: { colors: Colors }) {
   return (
     <motion.div
       initial={{ opacity: 0 }}

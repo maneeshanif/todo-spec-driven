@@ -2,8 +2,8 @@
 
 import { motion } from "framer-motion";
 import { CheckCircle2, Clock, AlertCircle, TrendingUp } from "lucide-react";
-import { useEffect, useState } from "react";
-import apiClient from "@/lib/api/client";
+import { useTaskStore } from "@/stores/task-store";
+import { useMemo } from "react";
 
 // Luxury color palette (Cream theme)
 const colors = {
@@ -17,37 +17,24 @@ const colors = {
   textLight: "#ffffff",
 };
 
-interface Stats {
-  total: number;
-  completed: number;
-  pending: number;
-  overdue: number;
-}
-
 export default function StatsCards() {
-  const [stats, setStats] = useState<Stats>({
-    total: 0,
-    completed: 0,
-    pending: 0,
-    overdue: 0,
-  });
-  const [loading, setLoading] = useState(true);
+  const { tasks, loading } = useTaskStore();
 
-  useEffect(() => {
-    fetchStats();
-  }, []);
+  const stats = useMemo(() => {
+    const total = tasks.length;
+    const completed = tasks.filter(t => t.completed).length;
+    const pending = tasks.filter(t => !t.completed).length;
+    
+    // Calculate overdue tasks
+    const now = new Date();
+    const overdue = tasks.filter(t => {
+      if (t.completed || !t.due_date) return false;
+      const dueDate = new Date(t.due_date);
+      return dueDate < now;
+    }).length;
 
-  const fetchStats = async () => {
-    try {
-      const response = await apiClient.get("/api/stats/");
-      setStats(response.data);
-    } catch (error) {
-      console.error("Failed to fetch stats:", error);
-      // Don't crash - just show empty stats
-    } finally {
-      setLoading(false);
-    }
-  };
+    return { total, completed, pending, overdue };
+  }, [tasks]);
 
   const cards = [
     {

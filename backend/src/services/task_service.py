@@ -1,6 +1,6 @@
 """Task service for task-related operations."""
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlmodel import select, desc, asc, or_, and_, col
 from sqlmodel.ext.asyncio.session import AsyncSession
 from src.models.task import Task
@@ -182,6 +182,12 @@ class TaskService:
         Returns:
             Created Task object
         """
+        # Normalize due_date - remove timezone since DB columns are WITHOUT TIME ZONE
+        if due_date is not None:
+            if due_date.tzinfo is not None:
+                # Convert to UTC and remove timezone
+                due_date = due_date.astimezone(timezone.utc).replace(tzinfo=None)
+        
         task = Task(
             user_id=user_id,
             title=title,
@@ -262,6 +268,10 @@ class TaskService:
         if priority is not None:
             task.priority = priority
         if due_date is not None:
+            # Normalize due_date - remove timezone since DB columns are WITHOUT TIME ZONE
+            if due_date.tzinfo is not None:
+                # Convert to UTC and remove timezone
+                due_date = due_date.astimezone(timezone.utc).replace(tzinfo=None)
             task.due_date = due_date
         if is_recurring is not None:
             task.is_recurring = is_recurring
