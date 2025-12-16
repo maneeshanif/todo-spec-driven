@@ -9,9 +9,11 @@ allowed-tools: Bash, Write, Read, Edit, Glob
 Quick reference for setting up OpenAI ChatKit for the Todo AI Chatbot Phase 3.
 
 **Official Documentation**:
+- [OpenAI ChatKit Docs](https://platform.openai.com/docs/guides/chatkit) - **VERIFY PACKAGE NAME HERE FIRST**
 - [ChatKit.js Docs](https://openai.github.io/chatkit-js/)
 - [GitHub Repository](https://github.com/openai/chatkit-js)
 - [Starter App](https://github.com/openai/openai-chatkit-starter-app)
+- [Domain Allowlist](https://platform.openai.com/settings/organization/security/domain-allowlist) - Required for production
 
 ---
 
@@ -58,11 +60,17 @@ ChatKit is a batteries-included framework for building high-quality, AI-powered 
 
 ## Installation
 
+### IMPORTANT: Verify Package Name First
+
+Before installing, verify the exact package name from official documentation:
+- https://platform.openai.com/docs/guides/chatkit
+
 ### React (Recommended)
 
 ```bash
 cd frontend
-npm install @openai/chatkit-react
+# Verify package name from official docs before installing
+npm install @openai/chatkit-react  # Verify this is correct
 ```
 
 ### Vanilla JavaScript (CDN)
@@ -312,20 +320,36 @@ frontend/src/
 # Frontend (.env.local)
 NEXT_PUBLIC_API_URL=http://localhost:8000
 
+# ChatKit Domain Key (for production deployment)
+# Get from: https://platform.openai.com/settings/organization/security/domain-allowlist
+NEXT_PUBLIC_OPENAI_DOMAIN_KEY=your-domain-key-here
+
 # Backend (.env)
 OPENAI_API_KEY=sk-...
 CHATKIT_DEPLOYMENT_ID=your-deployment-id  # If using OpenAI-hosted
 ```
 
+### Domain Allowlist Configuration (Required for Production)
+
+Before deploying ChatKit to production:
+1. Deploy frontend to get production URL (e.g., `https://your-app.vercel.app`)
+2. Add domain to allowlist: https://platform.openai.com/settings/organization/security/domain-allowlist
+3. Copy domain key to `NEXT_PUBLIC_OPENAI_DOMAIN_KEY`
+
+**Note**: Local development (`localhost`) typically works without domain allowlist configuration.
+
 ---
 
 ## Verification Checklist
 
-- [ ] `@openai/chatkit-react` package installed
+- [ ] Package name verified from https://platform.openai.com/docs/guides/chatkit
+- [ ] ChatKit package installed
 - [ ] ChatKit component renders correctly
 - [ ] `useChatKit` hook configured with API
 - [ ] Session token endpoint working (if using OpenAI-hosted)
 - [ ] Self-hosted message endpoint working (if self-hosted)
+- [ ] Domain allowlist configured (for production)
+- [ ] `NEXT_PUBLIC_OPENAI_DOMAIN_KEY` set (for production)
 - [ ] Styling matches app theme
 - [ ] Dark mode works correctly
 - [ ] Mobile responsive

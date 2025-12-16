@@ -29,20 +29,37 @@ You are an expert AI assistant specializing in Spec-Driven Development (SDD). Yo
    - `axios` - HTTP client (MANDATORY for frontend)
    - `aceternity-ui` - Visual effects (MANDATORY for landing page)
 
-3. **Never assume** - Always verify current API patterns from Context7
+3. **Required Context7 lookups for Phase 3 (AI Chatbot):**
+   - `openai-agents-sdk` - OpenAI Agents SDK patterns
+   - `fastmcp` - FastMCP server implementation
+   - `litellm` - Multi-LLM support (for Gemini)
+   - `openai-chatkit` - ChatKit React components
+   - `sse` - Server-Sent Events patterns
+
+4. **Never assume** - Always verify current API patterns from Context7
 
 ### 📋 Constitution & Specs - MANDATORY READING
 
 **Before ANY implementation task, read these in order:**
 
+**For Phase 3 (Current):**
+
 | Order | Document | Purpose | Path |
 |-------|----------|---------|------|
-| 1 | Constitution | Project laws & principles | `constitution-prompt-phase-2.md` |
-| 2 | Specification | User stories & acceptance | `spec-prompt-phase-2.md` |
-| 3 | Plan | Architecture & approach | `plan-prompt-phase-2.md` |
+| 1 | Constitution | Project laws & principles | `constitution-prompt-phase-3.md` |
+| 2 | Specification | User stories & acceptance | `spec-prompt-phase-3.md` |
+| 3 | Plan | Architecture & approach | `plan-prompt-phase-3.md` |
 | 4 | Feature Spec | Specific feature details | `specs/features/*.md` |
 | 5 | API Spec | Endpoint contracts | `specs/api/rest-endpoints.md` |
 | 6 | DB Schema | Database design | `specs/database/schema.md` |
+
+**For Phase 2 (Reference):**
+
+| Order | Document | Purpose | Path |
+|-------|----------|---------|------|
+| 1 | Constitution | Project laws & principles | `prompts/constitution-prompt-phase-2.md` |
+| 2 | Specification | User stories & acceptance | `prompts/spec-prompt-phase-2.md` |
+| 3 | Plan | Architecture & approach | `prompts/plan-prompt-phase-2.md` |
 
 **Enforcement:** If you haven't read the relevant specs, STOP and read them first.
 
@@ -54,17 +71,29 @@ You are an expert AI assistant specializing in Spec-Driven Development (SDD). Yo
 
 You MUST delegate to specialized agents based on task type:
 
+**Phase 2 & 3 Core Agents:**
+
 | Task Type | Agent | Trigger |
 |-----------|-------|--------|
 | FastAPI endpoints, services, middleware | `@backend-api-builder` | Any backend code |
 | React components, pages, hooks | `@frontend-ui-builder` | Any frontend code |
 | Database schema, models, migrations | `@database-designer` | Any DB work |
 
-**Rule:** Never write backend/frontend/database code directly. ALWAYS invoke the appropriate agent.
+**Phase 3 AI/Chatbot Agents:**
+
+| Task Type | Agent | Trigger |
+|-----------|-------|--------|
+| OpenAI Agents SDK, MCP integration | `@ai-agent-builder` | AI agent code |
+| FastMCP server, tool definitions | `@mcp-server-builder` | MCP server code |
+| ChatKit UI, conversation components | `@chatbot-ui-builder` | Chat UI code |
+
+**Rule:** Never write backend/frontend/database/AI code directly. ALWAYS invoke the appropriate agent.
 
 ### MANDATORY Skill Usage
 
 Before setup tasks, reference the appropriate skill:
+
+**Phase 2 Skills (Foundation):**
 
 | Setup Task | Skill | Location |
 |------------|-------|----------|
@@ -73,6 +102,17 @@ Before setup tasks, reference the appropriate skill:
 | Add Shadcn components | `shadcn-ui-setup` | `.claude/skills/shadcn-ui-setup/SKILL.md` |
 | Configure Neon DB | `neon-db-setup` | `.claude/skills/neon-db-setup/SKILL.md` |
 | Implement auth | `better-auth-integration` | `.claude/skills/better-auth-integration/SKILL.md` |
+
+**Phase 3 Skills (AI Chatbot):**
+
+| Setup Task | Skill | Location |
+|------------|-------|----------|
+| OpenAI Agents + Gemini | `openai-agents-setup` | `.claude/skills/openai-agents-setup/SKILL.md` |
+| FastMCP server | `fastmcp-server-setup` | `.claude/skills/fastmcp-server-setup/SKILL.md` |
+| Chat API endpoint | `chat-api-integration` | `.claude/skills/chat-api-integration/SKILL.md` |
+| ChatKit React UI | `openai-chatkit-setup` | `.claude/skills/openai-chatkit-setup/SKILL.md` |
+| SSE streaming | `streaming-sse-setup` | `.claude/skills/streaming-sse-setup/SKILL.md` |
+| Conversation history | `conversation-management` | `.claude/skills/conversation-management/SKILL.md` |
 
 ---
 
@@ -105,12 +145,18 @@ Before setup tasks, reference the appropriate skill:
 
 ```
 main (production)
-├── phase2/setup        → Project initialization
-├── phase2/database     → Schema & migrations
-├── phase2/backend-api  → FastAPI endpoints
-├── phase2/frontend-ui  → Next.js pages & components
-├── phase2/integration  → Connect frontend ↔ backend
-└── phase2/deploy       → Vercel + Neon deployment
+├── phase2/setup        → Project initialization (COMPLETED)
+├── phase2/database     → Schema & migrations (COMPLETED)
+├── phase2/backend-api  → FastAPI endpoints (COMPLETED)
+├── phase2/frontend-ui  → Next.js pages & components (COMPLETED)
+├── phase2/integration  → Connect frontend ↔ backend (COMPLETED)
+├── phase2/deploy       → Vercel + Neon deployment (COMPLETED)
+│
+├── phase3/setup-ai-chatbot  → AI Chatbot implementation (CURRENT)
+├── phase3/mcp-server        → MCP server with task tools
+├── phase3/ai-agent          → OpenAI Agents SDK integration
+├── phase3/chat-ui           → ChatKit frontend
+└── phase3/streaming         → SSE streaming responses
 ```
 
 **Naming Convention**: `phase{N}/{task-type}`
@@ -169,75 +215,101 @@ Run in Claude Code CLI:
 
 ---
 
-## 🎯 Phase 2: Full-Stack Web Application
+## 🎯 Phase 3: AI-Powered Todo Chatbot (CURRENT)
 
-**Current Phase**: Phase 2 - Full-Stack Web Application  
-**Due Date**: December 14, 2025  
-**Main Branch**: `main` | **Feature Branches**: `phase2/*`
+**Current Phase**: Phase 3 - AI-Powered Todo Chatbot
+**Due Date**: December 21, 2025
+**Main Branch**: `main` | **Feature Branches**: `phase3/*`
 
-### Phase 2 Overview
+### Phase 3 Overview
 
-Transform the Phase 1 console app into a production-ready, multi-user web application with:
-- **Backend**: FastAPI + SQLModel + Neon PostgreSQL
-- **Frontend**: Next.js 16+ + Shadcn/ui + Framer Motion
-- **Auth**: Better Auth with JWT tokens
-- **Deployment**: Vercel + Neon Serverless
+Transform the Phase 2 web application into an AI-powered chatbot interface:
+- **AI Agent**: OpenAI Agents SDK + Gemini model
+- **MCP Server**: FastMCP with task operation tools
+- **Chat UI**: OpenAI ChatKit React components
+- **Streaming**: Server-Sent Events (SSE) for real-time responses
+- **Persistence**: Conversation history in PostgreSQL
 
 ### Key Documents
 
 | Document | Purpose |
 |----------|---------|
-| `constitution-prompt-phase-2.md` | Project principles and standards |
-| `spec-prompt-phase-2.md` | User stories and acceptance criteria |
-| `plan-prompt-phase-2.md` | Implementation plan and architecture |
+| `constitution-prompt-phase-3.md` | Project principles and AI standards |
+| `spec-prompt-phase-3.md` | User stories and acceptance criteria |
+| `plan-prompt-phase-3.md` | Implementation plan and architecture |
 
-### Specialized Agents
-
-Use these agents for specific tasks:
+### Phase 3 Specialized Agents
 
 | Agent | When to Use |
 |-------|-------------|
-| `@backend-api-builder` | FastAPI endpoints, SQLModel models, API logic |
-| `@frontend-ui-builder` | Next.js pages, React components, UI/UX |
-| `@database-designer` | Schema design, migrations, database optimization |
+| `@ai-agent-builder` | OpenAI Agents SDK, MCP integration, Gemini config |
+| `@mcp-server-builder` | FastMCP server, tool definitions |
+| `@chatbot-ui-builder` | ChatKit UI, conversation components |
+| `@backend-api-builder` | Chat API endpoints, SSE streaming |
+| `@frontend-ui-builder` | Chat pages, conversation sidebar |
+| `@database-designer` | Conversation/Message models, migrations |
 
-### Available Skills
-
-Quick-start skills for common tasks:
+### Phase 3 Skills
 
 | Skill | Purpose |
 |-------|---------|
-| `fastapi-setup` | Initialize FastAPI backend with UV |
-| `nextjs-setup` | Initialize Next.js frontend with TypeScript |
-| `shadcn-ui-setup` | Install and configure Shadcn/ui components |
-| `neon-db-setup` | Set up Neon PostgreSQL database |
-| `better-auth-integration` | Implement JWT authentication |
+| `openai-agents-setup` | Initialize AI agent with Gemini model |
+| `fastmcp-server-setup` | Create MCP server with task tools |
+| `chat-api-integration` | Chat endpoint + agent integration |
+| `openai-chatkit-setup` | ChatKit React component setup |
+| `streaming-sse-setup` | SSE streaming implementation |
+| `conversation-management` | Conversation history UI |
 
-### Implementation Phases
+### Phase 3 Implementation Steps
 
-1. **Phase 0**: Project Setup & Research ⏳
-2. **Phase 1**: Database Schema & Models
-3. **Phase 2**: Backend API
-4. **Phase 3**: Backend Testing
-5. **Phase 4**: Frontend UI Components
-6. **Phase 5**: Frontend Integration
+1. **Phase 0**: Research & Setup (OpenAI Agents SDK, FastMCP, ChatKit)
+2. **Phase 1**: Database Models (Conversation, Message tables)
+3. **Phase 2**: MCP Server (5 task tools)
+4. **Phase 3**: AI Agent (Gemini + tool wrappers)
+5. **Phase 4**: Chat API (SSE streaming endpoint)
+6. **Phase 5**: Chat UI (ChatKit + conversation sidebar)
 7. **Phase 6**: Integration Testing
-8. **Phase 7**: Deployment
-9. **Phase 8**: Documentation & Wrap-up
+8. **Phase 7**: Deployment & Documentation
 
 ### Quick Commands
 
 ```bash
-# Initialize backend
-cd backend && uv init && uv add fastapi sqlmodel
+# Install Phase 3 backend dependencies
+cd backend && uv add openai-agents fastmcp litellm sse-starlette
 
-# Initialize frontend
-cd frontend && npx create-next-app@latest . --typescript --tailwind --app
+# Install Phase 3 frontend dependencies
+cd frontend && npm install @openai/chatkit-react eventsource-parser
+
+# Run MCP server (separate terminal)
+cd backend && uv run python -m src.mcp_server.server
 
 # Run development servers
 cd backend && uv run uvicorn src.main:app --reload
 cd frontend && npm run dev
 ```
+
+---
+
+## 📦 Phase 2: Full-Stack Web Application (COMPLETED)
+
+**Status**: ✅ COMPLETED
+**Completed Date**: December 16, 2025
+
+### Phase 2 Summary
+
+Built a production-ready, multi-user web application with:
+- **Backend**: FastAPI + SQLModel + Neon PostgreSQL
+- **Frontend**: Next.js 16+ + Shadcn/ui + Framer Motion + Aceternity UI
+- **Auth**: Better Auth with JWT tokens
+- **Deployment**: Vercel + Neon Serverless
+
+### Phase 2 Documents (Reference)
+
+| Document | Purpose |
+|----------|---------|
+| `prompts/constitution-prompt-phase-2.md` | Project principles and standards |
+| `prompts/spec-prompt-phase-2.md` | User stories and acceptance criteria |
+| `prompts/plan-prompt-phase-2.md` | Implementation plan and architecture |
 
 ---
 
@@ -435,15 +507,19 @@ Wait for consent; never auto-create ADRs. Group related decisions (stacks, authe
 
 ## Basic Project Structure
 
-### Phase 2 Monorepo Structure
+### Project Monorepo Structure (Phase 3)
 
 ```
 /
 ├── CLAUDE.md                        # This file - Claude Code instructions
-├── constitution-prompt-phase-2.md   # Project constitution
-├── spec-prompt-phase-2.md           # Feature specification
-├── plan-prompt-phase-2.md           # Implementation plan
-├── hackathon-ii.md                  # Hackathon requirements
+├── constitution-prompt-phase-3.md   # Phase 3 constitution (CURRENT)
+├── spec-prompt-phase-3.md           # Phase 3 specification (CURRENT)
+├── plan-prompt-phase-3.md           # Phase 3 implementation plan (CURRENT)
+│
+├── prompts/                         # Phase 2 documents (reference)
+│   ├── constitution-prompt-phase-2.md
+│   ├── spec-prompt-phase-2.md
+│   └── plan-prompt-phase-2.md
 │
 ├── backend/                         # FastAPI backend
 │   ├── src/
@@ -451,10 +527,23 @@ Wait for consent; never auto-create ADRs. Group related decisions (stacks, authe
 │   │   ├── config.py               # Configuration
 │   │   ├── database.py             # Database connection
 │   │   ├── models/                 # SQLModel models
+│   │   │   ├── task.py            # Task model (Phase 2)
+│   │   │   ├── conversation.py    # Conversation model (Phase 3)
+│   │   │   └── message.py         # Message model (Phase 3)
 │   │   ├── routers/                # API endpoints
+│   │   │   ├── tasks.py           # Task CRUD (Phase 2)
+│   │   │   └── chat.py            # Chat endpoint (Phase 3)
 │   │   ├── services/               # Business logic
 │   │   ├── middleware/             # Auth middleware
 │   │   ├── schemas/                # Pydantic schemas
+│   │   ├── agents/                 # AI Agent code (Phase 3)
+│   │   │   ├── config.py          # Gemini/LiteLLM config
+│   │   │   ├── tools.py           # @function_tool wrappers
+│   │   │   ├── todo_agent.py      # Agent definition
+│   │   │   └── runner.py          # Agent execution
+│   │   ├── mcp_server/             # MCP Server (Phase 3)
+│   │   │   ├── server.py          # FastMCP server
+│   │   │   └── tools/             # Task tools
 │   │   └── utils/                  # Utilities
 │   ├── tests/                      # Backend tests
 │   ├── alembic/                    # Database migrations
@@ -462,12 +551,21 @@ Wait for consent; never auto-create ADRs. Group related decisions (stacks, authe
 │   └── CLAUDE.md                   # Backend-specific rules
 │
 ├── frontend/                        # Next.js frontend
-│   ├── src/
-│   │   ├── app/                    # App Router pages
-│   │   ├── components/             # React components
-│   │   ├── lib/                    # Utilities & API client
-│   │   └── hooks/                  # Custom hooks
-│   ├── tests/                      # Frontend tests
+│   ├── app/
+│   │   ├── dashboard/              # Dashboard (Phase 2)
+│   │   ├── tasks/                  # Task views (Phase 2)
+│   │   └── chat/                   # Chat page (Phase 3)
+│   ├── components/
+│   │   ├── tasks/                  # Task components (Phase 2)
+│   │   ├── chat/                   # Chat components (Phase 3)
+│   │   └── conversation/           # Conversation sidebar (Phase 3)
+│   ├── stores/
+│   │   ├── auth-store.ts          # Auth state (Phase 2)
+│   │   ├── task-store.ts          # Task state (Phase 2)
+│   │   └── conversation-store.ts  # Conversation state (Phase 3)
+│   ├── lib/
+│   │   ├── api/                    # Axios API modules
+│   │   └── sse/                    # SSE client (Phase 3)
 │   ├── package.json                # Dependencies
 │   └── CLAUDE.md                   # Frontend-specific rules
 │
@@ -481,20 +579,30 @@ Wait for consent; never auto-create ADRs. Group related decisions (stacks, authe
 │   ├── prompts/                    # Prompt History Records
 │   │   ├── constitution/
 │   │   ├── general/
-│   │   └── phase-2-web-app/
+│   │   ├── phase-2-web-app/
+│   │   └── phase-3-chatbot/        # Phase 3 PHRs
 │   └── adr/                        # Architecture Decision Records
 │
 └── .claude/                         # Claude Code configuration
     ├── agents/                     # Specialized agents
-    │   ├── backend-api-builder.md
-    │   ├── frontend-ui-builder.md
-    │   └── database-designer.md
+    │   ├── backend-api-builder.md  # Phase 2
+    │   ├── frontend-ui-builder.md  # Phase 2
+    │   ├── database-designer.md    # Phase 2
+    │   ├── ai-agent-builder.md     # Phase 3
+    │   ├── mcp-server-builder.md   # Phase 3
+    │   └── chatbot-ui-builder.md   # Phase 3
     ├── skills/                     # Reusable skills
-    │   ├── fastapi-setup/
-    │   ├── nextjs-setup/
-    │   ├── shadcn-ui-setup/
-    │   ├── neon-db-setup/
-    │   └── better-auth-integration/
+    │   ├── fastapi-setup/          # Phase 2
+    │   ├── nextjs-setup/           # Phase 2
+    │   ├── shadcn-ui-setup/        # Phase 2
+    │   ├── neon-db-setup/          # Phase 2
+    │   ├── better-auth-integration/ # Phase 2
+    │   ├── openai-agents-setup/    # Phase 3
+    │   ├── fastmcp-server-setup/   # Phase 3
+    │   ├── chat-api-integration/   # Phase 3
+    │   ├── openai-chatkit-setup/   # Phase 3
+    │   ├── streaming-sse-setup/    # Phase 3
+    │   └── conversation-management/ # Phase 3
     └── commands/                   # Slash commands
 ```
 
@@ -511,4 +619,5 @@ Wait for consent; never auto-create ADRs. Group related decisions (stacks, authe
 ## Code Standards
 See `.specify/memory/constitution.md` for code quality, testing, performance, security, and architecture principles.
 
-See `constitution-prompt-phase-2.md` for Phase 2 specific standards.
+See `constitution-prompt-phase-3.md` for Phase 3 specific standards (AI chatbot).
+See `prompts/constitution-prompt-phase-2.md` for Phase 2 reference (full-stack web app).
