@@ -2,21 +2,30 @@
 
 Detailed API reference for OpenAI ChatKit React integration.
 
-**Official Documentation**: [openai.github.io/chatkit-js](https://openai.github.io/chatkit-js/)
+**Official Documentation**:
+- [OpenAI ChatKit Docs](https://platform.openai.com/docs/guides/chatkit) - **VERIFY PACKAGE NAME HERE FIRST**
+- [ChatKit.js Docs](https://openai.github.io/chatkit-js/)
+- [Domain Allowlist](https://platform.openai.com/settings/organization/security/domain-allowlist) - Required for production
 
 ---
 
 ## Installation
 
+### IMPORTANT: Verify Package Name First
+
+Before installing, verify the exact package name from official documentation:
+- https://platform.openai.com/docs/guides/chatkit
+
 ### NPM Packages
 
 | Package | Description |
 |---------|-------------|
-| `@openai/chatkit-react` | React bindings with hooks and components |
+| `@openai/chatkit-react` | React bindings with hooks and components (verify from docs) |
 | `@openai/chatkit` | TypeScript types for the WebComponent |
 
 ```bash
-npm install @openai/chatkit-react
+# Verify package name from official docs before installing
+npm install @openai/chatkit-react  # Verify this is correct
 ```
 
 ---

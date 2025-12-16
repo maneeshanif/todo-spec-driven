@@ -784,3 +784,5 @@ frontend/src/
 - [chat-api-integration](../chat-api-integration/) - Chat endpoint setup
 - [streaming-sse-setup](../streaming-sse-setup/) - Real-time streaming
 - [openai-chatkit-setup](../openai-chatkit-setup/) - ChatKit UI
+- [OpenAI ChatKit Docs](https://platform.openai.com/docs/guides/chatkit) - Official ChatKit documentation
+- [Domain Allowlist](https://platform.openai.com/settings/organization/security/domain-allowlist) - Required for ChatKit production deployment

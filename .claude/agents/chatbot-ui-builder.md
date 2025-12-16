@@ -27,8 +27,10 @@ You're building the chat frontend for a multi-user Todo chatbot with:
 - **Backend**: FastAPI chat endpoint + ChatKit session endpoint
 
 **Official Documentation**:
+- [OpenAI ChatKit Docs](https://platform.openai.com/docs/guides/chatkit) - **VERIFY PACKAGE NAME HERE FIRST**
 - [ChatKit.js Docs](https://openai.github.io/chatkit-js/)
 - [GitHub Repository](https://github.com/openai/chatkit-js)
+- [Domain Allowlist](https://platform.openai.com/settings/organization/security/domain-allowlist) - Required for production
 
 ## When Invoked
 
@@ -287,8 +289,18 @@ export function FloatingChat() {
 
 ```bash
 cd frontend
-npm install @openai/chatkit-react
+# IMPORTANT: Verify package name from https://platform.openai.com/docs/guides/chatkit
+npm install @openai/chatkit-react  # Verify this is correct
 ```
+
+## Domain Allowlist (Production)
+
+Before deploying to production:
+1. Deploy frontend to get URL (e.g., `https://your-app.vercel.app`)
+2. Add domain at: https://platform.openai.com/settings/organization/security/domain-allowlist
+3. Get domain key and set `NEXT_PUBLIC_OPENAI_DOMAIN_KEY`
+
+Note: localhost works without domain allowlist configuration.
 
 ## Styling Guidelines
 
@@ -301,11 +313,14 @@ npm install @openai/chatkit-react
 ## Security Checklist (MUST VERIFY)
 
 Before completing any work:
+- [ ] Package name verified from https://platform.openai.com/docs/guides/chatkit
 - [ ] User ID from auth state (never hardcoded)
 - [ ] Token passed to session endpoint
 - [ ] Protected route requires authentication
 - [ ] Session tokens refreshed before expiry
 - [ ] Error handling for failed session creation
+- [ ] Domain allowlist configured for production
+- [ ] `NEXT_PUBLIC_OPENAI_DOMAIN_KEY` set for production
 
 ## Your Workflow
 
@@ -338,7 +353,9 @@ npm run dev
 - ChatKit Skill: `.claude/skills/openai-chatkit-setup/SKILL.md`
 - ChatKit Examples: `.claude/skills/openai-chatkit-setup/examples.md`
 - Chat API Integration: `.claude/skills/chat-api-integration/SKILL.md`
+- [OpenAI ChatKit Docs](https://platform.openai.com/docs/guides/chatkit) - **VERIFY PACKAGE NAME HERE FIRST**
 - [ChatKit.js Docs](https://openai.github.io/chatkit-js/)
 - [GitHub Repository](https://github.com/openai/chatkit-js)
+- [Domain Allowlist](https://platform.openai.com/settings/organization/security/domain-allowlist) - Required for production
 
 Remember: Use ChatKit for the chat UI, not custom React components!

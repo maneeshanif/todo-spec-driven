@@ -2,7 +2,12 @@
 
 Complete code examples for implementing ChatKit in the Todo AI Chatbot.
 
-**Official Documentation**: [openai.github.io/chatkit-js](https://openai.github.io/chatkit-js/)
+**Official Documentation**:
+- [OpenAI ChatKit Docs](https://platform.openai.com/docs/guides/chatkit) - **VERIFY PACKAGE NAME HERE FIRST**
+- [ChatKit.js Docs](https://openai.github.io/chatkit-js/)
+- [Domain Allowlist](https://platform.openai.com/settings/organization/security/domain-allowlist) - Required for production
+
+**IMPORTANT**: Verify the exact package name from official documentation before using these examples.
 
 ---
 
@@ -469,11 +474,24 @@ app.include_router(chatkit.router)
 # Frontend (.env.local)
 NEXT_PUBLIC_API_URL=http://localhost:8000
 
+# ChatKit Domain Key (for production deployment)
+# Get from: https://platform.openai.com/settings/organization/security/domain-allowlist
+NEXT_PUBLIC_OPENAI_DOMAIN_KEY=your-domain-key-here
+
 # Backend (.env)
 OPENAI_API_KEY=sk-...  # If using OpenAI-hosted ChatKit
 CHATKIT_DEPLOYMENT_ID=...  # If using OpenAI-hosted ChatKit
 BETTER_AUTH_SECRET=your-auth-secret
 ```
+
+### Domain Allowlist Configuration (Required for Production)
+
+Before deploying ChatKit to production:
+1. Deploy frontend to get production URL (e.g., `https://your-app.vercel.app`)
+2. Add domain to allowlist: https://platform.openai.com/settings/organization/security/domain-allowlist
+3. Copy domain key to `NEXT_PUBLIC_OPENAI_DOMAIN_KEY`
+
+**Note**: localhost works without domain allowlist configuration.
 
 ---
 

@@ -1,0 +1,443 @@
+openapi: 3.1.0
+info:
+  title: Chat API
+  description: AI-Powered Todo Chatbot API endpoints
+  version: 1.0.0
+  contact:
+    name: Phase 3 AI Chatbot
+
+servers:
+  - url: http://localhost:8000
+    description: Local development
+  - url: https://api.todoapp.com
+    description: Production
+
+tags:
+  - name: Chat
+    description: Chat messaging endpoints
+  - name: Conversations
+    description: Conversation management endpoints
+
+paths:
+  /api/{user_id}/chat:
+    post:
+      tags:
+        - Chat
+      summary: Send chat message (non-streaming)
+      description: Send a message to the AI assistant and receive a complete response
+      operationId: sendChatMessage
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: User identifier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatRequest'
+            example:
+              conversation_id: null
+              message: "Add a task to buy groceries"
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatResponse'
+              example:
+                conversation_id: 1
+                message_id: 2
+                response: "I've created a new task 'Buy groceries' for you. Is there anything else you'd like to add?"
+                tool_calls:
+                  - id: "call_abc123"
+                    tool: "add_task"
+                    arguments:
+                      title: "Buy groceries"
+                    result:
+                      task_id: 42
+                      status: "created"
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Rate limit exceeded (30 messages/minute)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/{user_id}/chat/stream:
+    post:
+      tags:
+        - Chat
+      summary: Send chat message (SSE streaming)
+      description: Send a message and receive streaming response via Server-Sent Events
+      operationId: sendChatMessageStream
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: User identifier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatRequest'
+      responses:
+        '200':
+          description: SSE stream
+          content:
+            text/event-stream:
+              schema:
+                type: string
+              example: |
+                event: token
+                data: {"content": "I've "}
+
+                event: token
+                data: {"content": "created "}
+
+                event: tool_call
+                data: {"id": "call_123", "tool": "add_task", "arguments": {"title": "Buy groceries"}}
+
+                event: token
+                data: {"content": "a new task for you."}
+
+                event: done
+                data: {"conversation_id": 1, "message_id": 2}
+        '401':
+          description: Unauthorized
+        '429':
+          description: Rate limit exceeded
+
+  /api/{user_id}/conversations:
+    get:
+      tags:
+        - Conversations
+      summary: List user conversations
+      description: Get paginated list of user's conversations, sorted by most recent
+      operationId: listConversations
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+          description: Number of conversations to return
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+          description: Offset for pagination
+      responses:
+        '200':
+          description: List of conversations
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  conversations:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ConversationSummary'
+                  total:
+                    type: integer
+                  limit:
+                    type: integer
+                  offset:
+                    type: integer
+              example:
+                conversations:
+                  - id: 1
+                    title: "Add task to buy groceries"
+                    message_count: 4
+                    updated_at: "2025-12-17T10:05:00Z"
+                  - id: 2
+                    title: "List my pending tasks"
+                    message_count: 2
+                    updated_at: "2025-12-17T09:30:00Z"
+                total: 15
+                limit: 20
+                offset: 0
+        '401':
+          description: Unauthorized
+
+  /api/{user_id}/conversations/{conversation_id}:
+    get:
+      tags:
+        - Conversations
+      summary: Get conversation with messages
+      description: Get a conversation and its messages (paginated)
+      operationId: getConversation
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: conversation_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: message_limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+            maximum: 100
+          description: Number of messages to return
+        - name: message_offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+          description: Offset for message pagination
+      responses:
+        '200':
+          description: Conversation with messages
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversationWithMessages'
+        '404':
+          description: Conversation not found
+        '401':
+          description: Unauthorized
+
+    put:
+      tags:
+        - Conversations
+      summary: Rename conversation
+      description: Update the conversation title (clarified requirement)
+      operationId: renameConversation
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: conversation_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConversationUpdate'
+            example:
+              title: "Grocery shopping tasks"
+      responses:
+        '200':
+          description: Conversation updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversationSummary'
+        '404':
+          description: Conversation not found
+        '401':
+          description: Unauthorized
+
+    delete:
+      tags:
+        - Conversations
+      summary: Delete conversation
+      description: Permanently delete a conversation and all its messages
+      operationId: deleteConversation
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: conversation_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Conversation deleted
+        '404':
+          description: Conversation not found
+        '401':
+          description: Unauthorized
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ChatRequest:
+      type: object
+      required:
+        - message
+      properties:
+        conversation_id:
+          type: integer
+          nullable: true
+          description: Existing conversation ID, or null to create new
+        message:
+          type: string
+          minLength: 1
+          maxLength: 4000
+          description: User message content
+
+    ChatResponse:
+      type: object
+      properties:
+        conversation_id:
+          type: integer
+          description: Conversation ID (may be newly created)
+        message_id:
+          type: integer
+          description: ID of the assistant's response message
+        response:
+          type: string
+          description: Assistant's response text
+        tool_calls:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/ToolCall'
+          description: Tools invoked during response generation
+
+    ToolCall:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique tool call identifier
+        tool:
+          type: string
+          description: Tool name (e.g., add_task, list_tasks)
+        arguments:
+          type: object
+          description: Arguments passed to the tool
+        result:
+          type: object
+          description: Tool execution result
+
+    ConversationSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+          nullable: true
+        message_count:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    ConversationWithMessages:
+      allOf:
+        - $ref: '#/components/schemas/ConversationSummary'
+        - type: object
+          properties:
+            messages:
+              type: array
+              items:
+                $ref: '#/components/schemas/Message'
+            message_total:
+              type: integer
+            message_limit:
+              type: integer
+            message_offset:
+              type: integer
+
+    ConversationUpdate:
+      type: object
+      required:
+        - title
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: New conversation title
+
+    Message:
+      type: object
+      properties:
+        id:
+          type: integer
+        conversation_id:
+          type: integer
+        role:
+          type: string
+          enum: [user, assistant, system]
+        content:
+          type: string
+        tool_calls:
+          type: object
+          nullable: true
+          description: JSONB stored tool call data
+        created_at:
+          type: string
+          format: date-time
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          default: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              description: Error code
+            message:
+              type: string
+              description: Human-readable error message

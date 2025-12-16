@@ -1,28 +1,40 @@
 <!--
 Sync Impact Report:
-- Version Change: None → 1.0.0 (Initial ratification)
-- Modified Principles: N/A (New constitution)
-- Added Sections: All (10 core principles, Technology Stack, Claude Code Integration, Development Workflow, Code Quality Standards, Error Handling, Performance Guidelines, Security Checklist, Git & Version Control, Deployment Strategy, Governance)
-- Removed Sections: None
+- Version Change: 1.0.0 → 2.0.0 (MAJOR: Phase 3 AI chatbot additions)
+- Modified Principles:
+  - Principle X → "Stateless Architecture" (NEW for Phase 3)
+  - Principle XI → "MCP-First Tool Design" (NEW for Phase 3)
+  - Principle XII → "Agent-Centric Design" (NEW for Phase 3)
+  - Principle XIII → "Real-Time Streaming (SSE)" (NEW for Phase 3)
+  - Principle XIV → "ChatKit UI Integration" (NEW for Phase 3)
+  - Principle XV → "Conversation Persistence" (NEW for Phase 3)
+- Added Sections:
+  - Phase 3 Technology Stack (AI/Agent Framework)
+  - Phase 3 Specialized Agents (AI Agent Builder, MCP Server Builder, Chatbot UI Builder)
+  - Phase 3 Skills Reference (6 new skills)
+  - Natural Language Commands reference
+  - Phase 3 Security Checklist additions
+- Removed Sections: None (Phase 2 content preserved)
 - Templates Status:
-  ✅ plan-template.md - Updated Constitution Check reference
+  ✅ plan-template.md - Constitution Check reference remains valid
   ✅ spec-template.md - Aligned with spec-driven development principles
   ✅ tasks-template.md - Aligned with test-first and progressive enhancement principles
-  ✅ Command files in .claude/commands/ - No updates needed (agent-agnostic)
 - Follow-up TODOs: None
 -->
 
-# Todo App - Phase 2 Constitution
+# Todo App - Phase 3 Constitution
 
-**Project**: Todo Web Application
-**Phase**: Phase 2 - Full-Stack Web Application
-**Version**: 1.0.0
+**Project**: Todo AI Chatbot Application
+**Phase**: Phase 3 - AI-Powered Todo Chatbot
+**Version**: 2.0.0
 **Ratified**: 2025-12-11
 **Status**: Active
+**Last Amended**: 2025-12-17
+**Builds Upon**: Phase 2 Constitution (Full-Stack Web Application)
 
 ---
 
-## ⚠️ CLAUDE.md Integration (READ FIRST)
+## CLAUDE.md Integration (READ FIRST)
 
 **This constitution is coupled with the CLAUDE.md hierarchy. Before any work:**
 
@@ -33,15 +45,20 @@ Sync Impact Report:
 
 2. **Use Context7 MCP BEFORE implementation:**
    - Always fetch latest library documentation via Context7
+   - Required lookups: `openai-agents-sdk`, `fastmcp`, `openai-chatkit`, `framer-motion`
    - Never assume API patterns - verify first
 
 3. **Delegate to Specialized Agents:**
-   - `@backend-api-builder` for all FastAPI code
-   - `@frontend-ui-builder` for all Next.js code
-   - `@database-designer` for all database work
+   - `@ai-agent-builder` for OpenAI Agents SDK + MCP integration
+   - `@mcp-server-builder` for FastMCP server development
+   - `@chatbot-ui-builder` for ChatKit UI implementation
+   - `@backend-api-builder` for FastAPI chat endpoints
+   - `@frontend-ui-builder` for Next.js UI components
+   - `@database-designer` for database schema changes
 
 4. **Reference Skills for Setup Tasks:**
    - Check `.claude/skills/` before any initialization
+   - Phase 3 skills: `openai-agents-setup`, `fastmcp-server-setup`, `chat-api-integration`, `openai-chatkit-setup`, `streaming-sse-setup`, `conversation-management`
 
 **Coupling:** All CLAUDE.md files reference this constitution. This constitution references all CLAUDE.md files. They work together as a unified system.
 
@@ -49,13 +66,20 @@ Sync Impact Report:
 
 ## Project Overview
 
-This is the constitution for the Todo App Hackathon Phase 2, where we transform the console app into a modern multi-user web application with persistent storage. This document defines the principles, standards, and practices that govern the development of this project.
+This is the constitution for the Todo App Hackathon Phase 3, where we transform the Phase 2 web application into an AI-powered chatbot interface for managing todos through natural language. This document defines the principles, standards, and practices that govern the development.
 
-**Goal**: Build a production-ready, full-stack web application using spec-driven development with Claude Code and Spec-Kit Plus.
+**Goal**: Build a conversational AI interface using OpenAI Agents SDK, FastMCP server, and OpenAI ChatKit that allows users to manage their tasks through natural language commands.
+
+**Phase 3 Adds**:
+- AI Agent with OpenAI Agents SDK (using Gemini model)
+- MCP Server with task management tools
+- ChatKit frontend for conversational interface
+- Server-Sent Events (SSE) for real-time streaming
+- Conversation history with database persistence
 
 ---
 
-## Core Principles
+## Core Principles (Phase 2 Foundation)
 
 ### I. Spec-Driven Development (NON-NEGOTIABLE)
 
@@ -255,36 +279,225 @@ This is the constitution for the Todo App Hackathon Phase 2, where we transform 
 
 **ADR Suggestion** (for significant decisions):
 - Test for significance: Impact + Alternatives + Scope
-- Suggest: "📋 Architectural decision detected: [brief] — Document? Run `/sp.adr [title]`"
+- Suggest: "Architectural decision detected: [brief] - Document? Run `/sp.adr [title]`"
 - Never auto-create; wait for user consent
 
 **Rationale**: Documentation preserves knowledge and accelerates onboarding.
 
 ---
 
-### X. Progressive Enhancement
+## Core Principles (Phase 3 AI Chatbot)
 
-**Description**: Build incrementally from simple to complex.
+### X. Stateless Architecture (CRITICAL FOR PHASE 3)
 
-**Approach**:
-1. **Phase 2A**: Basic CRUD (Add, View, Update, Delete, Mark Complete)
-2. **Phase 2B**: Authentication & Multi-user support
-3. **Phase 2C**: Advanced features (if time permits)
+**Description**: The chatbot server MUST be completely stateless - all conversation state persists in the database.
 
 **Rules**:
-- Deliver working software at each sub-phase
-- Each increment MUST be deployable
-- Don't build features that aren't in the spec
-- Refactor only when necessary
-- Keep it simple (YAGNI - You Aren't Gonna Need It)
+- Server holds NO in-memory conversation state
+- Every request includes conversation_id to fetch history from database
+- Messages stored in database immediately after generation
+- Agent can be restarted without losing conversation context
+- MCP tools are stateless - they operate on database state
 
-**Rationale**: Progressive enhancement delivers value early and reduces risk.
+**Rationale**: Stateless architecture enables horizontal scaling, fault tolerance, and seamless server restarts.
+
+**Implementation Pattern**:
+```
+1. Receive user message with conversation_id
+2. Fetch conversation history from database
+3. Build message array (history + new message)
+4. Store user message in database
+5. Run AI agent with MCP tools
+6. Store assistant response in database
+7. Return response (stream or complete)
+8. Server ready for next request (no state held)
+```
+
+---
+
+### XI. MCP-First Tool Design
+
+**Description**: All task operations are exposed as MCP tools that the AI agent calls.
+
+**Rules**:
+- Use FastMCP Python SDK for MCP server implementation
+- Each tool has clear input schema and return type
+- Tools are thin wrappers around database operations
+- Tools handle their own error responses
+- Never expose raw database errors to AI agent
+
+**MCP Server Architecture**:
+- **Phase 3**: MCP Server runs as separate Python process on **port 8001**
+- **Phase 4**: MCP Server becomes separate Docker container for Kubernetes deployment
+- Agent connects via HTTP: `http://localhost:8001` (Phase 3) or `http://mcp-server:8001` (Phase 4)
+
+**MCP Tools Required**:
+| Tool | Purpose | Parameters |
+|------|---------|------------|
+| `add_task` | Create new task | user_id, title, description? |
+| `list_tasks` | Get user's tasks | user_id, status? |
+| `complete_task` | Mark task complete | user_id, task_id |
+| `delete_task` | Remove task | user_id, task_id |
+| `update_task` | Modify task | user_id, task_id, title?, description? |
+
+**Rationale**: MCP standardizes AI-to-application communication and enables tool reuse across different AI frameworks. Separate process architecture is Kubernetes-ready for Phase 4.
+
+---
+
+### XII. Agent-Centric Design
+
+**Description**: The OpenAI Agents SDK agent is the brain that interprets user intent and orchestrates tool calls.
+
+**Rules**:
+- Use OpenAI Agents SDK with Gemini model (via AsyncOpenAI wrapper)
+- Agent has clear system prompt defining personality and capabilities
+- Agent uses @function_tool decorators for MCP tool integration
+- Implement AgentHooks and RunHooks for observability
+- Use Runner.run() for synchronous execution or Runner.run_streamed() for SSE
+
+**Agent Behavior**:
+- Interpret natural language commands
+- Call appropriate MCP tools
+- Provide friendly, helpful responses
+- Confirm actions with users
+- Handle errors gracefully
+
+**Rationale**: Centralizing AI logic in the agent ensures consistent behavior and maintainable code.
+
+---
+
+### XIII. Real-Time Streaming (SSE)
+
+**Description**: Use Server-Sent Events for real-time response streaming from AI agent.
+
+**Rules**:
+- Implement SSE endpoint for chat responses
+- Stream tokens as they're generated by the agent
+- Include tool call notifications in stream
+- Handle connection drops gracefully
+- Support both streaming and non-streaming modes
+
+**SSE Event Format**:
+```
+event: token
+data: {"content": "partial response text"}
+
+event: tool_call
+data: {"tool": "add_task", "args": {"title": "..."}}
+
+event: done
+data: {"conversation_id": 123, "message_id": 456}
+```
+
+**Rationale**: Streaming provides better UX by showing responses as they're generated.
+
+---
+
+### XIV. ChatKit UI Integration
+
+**Description**: Use OpenAI ChatKit for the chat interface frontend.
+
+**Rules**:
+- Use OpenAI ChatKit for chatbot UI (as specified in hackathon requirements)
+- Configure ChatKit with custom backend endpoint
+- Implement themed components for dark mode support
+- Add conversation sidebar for thread management
+- Use Zustand for conversation state management
+- Implement message pagination (50 messages per page, lazy load on scroll)
+
+**UI Strategy**: 90% ChatKit, 10% Custom Fallback
+- Primary: Use OpenAI ChatKit components
+- Fallback: If ChatKit doesn't work, implement custom chat UI with Shadcn/ui
+
+**Domain Allowlist Configuration (Required for Hosted ChatKit)**:
+- **Local Development**: `localhost` works without domain allowlist configuration
+- **Production Deployment**:
+  1. Deploy frontend to get production URL (Vercel: `https://your-app.vercel.app`)
+  2. Add domain to OpenAI allowlist: https://platform.openai.com/settings/organization/security/domain-allowlist
+  3. Get ChatKit domain key and add to environment variables
+
+**Environment Variable**:
+```
+NEXT_PUBLIC_OPENAI_DOMAIN_KEY=your-domain-key-here
+```
+
+**Rationale**: ChatKit provides production-ready chat UI components that match OpenAI's design language.
+
+---
+
+### XV. Conversation Persistence
+
+**Description**: Store all conversations and messages in PostgreSQL database.
+
+**Database Models**:
+
+**Conversation**:
+- id (int, primary key)
+- user_id (string, foreign key -> users.id)
+- title (string, optional - auto-generated from first message)
+- created_at (timestamp)
+- updated_at (timestamp)
+
+**Message**:
+- id (int, primary key)
+- conversation_id (int, foreign key -> conversations.id)
+- role (enum: 'user' | 'assistant' | 'system')
+- content (text)
+- tool_calls (jsonb, optional)
+- created_at (timestamp)
+
+**Rules**:
+- Create new conversation if conversation_id not provided
+- Auto-generate conversation title from first user message
+- Store all messages immediately (don't wait for response)
+- Support listing conversations by user
+- Support deleting conversations
+
+**Rationale**: Persistent conversations enable history viewing, context continuation, and user experience continuity.
+
+---
+
+### XVI. Progressive Enhancement from Phase 2
+
+**Description**: Build on Phase 2 foundation without breaking existing functionality.
+
+**Rules**:
+- Preserve all Phase 2 REST API endpoints
+- Add chat endpoint alongside existing APIs
+- Share database models and services
+- Reuse authentication middleware
+- Maintain existing frontend routes
+
+**Phase 3 Additions**:
+- `/api/{user_id}/chat` - New chat endpoint
+- `/app/chat` - New chat page route
+- `Conversation` and `Message` models
+- MCP server as separate service
+- ChatKit components in frontend
+
+**Rationale**: Progressive enhancement delivers value incrementally without regression.
 
 ---
 
 ## Technology Stack
 
-### Frontend
+### AI & Agent Framework (Phase 3)
+- **OpenAI Agents SDK**: 0.1.0+ - Agent orchestration
+- **Gemini**: gemini-2.5-flash - LLM model (via OpenAI-compatible API)
+- **FastMCP**: Latest - MCP server implementation
+- **SSE**: Server-Sent Events - Real-time streaming
+
+### Backend (Phase 2 + Phase 3)
+- **Framework**: FastAPI 0.115+
+- **Language**: Python 3.13+
+- **ORM**: SQLModel 0.0.24+ (SQLAlchemy 2.0 + Pydantic 2.0)
+- **Database**: Neon Serverless PostgreSQL
+- **Authentication**: Better Auth (JWT tokens)
+- **Validation**: Pydantic 2.0
+- **Testing**: pytest 8.0+, httpx (for API tests)
+- **Package Manager**: UV (fast Python package manager)
+
+### Frontend (Phase 2 + Phase 3)
 - **Framework**: Next.js 16+ (App Router, Server Components, Server Actions)
 - **Language**: TypeScript 5.0+
 - **Styling**: Tailwind CSS 4.0
@@ -294,16 +507,7 @@ This is the constitution for the Todo App Hackathon Phase 2, where we transform 
 - **Forms**: React Hook Form + Zod validation
 - **HTTP Client**: Axios 1.7+ (MANDATORY - NO fetch for API calls)
 - **State**: Zustand 5.0+ (MANDATORY - NO React Context for state)
-
-### Backend
-- **Framework**: FastAPI 0.115+
-- **Language**: Python 3.13+
-- **ORM**: SQLModel 0.0.24+ (SQLAlchemy 2.0 + Pydantic 2.0)
-- **Database**: Neon Serverless PostgreSQL
-- **Authentication**: Better Auth (JWT tokens)
-- **Validation**: Pydantic 2.0
-- **Testing**: pytest 8.0+, httpx (for API tests)
-- **Package Manager**: UV (fast Python package manager)
+- **Chat UI**: @openai/chatkit-react (Phase 3)
 
 ### Infrastructure
 - **Frontend Hosting**: Vercel
@@ -316,9 +520,7 @@ This is the constitution for the Todo App Hackathon Phase 2, where we transform 
 
 ## Claude Code Integration
 
-### Specialized Agents
-
-Use these agents via `@agent-name` for domain-specific tasks:
+### Phase 2 Specialized Agents
 
 | Agent | Trigger | Purpose |
 |-------|---------|---------|
@@ -326,14 +528,23 @@ Use these agents via `@agent-name` for domain-specific tasks:
 | **Frontend UI Builder** | `@frontend-ui-builder` | Next.js development: components, pages, hooks, animations |
 | **Database Designer** | `@database-designer` | PostgreSQL schema, SQLModel models, Alembic migrations |
 
+### Phase 3 Specialized Agents
+
+| Agent | Trigger | Purpose |
+|-------|---------|---------|
+| **AI Agent Builder** | `@ai-agent-builder` | OpenAI Agents SDK, MCP integration, Gemini config |
+| **MCP Server Builder** | `@mcp-server-builder` | FastMCP server, tool definitions |
+| **Chatbot UI Builder** | `@chatbot-ui-builder` | ChatKit integration, conversation UI |
+
 **Agent Files**: `.claude/agents/`
 - `backend-api-builder.md` - FastAPI patterns, SQLModel, JWT middleware
 - `frontend-ui-builder.md` - React components, Shadcn/ui, Framer Motion
 - `database-designer.md` - Schema design, migrations, query optimization
+- `ai-agent-builder.md` - OpenAI Agents + MCP patterns
+- `mcp-server-builder.md` - FastMCP server development
+- `chatbot-ui-builder.md` - ChatKit UI integration
 
-### Skills Reference
-
-Use these skills for setup and configuration guidance:
+### Phase 2 Skills Reference
 
 | Skill | Location | Purpose |
 |-------|----------|---------|
@@ -343,6 +554,17 @@ Use these skills for setup and configuration guidance:
 | **Neon DB Setup** | `.claude/skills/neon-db-setup/SKILL.md` | Configure PostgreSQL database |
 | **Better Auth** | `.claude/skills/better-auth-integration/SKILL.md` | JWT authentication for both ends |
 
+### Phase 3 Skills Reference
+
+| Skill | Location | Purpose |
+|-------|----------|---------|
+| **OpenAI Agents Setup** | `.claude/skills/openai-agents-setup/SKILL.md` | Initialize agent with Gemini |
+| **FastMCP Server Setup** | `.claude/skills/fastmcp-server-setup/SKILL.md` | Create MCP server |
+| **Chat API Integration** | `.claude/skills/chat-api-integration/SKILL.md` | Chat endpoint + agent |
+| **OpenAI ChatKit Setup** | `.claude/skills/openai-chatkit-setup/SKILL.md` | ChatKit React components |
+| **Streaming SSE Setup** | `.claude/skills/streaming-sse-setup/SKILL.md` | SSE implementation |
+| **Conversation Management** | `.claude/skills/conversation-management/SKILL.md` | History UI |
+
 ### CLAUDE.md Hierarchy
 
 The project uses a layered CLAUDE.md structure:
@@ -351,16 +573,19 @@ The project uses a layered CLAUDE.md structure:
    - Project overview and phase information
    - Quick commands and spec locations
    - Links to all agents and skills
+   - Updated for Phase 3 agents and skills
 
 2. **Frontend CLAUDE.md** (`./frontend/CLAUDE.md`)
    - Next.js specific patterns and conventions
    - Component structure and styling rules
    - API client and auth integration
+   - ChatKit integration patterns (Phase 3)
 
 3. **Backend CLAUDE.md** (`./backend/CLAUDE.md`)
    - FastAPI specific patterns and conventions
    - SQLModel usage and database access
    - JWT middleware and security rules
+   - Agent and MCP patterns (Phase 3)
 
 **Rule**: Always read root CLAUDE.md first, then subfolder CLAUDE.md for context.
 
@@ -409,11 +634,107 @@ The project uses a layered CLAUDE.md structure:
 
 ---
 
+## Natural Language Commands (Phase 3)
+
+The chatbot should understand and respond to:
+
+| User Says | Agent Should Do |
+|-----------|-----------------|
+| "Add a task to buy groceries" | Call add_task with title "Buy groceries" |
+| "Show me all my tasks" | Call list_tasks with status "all" |
+| "What's pending?" | Call list_tasks with status "pending" |
+| "Mark task 3 as complete" | Call complete_task with task_id 3 |
+| "Delete the meeting task" | Call list_tasks first, then delete_task |
+| "Change task 1 to 'Call mom tonight'" | Call update_task with new title |
+| "I need to remember to pay bills" | Call add_task with title "Pay bills" |
+| "What have I completed?" | Call list_tasks with status "completed" |
+
+---
+
 ## Code Quality Standards
 
-### Frontend (TypeScript)
+### Agent Code (Python - Phase 3)
+```python
+# GOOD: Clear agent definition with typed tools
+from agents import Agent, Runner, function_tool
+from agents.extensions.models.litellm import LitellmModel
+
+model = LitellmModel(model="gemini/gemini-2.5-flash", api_key=GEMINI_API_KEY)
+
+@function_tool
+async def add_task(user_id: str, title: str, description: str = "") -> dict:
+    """Add a new task for the user."""
+    result = await mcp_client.call_tool("add_task", {
+        "user_id": user_id,
+        "title": title,
+        "description": description
+    })
+    return result
+
+agent = Agent(
+    name="TodoBot",
+    instructions="You are a helpful todo assistant...",
+    model=model,
+    tools=[add_task, list_tasks, complete_task, delete_task, update_task]
+)
+```
+
+### MCP Server Code (Python - Phase 3)
+```python
+# GOOD: Clean MCP tool definition
+from fastmcp import FastMCP
+from sqlmodel import Session, select
+
+mcp = FastMCP("Todo MCP Server")
+
+@mcp.tool()
+async def add_task(user_id: str, title: str, description: str = "") -> dict:
+    """Create a new task for the user."""
+    async with get_session() as session:
+        task = Task(user_id=user_id, title=title, description=description)
+        session.add(task)
+        await session.commit()
+        await session.refresh(task)
+        return {"task_id": task.id, "status": "created", "title": task.title}
+```
+
+### ChatKit Frontend (TypeScript - Phase 3)
 ```typescript
-// ✅ GOOD: Clear, typed, readable
+// GOOD: Chat interface with Zustand state management
+// Note: Verify exact ChatKit package import from OpenAI documentation
+'use client';
+
+import { useConversationStore } from '@/stores/conversation-store';
+
+export function ChatInterface() {
+  const { currentConversation, messages, sendMessage, isStreaming } = useConversationStore();
+
+  const handleSendMessage = async (content: string) => {
+    await sendMessage({
+      conversationId: currentConversation?.id,
+      message: content,
+    });
+  };
+
+  return (
+    <div className="flex flex-col h-full">
+      {/* Message list */}
+      <div className="flex-1 overflow-y-auto">
+        {messages.map((msg) => (
+          <MessageBubble key={msg.id} message={msg} />
+        ))}
+      </div>
+
+      {/* Input area - integrate with ChatKit components */}
+      <ChatInput onSend={handleSendMessage} disabled={isStreaming} />
+    </div>
+  );
+}
+```
+
+### Frontend (TypeScript - Phase 2)
+```typescript
+// GOOD: Clear, typed, readable
 interface Task {
   id: number;
   title: string;
@@ -427,17 +748,9 @@ export async function getTasks(userId: string): Promise<Task[]> {
 }
 ```
 
-```typescript
-// ❌ BAD: No types, unclear, error-prone
-export async function getTasks(id) {
-  const res = await fetch("/api/tasks");
-  return res.json();
-}
-```
-
-### Backend (Python)
+### Backend (Python - Phase 2)
 ```python
-# ✅ GOOD: Clear, typed, validated
+# GOOD: Clear, typed, validated
 from sqlmodel import SQLModel, Field
 from datetime import datetime
 
@@ -450,13 +763,6 @@ class Task(SQLModel, table=True):
     completed: bool = Field(default=False)
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
-```
-
-```python
-# ❌ BAD: No validation, no types, unsafe
-def create_task(user_id, title):
-    db.execute(f"INSERT INTO tasks (user_id, title) VALUES ('{user_id}', '{title}')")
-    # SQL injection vulnerability!
 ```
 
 ---
@@ -475,13 +781,19 @@ def create_task(user_id, title):
 - Log all errors with context
 - Never expose internal errors to clients
 
+### AI/Agent Layer (Phase 3)
+- Catch and handle agent errors
+- Return error messages, not exceptions from tools
+- Provide actionable error messages to users
+- Log all tool calls for audit trail
+
 **Error Response Format**:
 ```json
 {
   "success": false,
   "error": {
-    "code": "UNAUTHORIZED",
-    "message": "Invalid or expired token",
+    "code": "AGENT_ERROR",
+    "message": "I'm sorry, I couldn't complete that action. Please try again.",
     "details": {}
   }
 }
@@ -507,10 +819,17 @@ def create_task(user_id, title):
 - Cache static data (optional for Phase 2)
 - Set appropriate timeout limits
 
+### AI/Chat (Phase 3)
+- Implement SSE for streaming responses
+- Use message pagination (50 per page)
+- Cache conversation history lookup
+- Implement rate limiting: 30 messages/minute per user
+
 ---
 
 ## Security Checklist
 
+### Phase 2 Security
 - [ ] All API endpoints validate JWT tokens
 - [ ] User data is isolated by user_id
 - [ ] Passwords are hashed (never stored plain)
@@ -524,23 +843,34 @@ def create_task(user_id, title):
 - [ ] CORS configured correctly
 - [ ] Input validation on all endpoints
 
+### Phase 3 Security (Chat-Specific)
+- [ ] Chat endpoints validate JWT tokens
+- [ ] User can only access their own conversations
+- [ ] MCP tools validate user_id ownership
+- [ ] Message content length limited (max 4000 characters)
+- [ ] Rate limiting on chat endpoints (30 msg/min)
+- [ ] Tool calls logged for audit
+- [ ] No sensitive data in agent responses
+- [ ] SSE connections properly authenticated
+- [ ] Input sanitization to prevent prompt injection
+
 ---
 
 ## Git & Version Control
 
 ### Branch Strategy
 - `main` - production-ready code
-- `feature/[feature-name]` - feature branches
+- `phase3/[task-name]` - Phase 3 feature branches
 - Create PR for all changes
 - Squash commits on merge
 
 ### Commit Messages
 ```
-feat: add user authentication with Better Auth
-fix: resolve task deletion bug
+feat: add AI chatbot with MCP integration
+fix: resolve SSE streaming bug
 docs: update API endpoint documentation
-refactor: simplify task service logic
-test: add integration tests for task API
+refactor: simplify agent tool logic
+test: add integration tests for chat API
 ```
 
 Format: `type: description`
@@ -550,21 +880,48 @@ Types: feat, fix, docs, refactor, test, chore
 
 ## Deployment Strategy
 
-### Phase 2 Deployment
+### Phase 3 Deployment
 1. **Frontend**: Deploy to Vercel
    - Connect GitHub repository
    - Auto-deploy on push to main
    - Environment variables via Vercel dashboard
+   - Add ChatKit domain key for production
 
 2. **Backend**: Deploy to Vercel (Python runtime) or Railway
    - Set up Python runtime
    - Configure DATABASE_URL
    - Set BETTER_AUTH_SECRET
+   - Set GEMINI_API_KEY
 
-3. **Database**: Neon Serverless PostgreSQL
-   - Create project and database
-   - Copy connection string to backend env
-   - Run migrations
+3. **MCP Server**: Run as separate process
+   - Port 8001 for Phase 3
+   - Future: Docker container for Phase 4
+
+4. **Database**: Neon Serverless PostgreSQL
+   - Run migrations for Conversation/Message tables
+   - Verify indexes on conversation_id, user_id
+
+---
+
+## Environment Variables (Phase 3 Additions)
+
+```env
+# AI/Agent Configuration
+GEMINI_API_KEY=your_gemini_api_key
+GEMINI_MODEL=gemini-2.5-flash
+
+# MCP Server
+MCP_SERVER_URL=http://localhost:8001/mcp
+MCP_SERVER_PORT=8001
+
+# ChatKit (Frontend - for production deployment)
+NEXT_PUBLIC_OPENAI_DOMAIN_KEY=your-domain-key-here
+
+# Existing Phase 2 variables remain unchanged
+DATABASE_URL=postgresql+asyncpg://...
+BETTER_AUTH_SECRET=...
+CORS_ORIGINS=http://localhost:3000
+```
 
 ---
 
@@ -572,6 +929,7 @@ Types: feat, fix, docs, refactor, test, chore
 
 ### Constitution Authority
 - This constitution supersedes all other practices
+- Phase 2 constitution remains valid for non-chat features
 - All code reviews MUST verify compliance
 - Violations MUST be justified and documented
 - Amendments require user approval and documentation
@@ -592,15 +950,18 @@ Types: feat, fix, docs, refactor, test, chore
 
 ## References
 
-- [Hackathon II Documentation](./hackathon-ii.md)
+- [Phase 3 Constitution Source](./constitution-prompt-phase-3.md)
+- [Phase 2 Constitution](./prompts/constitution-prompt-phase-2.md)
+- [OpenAI Agents SDK Documentation](https://openai.github.io/openai-agents-python/)
+- [FastMCP Documentation](https://github.com/jlowin/fastmcp)
+- [OpenAI ChatKit Documentation](https://platform.openai.com/docs/guides/chatkit)
+- [Server-Sent Events MDN](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events)
 - [Next.js Documentation](https://nextjs.org/docs)
 - [FastAPI Documentation](https://fastapi.tiangolo.com/)
 - [SQLModel Documentation](https://sqlmodel.tiangolo.com/)
 - [Better Auth Documentation](https://www.better-auth.com/)
 - [Shadcn/ui Components](https://ui.shadcn.com/)
-- [Aceternity UI](https://ui.aceternity.com/)
-- [Framer Motion](https://www.framer.com/motion/)
 
 ---
 
-**Version**: 1.0.0 | **Ratified**: 2025-12-11 | **Last Amended**: 2025-12-11
+**Version**: 2.0.0 | **Ratified**: 2025-12-11 | **Last Amended**: 2025-12-17

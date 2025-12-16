@@ -17,6 +17,10 @@ SSE (Server-Sent Events) enables real-time, one-way streaming from server to cli
 - **Reduced perceived latency** - Users see responses immediately
 - **ChatKit compatibility** - OpenAI ChatKit expects SSE format
 
+**ChatKit Reference**:
+- [OpenAI ChatKit Docs](https://platform.openai.com/docs/guides/chatkit)
+- [Domain Allowlist](https://platform.openai.com/settings/organization/security/domain-allowlist) - Required for production
+
 ---
 
 ## Architecture
