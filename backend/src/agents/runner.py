@@ -122,7 +122,8 @@ async def run_agent(
 
     logger.info(f"Running agent for user {user_id} with {len(input_messages)} messages")
 
-    mcp_url = get_mcp_server_url()
+    # Pass user_id in MCP URL for task isolation
+    mcp_url = get_mcp_server_url(user_id=user_id)
     logger.debug(f"Connecting to MCP server at {mcp_url}")
 
     try:
@@ -263,7 +264,8 @@ async def run_agent_streamed(
 
     logger.info(f"Starting streamed agent run for user {user_id} with {len(input_messages)} messages (verbose={verbose})")
 
-    mcp_url = get_mcp_server_url()
+    # Pass user_id in MCP URL for task isolation
+    mcp_url = get_mcp_server_url(user_id=user_id)
     tool_calls: list[dict] = []
     full_content = ""
 

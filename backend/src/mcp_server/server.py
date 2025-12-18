@@ -28,10 +28,37 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from fastmcp import FastMCP
+from fastmcp.server.dependencies import get_http_request
 from sqlmodel import Session, create_engine, select
 from sqlalchemy.pool import NullPool
 
 from src.models.task import Task, utcnow
+
+
+def get_user_id_from_request() -> str:
+    """Extract user_id from the HTTP request query parameters.
+
+    This provides task isolation by getting the user_id from the MCP
+    server URL, which is set by the agent runner for each user session.
+
+    Returns:
+        str: The user_id from query params
+
+    Raises:
+        ValueError: If user_id is not provided in the request
+    """
+    try:
+        request = get_http_request()
+        user_id = request.query_params.get("user_id")
+        if not user_id:
+            logger.error("No user_id provided in MCP request")
+            raise ValueError("user_id is required for task operations")
+        logger.debug(f"Extracted user_id from request: {user_id}")
+        return user_id
+    except RuntimeError as e:
+        # get_http_request() raises RuntimeError if not in HTTP context
+        logger.error(f"Failed to get HTTP request context: {e}")
+        raise ValueError("Cannot determine user context - not in HTTP request")
 
 # Create synchronous database engine for MCP server
 # Convert asyncpg URL to psycopg2 URL for sync operations
@@ -62,7 +89,6 @@ mcp = FastMCP("Todo MCP Server")
 
 @mcp.tool
 def add_task(
-    user_id: str,
     title: str,
     description: Optional[str] = None,
     priority: str = "medium",
@@ -70,12 +96,12 @@ def add_task(
     is_recurring: bool = False,
     recurrence_pattern: Optional[str] = None,
 ) -> dict:
-    """Add a new task for a user.
+    """Add a new task for the current user.
 
     Creates a new task with full details including priority, due date, and recurrence.
+    The user is automatically identified from the session context.
 
     Args:
-        user_id: The user's unique identifier
         title: The task title (required, max 200 chars)
         description: Task description (optional, max 1000 chars)
         priority: Task priority - "low", "medium", or "high" (default: "medium")
@@ -87,6 +113,8 @@ def add_task(
         dict with task details including task_id, title, priority, due_date
     """
     try:
+        # Get user_id from request context for task isolation
+        user_id = get_user_id_from_request()
         # Validate priority
         valid_priorities = ["low", "medium", "high"]
         if priority not in valid_priorities:
@@ -138,14 +166,14 @@ def add_task(
 
 @mcp.tool
 def list_tasks(
-    user_id: str,
     status: str = "all",
     priority: Optional[str] = None,
 ) -> dict:
-    """List tasks for a user with optional filters.
+    """List tasks for the current user with optional filters.
+
+    The user is automatically identified from the session context.
 
     Args:
-        user_id: The user's unique identifier
         status: Filter by "all", "pending", or "completed" (default: "all")
         priority: Filter by "low", "medium", or "high" (optional)
 
@@ -153,6 +181,8 @@ def list_tasks(
         dict with tasks list and summary counts
     """
     try:
+        # Get user_id from request context for task isolation
+        user_id = get_user_id_from_request()
         with Session(sync_engine) as session:
             query = select(Task).where(Task.user_id == user_id)
 
@@ -201,17 +231,20 @@ def list_tasks(
 
 
 @mcp.tool
-def complete_task(user_id: str, task_id: int) -> dict:
+def complete_task(task_id: int) -> dict:
     """Mark a task as completed.
 
+    The user is automatically identified from the session context.
+
     Args:
-        user_id: The user's unique identifier
         task_id: The ID of the task to mark complete
 
     Returns:
         dict with status and task_id
     """
     try:
+        # Get user_id from request context for task isolation
+        user_id = get_user_id_from_request()
         with Session(sync_engine) as session:
             task = session.exec(
                 select(Task).where(Task.id == task_id, Task.user_id == user_id)
@@ -234,17 +267,20 @@ def complete_task(user_id: str, task_id: int) -> dict:
 
 
 @mcp.tool
-def delete_task(user_id: str, task_id: int) -> dict:
+def delete_task(task_id: int) -> dict:
     """Delete a task permanently.
 
+    The user is automatically identified from the session context.
+
     Args:
-        user_id: The user's unique identifier
         task_id: The ID of the task to delete
 
     Returns:
         dict with status and deleted task_id
     """
     try:
+        # Get user_id from request context for task isolation
+        user_id = get_user_id_from_request()
         with Session(sync_engine) as session:
             task = session.exec(
                 select(Task).where(Task.id == task_id, Task.user_id == user_id)
@@ -268,7 +304,6 @@ def delete_task(user_id: str, task_id: int) -> dict:
 
 @mcp.tool
 def update_task(
-    user_id: str,
     task_id: int,
     title: Optional[str] = None,
     description: Optional[str] = None,
@@ -280,8 +315,9 @@ def update_task(
 ) -> dict:
     """Update a task's details.
 
+    The user is automatically identified from the session context.
+
     Args:
-        user_id: The user's unique identifier
         task_id: The ID of the task to update
         title: New title for the task (optional)
         description: New description for the task (optional)
@@ -295,6 +331,8 @@ def update_task(
         dict with status and updated task info
     """
     try:
+        # Get user_id from request context for task isolation
+        user_id = get_user_id_from_request()
         # Validate priority if provided
         if priority and priority not in ["low", "medium", "high"]:
             return {"status": "error", "message": "Invalid priority. Must be one of: low, medium, high"}

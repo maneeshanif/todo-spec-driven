@@ -59,14 +59,22 @@ def get_gemini_model(model_name: str | None = None) -> OpenAIChatCompletionsMode
     )
 
 
-def get_mcp_server_url() -> str:
+def get_mcp_server_url(user_id: str | None = None) -> str:
     """Get the MCP server URL from settings.
+
+    Args:
+        user_id: Optional user ID to include in the URL for per-user context.
+                 When provided, appended as query parameter for task isolation.
 
     Returns:
         str: MCP server URL for Streamable HTTP transport.
               FastMCP HTTP transport serves at the root when no path specified.
     """
-    return settings.MCP_SERVER_URL.rstrip("/")
+    base_url = settings.MCP_SERVER_URL.rstrip("/")
+    if user_id:
+        # Include user_id as query parameter for task isolation
+        return f"{base_url}?user_id={user_id}"
+    return base_url
 
 
 __all__ = [
