@@ -6,6 +6,36 @@
 
 ---
 
+## 🚨 ABSOLUTE REQUIREMENTS - READ FIRST
+
+### ⛔ STOP! Before ANY Backend Work
+
+**You MUST complete these steps IN ORDER:**
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│  STEP 1: READ ROOT CLAUDE.md                                            │
+│  → ../CLAUDE.md contains project-wide rules                             │
+│  → All rules from root apply here                                       │
+│                                                                         │
+│  STEP 2: INVOKE SKILL (MANDATORY)                                       │
+│  → Skill(skill: "matching-skill-name")                                  │
+│  → See Skill Matching Table below                                       │
+│                                                                         │
+│  STEP 3: FETCH CONTEXT7 DOCS (MANDATORY)                                │
+│  → mcp__context7__resolve-library-id                                    │
+│  → mcp__context7__get-library-docs                                      │
+│                                                                         │
+│  STEP 4: DELEGATE TO SUBAGENT (MANDATORY)                               │
+│  → Task(subagent_type: "agent-name", prompt: "...")                     │
+│  → NEVER write backend code directly                                    │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+**VIOLATION OF THESE STEPS IS FORBIDDEN. NO EXCEPTIONS.**
+
+---
+
 ## Coupling with Root CLAUDE.md
 
 This file extends the root `../CLAUDE.md`. **ALWAYS read the root file first** for:
@@ -22,43 +52,91 @@ This file extends the root `../CLAUDE.md`. **ALWAYS read the root file first** f
 
 ---
 
-## CRITICAL: Pre-Implementation Requirements
+## 🎯 BACKEND SKILL INVOCATION - MANDATORY
 
-### Context7 MCP - ALWAYS USE FIRST
+### Skill Matching Table - USE FOR EVERY BACKEND TASK
 
-**BEFORE writing ANY backend code, you MUST fetch latest docs:**
+| When User Asks About... | INVOKE SKILL | Then Use Agent |
+|-------------------------|--------------|----------------|
+| FastAPI setup, project init, routes | `fastapi-setup` | `backend-api-builder` |
+| Database setup, Neon, PostgreSQL | `neon-db-setup` | `database-designer` |
+| Authentication, Better Auth, JWT | `better-auth-integration` | `backend-api-builder` |
+| OpenAI Agents SDK, AI agent, Gemini | `openai-agents-setup` | `ai-agent-builder` |
+| FastMCP server, MCP tools | `fastmcp-server-setup` | `mcp-server-builder` |
+| Chat API, chat endpoint | `chat-api-integration` | `backend-api-builder` |
+| SSE streaming, real-time responses | `streaming-sse-setup` | `backend-api-builder` |
+
+### Backend Skills Reference
+
+| Skill Name | Path | Purpose |
+|------------|------|---------|
+| `fastapi-setup` | `../.claude/skills/fastapi-setup/SKILL.md` | FastAPI project initialization |
+| `neon-db-setup` | `../.claude/skills/neon-db-setup/SKILL.md` | Neon PostgreSQL configuration |
+| `better-auth-integration` | `../.claude/skills/better-auth-integration/SKILL.md` | Better Auth implementation |
+| `openai-agents-setup` | `../.claude/skills/openai-agents-setup/SKILL.md` | OpenAI Agents + Gemini |
+| `fastmcp-server-setup` | `../.claude/skills/fastmcp-server-setup/SKILL.md` | FastMCP server creation |
+| `chat-api-integration` | `../.claude/skills/chat-api-integration/SKILL.md` | Chat API endpoint |
+| `streaming-sse-setup` | `../.claude/skills/streaming-sse-setup/SKILL.md` | SSE streaming setup |
+
+---
+
+## 🤖 BACKEND AGENT DELEGATION - MANDATORY
+
+### ABSOLUTE RULE: NEVER WRITE BACKEND CODE DIRECTLY
+
+**All backend code generation MUST be delegated to a specialized subagent:**
+
+| Code Type | DELEGATE TO AGENT | subagent_type |
+|-----------|-------------------|---------------|
+| FastAPI endpoints, routes | Backend API Builder | `backend-api-builder` |
+| FastAPI services, middleware | Backend API Builder | `backend-api-builder` |
+| JWT validation, auth middleware | Backend API Builder | `backend-api-builder` |
+| SQLModel models, schemas | Database Designer | `database-designer` |
+| Alembic migrations | Database Designer | `database-designer` |
+| OpenAI Agents SDK code | AI Agent Builder | `ai-agent-builder` |
+| Gemini/LiteLLM configuration | AI Agent Builder | `ai-agent-builder` |
+| @function_tool wrappers | AI Agent Builder | `ai-agent-builder` |
+| FastMCP server | MCP Server Builder | `mcp-server-builder` |
+| @mcp.tool() definitions | MCP Server Builder | `mcp-server-builder` |
+
+### Agent Invocation Pattern
+
+```
+Task(
+  subagent_type: "backend-api-builder",
+  prompt: "Create a FastAPI endpoint for...",
+  description: "Create API endpoint"
+)
+```
+
+---
+
+## 🔍 CONTEXT7 MCP - MANDATORY DOCUMENTATION LOOKUP
+
+### BEFORE Writing ANY Backend Code
+
+**You MUST fetch latest docs using Context7:**
 
 ```
 # Phase 2 (Foundation)
-1. mcp_context7_resolve-library-id("fastapi") → get-library-docs
-2. mcp_context7_resolve-library-id("sqlmodel") → get-library-docs
-3. mcp_context7_resolve-library-id("pydantic") → get-library-docs
+1. mcp__context7__resolve-library-id(libraryName: "fastapi")
+2. mcp__context7__resolve-library-id(libraryName: "sqlmodel")
+3. mcp__context7__resolve-library-id(libraryName: "pydantic")
 
 # Phase 3 (AI Chatbot)
-4. mcp_context7_resolve-library-id("openai-agents-sdk") → get-library-docs
-5. mcp_context7_resolve-library-id("fastmcp") → get-library-docs
-6. mcp_context7_resolve-library-id("litellm") → get-library-docs
-7. mcp_context7_resolve-library-id("sse-starlette") → get-library-docs
+4. mcp__context7__resolve-library-id(libraryName: "openai-agents-sdk")
+5. mcp__context7__resolve-library-id(libraryName: "fastmcp")
+6. mcp__context7__resolve-library-id(libraryName: "litellm")
+7. mcp__context7__resolve-library-id(libraryName: "sse-starlette")
 ```
 
-**Never assume API patterns - verify with Context7 first!**
+**NEVER ASSUME API PATTERNS - ALWAYS VERIFY WITH CONTEXT7!**
 
-### Agent Requirements
+---
 
-**Backend code MUST be generated by these agents:**
+## 📋 SPEC READING - MANDATORY
 
-| Task Type | Agent | Trigger |
-|-----------|-------|--------|
-| API endpoints, services, middleware | `@backend-api-builder` | Any API code |
-| Schema, models, migrations | `@database-designer` | Any DB code |
-| OpenAI Agents SDK, MCP integration | `@ai-agent-builder` | AI agent code |
-| FastMCP server, tool definitions | `@mcp-server-builder` | MCP server code |
-
-Do NOT write backend code directly. Always delegate to the appropriate agent.
-
-### Required Spec Reading
-
-Before implementing any backend feature:
+### Required Spec Reading Before Implementation
 
 | Spec | Path | Purpose |
 |------|------|--------|
@@ -68,17 +146,62 @@ Before implementing any backend feature:
 | Chat Schema | `../specs/database/chat-schema.md` | Conversation/Message |
 | Chatbot Feature | `../specs/features/chatbot.md` | AI chatbot requirements |
 
-### Required Skills
+---
 
-| Task | Skill | Read First |
-|------|-------|------------|
-| Project setup | `fastapi-setup` | `.claude/skills/fastapi-setup/SKILL.md` |
-| Database setup | `neon-db-setup` | `.claude/skills/neon-db-setup/SKILL.md` |
-| Auth implementation | `better-auth-integration` | `.claude/skills/better-auth-integration/SKILL.md` |
-| OpenAI Agents | `openai-agents-setup` | `.claude/skills/openai-agents-setup/SKILL.md` |
-| MCP Server | `fastmcp-server-setup` | `.claude/skills/fastmcp-server-setup/SKILL.md` |
-| Chat API | `chat-api-integration` | `.claude/skills/chat-api-integration/SKILL.md` |
-| SSE Streaming | `streaming-sse-setup` | `.claude/skills/streaming-sse-setup/SKILL.md` |
+## 🔄 COMPLETE BACKEND WORKFLOW
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                    MANDATORY BACKEND WORKFLOW                           │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│  1. IDENTIFY TASK TYPE                                                  │
+│     └─ API endpoint? Database model? AI agent? MCP tool?                │
+│                                                                         │
+│  2. INVOKE SKILL                                                        │
+│     └─ Skill(skill: "matching-skill-name")                              │
+│     └─ Read examples and patterns from SKILL.md                         │
+│                                                                         │
+│  3. FETCH CONTEXT7 DOCS                                                 │
+│     └─ Fetch docs for FastAPI, SQLModel, etc.                           │
+│     └─ For AI: fetch OpenAI Agents SDK, FastMCP, LiteLLM                │
+│                                                                         │
+│  4. READ RELEVANT SPECS                                                 │
+│     └─ API spec, database schema, feature spec                          │
+│                                                                         │
+│  5. DELEGATE TO SUBAGENT                                                │
+│     └─ Task(subagent_type: "backend-api-builder", prompt: "...")        │
+│     └─ Or Task(subagent_type: "database-designer", prompt: "...")       │
+│     └─ Or Task(subagent_type: "ai-agent-builder", prompt: "...")        │
+│     └─ Or Task(subagent_type: "mcp-server-builder", prompt: "...")      │
+│                                                                         │
+│  6. VERIFY & TEST                                                       │
+│     └─ Run tests, check types, verify functionality                     │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+### Example: User asks "Create a chat endpoint"
+
+```
+1. IDENTIFY: API endpoint + AI agent integration
+2. SKILLS:
+   - Skill(skill: "chat-api-integration")
+   - Skill(skill: "streaming-sse-setup")
+3. CONTEXT7: Fetch FastAPI, SSE-Starlette docs
+4. SPECS: Read specs/api/chat-endpoints.md
+5. DELEGATE: Task(subagent_type: "backend-api-builder", prompt: "...")
+```
+
+### Example: User asks "Add MCP tool for task creation"
+
+```
+1. IDENTIFY: MCP tool definition
+2. SKILL: Skill(skill: "fastmcp-server-setup")
+3. CONTEXT7: Fetch FastMCP docs
+4. SPECS: Read specs/features/chatbot.md
+5. DELEGATE: Task(subagent_type: "mcp-server-builder", prompt: "...")
+```
 
 ---
 

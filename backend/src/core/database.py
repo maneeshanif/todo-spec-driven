@@ -3,14 +3,24 @@ from sqlmodel import create_engine, Session, SQLModel
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncEngine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import NullPool
 from src.core.config import settings
 
 
 # Create async engine for PostgreSQL
+# Using NullPool for serverless (Neon) to avoid connection issues
+# Each request gets a fresh connection that's closed after use
 engine = create_async_engine(
     str(settings.DATABASE_URL),
     echo=settings.DEBUG,
     future=True,
+    # Pool settings for serverless PostgreSQL (Neon)
+    poolclass=NullPool,  # Disable connection pooling for serverless
+    connect_args={
+        "server_settings": {
+            "application_name": "todo-api",
+        },
+    },
 )
 
 # Async session maker

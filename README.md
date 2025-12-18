@@ -2,18 +2,30 @@
 
 A modern, AI-powered todo application built using **Spec-Driven Development** with Claude Code and Spec-Kit Plus.
 
-## Current Phase: Phase 3 - AI-Powered Todo Chatbot 🚧
+## Current Phase: Phase 3 - AI-Powered Todo Chatbot
 
 Transform the Phase 2 web application into an AI-powered chatbot interface with natural language task management.
 
-### 🎯 Phase 3 Features (In Progress)
+### Phase 3 Features
 
-- 🔄 **AI Chatbot Interface** - Natural language task management
-- 🔄 **OpenAI Agents SDK** - Gemini-powered AI assistant
-- 🔄 **MCP Server** - FastMCP with 5 task operation tools
-- 🔄 **SSE Streaming** - Real-time response streaming
-- 🔄 **Conversation History** - Persistent chat storage
-- 🔄 **ChatKit UI** - Modern chat interface components
+- **AI Chatbot Interface** - Natural language task management through conversation
+- **OpenAI Agents SDK** - Gemini 2.5 Flash-powered AI assistant
+- **MCP Server** - FastMCP with 5 task operation tools
+- **SSE Streaming** - Real-time response streaming with token-by-token display
+- **Conversation History** - Persistent chat storage with sidebar navigation
+- **ChatKit UI** - Modern chat interface components
+
+### Natural Language Commands
+
+Talk to the AI assistant naturally to manage your tasks:
+
+| Intent | Example Commands |
+|--------|------------------|
+| **Add Task** | "Add a task to buy groceries", "I need to remember to call mom", "Create task: finish report" |
+| **List Tasks** | "Show me all my tasks", "What's pending?", "What have I completed?" |
+| **Complete Task** | "Mark task 3 as complete", "I finished buying groceries", "Complete the meeting task" |
+| **Delete Task** | "Delete task 2", "Remove the old meeting task" |
+| **Update Task** | "Change task 1 to 'Call mom tonight'", "Update task 2 description to 'Include milk and eggs'" |
 
 ### Phase 3 Tech Stack
 
@@ -27,29 +39,29 @@ Transform the Phase 2 web application into an AI-powered chatbot interface with 
 - httpx (Async HTTP client)
 
 **Frontend Additions:**
-- OpenAI ChatKit (Chat UI components - verify package from https://platform.openai.com/docs/guides/chatkit)
+- OpenAI ChatKit (Chat UI components)
 - eventsource-parser (SSE parsing)
 
 ---
 
-## Phase 2: Full-Stack Web Application ✅ COMPLETE
+## Phase 2: Full-Stack Web Application (COMPLETE)
 
 A production-ready web application with persistent storage, Better Auth authentication, and multi-user support.
 
-### 🎯 Features Implemented
+### Features Implemented
 
-- ✅ **User Authentication** - Better Auth with JWT tokens (signup, login, logout)
-- ✅ **Task Management** - Full CRUD operations (Create, Read, Update, Delete)
-- ✅ **Optimistic Updates** - Immediate UI feedback for all operations
-- ✅ **Smooth Animations** - Framer Motion transitions for state changes
-- ✅ **Real-time Validation** - React Hook Form + Zod schemas
-- ✅ **Error Handling** - Toast notifications for success/error states
-- ✅ **Responsive Design** - Mobile-first Tailwind CSS styling
-- ✅ **User Isolation** - Tasks are private to each user
-- ✅ **Voice Assistant** - Voice commands to create and complete tasks
-- ✅ **Task Filtering** - Filter by status, priority
-- ✅ **Task Sorting** - Sort by date, priority, title
-- ✅ **Analytics Dashboard** - Task statistics and insights
+- **User Authentication** - Better Auth with JWT tokens (signup, login, logout)
+- **Task Management** - Full CRUD operations (Create, Read, Update, Delete)
+- **Optimistic Updates** - Immediate UI feedback for all operations
+- **Smooth Animations** - Framer Motion transitions for state changes
+- **Real-time Validation** - React Hook Form + Zod schemas
+- **Error Handling** - Toast notifications for success/error states
+- **Responsive Design** - Mobile-first Tailwind CSS styling
+- **User Isolation** - Tasks are private to each user
+- **Voice Assistant** - Voice commands to create and complete tasks
+- **Task Filtering** - Filter by status, priority
+- **Task Sorting** - Sort by date, priority, title
+- **Analytics Dashboard** - Task statistics and insights
 
 ### Tech Stack
 
@@ -69,6 +81,41 @@ A production-ready web application with persistent storage, Better Auth authenti
 - SQLModel 0.0.24+ ORM
 - PostgreSQL (Neon Serverless)
 - Better Auth JWT Validation (JWKS)
+
+---
+
+## Architecture
+
+### System Overview
+
+```
++--------------------+       +----------------------+       +------------------+
+|                    |       |                      |       |                  |
+|   Next.js Frontend |<----->|   FastAPI Backend    |<----->|   Neon PostgreSQL|
+|   (Vercel)         |       |   (Port 8000)        |       |                  |
+|                    |       |                      |       +------------------+
+|   - ChatKit UI     |       |   - JWT Auth         |
+|   - Zustand Store  |       |   - Chat Router      |       +------------------+
+|   - SSE Client     |       |   - OpenAI Agents    |<----->|   FastMCP Server |
+|                    |       |     SDK              |       |   (Port 8001)    |
++--------------------+       +----------------------+       |                  |
+                                      |                     |   - add_task     |
+                                      v                     |   - list_tasks   |
+                              +---------------+             |   - complete_task|
+                              |  Gemini 2.5   |             |   - delete_task  |
+                              |  Flash API    |             |   - update_task  |
+                              +---------------+             +------------------+
+```
+
+### MCP Tools
+
+| Tool | Parameters | Returns | Description |
+|------|------------|---------|-------------|
+| `add_task` | user_id, title, description? | {task_id, status, title} | Create new task |
+| `list_tasks` | user_id, status? | [{id, title, completed, ...}] | List user's tasks |
+| `complete_task` | user_id, task_id | {task_id, status, title} | Mark task complete |
+| `delete_task` | user_id, task_id | {task_id, status, title} | Delete task |
+| `update_task` | user_id, task_id, title?, description? | {task_id, status, title} | Update task |
 
 ---
 
@@ -157,7 +204,7 @@ A production-ready web application with persistent storage, Better Auth authenti
 - Node.js 20+
 - PostgreSQL or Neon account
 - UV package manager (`pip install uv`)
-- Gemini API Key (for Phase 3)
+- Gemini API Key (for Phase 3 AI features)
 
 ### Backend Setup
 
@@ -184,23 +231,39 @@ npm run dev                # Start dev server
 
 Frontend will run at http://localhost:3000
 
-### Phase 3 Additional Setup
+### Phase 3 AI Chatbot Setup
 
 ```bash
-# Backend - Install AI dependencies
+# 1. Install backend AI dependencies
 cd backend
 uv add openai-agents fastmcp litellm sse-starlette httpx
 
-# Frontend - Install chat dependencies
+# 2. Install frontend chat dependencies
 cd frontend
-# Note: Verify ChatKit package name from https://platform.openai.com/docs/guides/chatkit
 npm install eventsource-parser
-# npm install <chatkit-package>  # Install after verifying package name
 
-# Run MCP server (separate terminal)
+# 3. Configure Gemini API key in backend/.env
+GEMINI_API_KEY=your-gemini-api-key-here
+
+# 4. Run MCP server (separate terminal)
 cd backend
 uv run python -m src.mcp_server.server
+
+# 5. Start backend (separate terminal)
+cd backend
+uv run uvicorn src.main:app --reload
+
+# 6. Start frontend (separate terminal)
+cd frontend
+npm run dev
 ```
+
+### Accessing the Chat Interface
+
+1. Navigate to http://localhost:3000
+2. Log in with your account
+3. Click "Chat" in the navigation
+4. Start typing natural language commands to manage tasks
 
 ---
 
@@ -219,33 +282,138 @@ BETTER_AUTH_URL=http://localhost:3000
 # CORS
 CORS_ORIGINS=http://localhost:3000
 
-# Phase 3 - AI
+# Phase 3 - AI Configuration
 GEMINI_API_KEY=your-gemini-api-key
 GEMINI_MODEL=gemini-2.5-flash
+
+# Phase 3 - MCP Server
 MCP_SERVER_URL=http://localhost:8001
 MCP_SERVER_PORT=8001
 ```
 
-### Frontend (.env.local) - Phase 3 Additions
+### Frontend (.env.local)
 
 ```env
+# API URL
+NEXT_PUBLIC_API_URL=http://localhost:8000
+
 # ChatKit (for production deployment)
 # Get domain key from: https://platform.openai.com/settings/organization/security/domain-allowlist
 NEXT_PUBLIC_OPENAI_DOMAIN_KEY=your-domain-key-here
 ```
 
-**ChatKit Domain Allowlist (Production)**:
-Before deploying to production, add your domain to OpenAI's allowlist:
+### Getting API Keys
+
+**Gemini API Key:**
+1. Visit https://ai.google.dev/
+2. Sign in with Google account
+3. Navigate to "Get API Key"
+4. Create a new API key
+5. Copy to `GEMINI_API_KEY` in backend/.env
+
+**ChatKit Domain Allowlist (Production Only):**
 1. Deploy frontend to get URL (e.g., `https://your-app.vercel.app`)
 2. Add domain at: https://platform.openai.com/settings/organization/security/domain-allowlist
-3. Copy domain key to environment variables
+3. Copy domain key to `NEXT_PUBLIC_OPENAI_DOMAIN_KEY`
 4. Note: localhost works without configuration
 
-### Frontend (.env.local)
+---
 
-```env
-NEXT_PUBLIC_API_URL=http://localhost:8000
+## API Documentation
+
+- **Swagger UI**: http://localhost:8000/docs
+- **ReDoc**: http://localhost:8000/redoc
+
+### Phase 2 Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/{user_id}/tasks` | List all tasks |
+| POST | `/api/{user_id}/tasks` | Create task |
+| GET | `/api/{user_id}/tasks/{id}` | Get task |
+| PUT | `/api/{user_id}/tasks/{id}` | Update task |
+| DELETE | `/api/{user_id}/tasks/{id}` | Delete task |
+| PATCH | `/api/{user_id}/tasks/{id}/complete` | Toggle complete |
+
+### Phase 3 Chat Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/{user_id}/chat` | Send message (non-streaming) |
+| POST | `/api/{user_id}/chat/stream` | Send message (SSE streaming) |
+| GET | `/api/{user_id}/conversations` | List conversations |
+| GET | `/api/{user_id}/conversations/{id}` | Get conversation with messages |
+| DELETE | `/api/{user_id}/conversations/{id}` | Delete conversation |
+
+### Chat Request/Response Format
+
+**Request:**
+```json
+{
+  "conversation_id": 123,  // optional - creates new if not provided
+  "message": "Add a task to buy groceries"
+}
 ```
+
+**Response (non-streaming):**
+```json
+{
+  "success": true,
+  "data": {
+    "conversation_id": 123,
+    "message_id": 456,
+    "response": "I've added 'Buy groceries' to your task list.",
+    "tool_calls": [
+      {
+        "tool": "add_task",
+        "args": {"title": "Buy groceries"},
+        "result": {"task_id": 789, "status": "created"}
+      }
+    ]
+  }
+}
+```
+
+**Response (SSE streaming):**
+```
+event: token
+data: {"content": "I've "}
+
+event: token
+data: {"content": "added "}
+
+event: tool_call
+data: {"tool": "add_task", "args": {"title": "Buy groceries"}}
+
+event: tool_result
+data: {"task_id": 789, "status": "created"}
+
+event: done
+data: {"conversation_id": 123, "message_id": 456}
+```
+
+---
+
+## Performance & Security
+
+### Performance Targets
+
+| Metric | Target |
+|--------|--------|
+| First token latency | < 2 seconds |
+| Full response time | < 30 seconds |
+| MCP tool execution | < 500ms |
+| Conversation load | < 1 second |
+| Concurrent sessions | 100+ |
+
+### Security Measures
+
+- **JWT Authentication**: All chat endpoints require valid JWT tokens
+- **User Isolation**: Users can only access their own conversations and tasks
+- **Rate Limiting**: 30 messages/minute per user
+- **Input Validation**: Message length limited to 4000 characters
+- **Input Sanitization**: Protection against prompt injection attacks
+- **Audit Trail**: Tool calls are logged for security review
 
 ---
 
@@ -278,34 +446,6 @@ This project follows **Spec-Driven Development**:
 
 ---
 
-## API Documentation
-
-- **Swagger UI**: http://localhost:8000/docs
-- **ReDoc**: http://localhost:8000/redoc
-
-### Phase 2 Endpoints
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/{user_id}/tasks` | List all tasks |
-| POST | `/api/{user_id}/tasks` | Create task |
-| GET | `/api/{user_id}/tasks/{id}` | Get task |
-| PUT | `/api/{user_id}/tasks/{id}` | Update task |
-| DELETE | `/api/{user_id}/tasks/{id}` | Delete task |
-| PATCH | `/api/{user_id}/tasks/{id}/complete` | Toggle complete |
-
-### Phase 3 Endpoints (Coming)
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/{user_id}/chat` | Send message (non-streaming) |
-| POST | `/api/{user_id}/chat/stream` | Send message (SSE streaming) |
-| GET | `/api/{user_id}/conversations` | List conversations |
-| GET | `/api/{user_id}/conversations/{id}` | Get conversation |
-| DELETE | `/api/{user_id}/conversations/{id}` | Delete conversation |
-
----
-
 ## See Also
 
 - [CLAUDE.md](./CLAUDE.md) - Root agent orchestrator
@@ -314,6 +454,13 @@ This project follows **Spec-Driven Development**:
 - [Phase 3 Plan](./plan-prompt-phase-3.md)
 - [Backend README](./backend/README.md)
 - [Frontend README](./frontend/README.md)
+
+### External Documentation
+
+- [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/)
+- [FastMCP GitHub](https://github.com/jlowin/fastmcp)
+- [OpenAI ChatKit](https://platform.openai.com/docs/guides/chatkit)
+- [Gemini API](https://ai.google.dev/docs)
 
 ---
 

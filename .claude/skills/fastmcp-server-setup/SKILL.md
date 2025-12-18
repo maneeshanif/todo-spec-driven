@@ -91,10 +91,10 @@ uv run python -m src.mcp_server.server  # modify server to use http
 | Transport | Use Case | Code | URL Pattern |
 |-----------|----------|------|-------------|
 | `stdio` | CLI, desktop apps, local dev | `mcp.run()` | N/A (spawned process) |
-| `http` | Web deployment, API access | `mcp.run(transport="http", host="0.0.0.0", port=8000, path="/mcp")` | `http://localhost:8000/mcp` |
-| `sse` | Legacy SSE clients | `mcp.run(transport="sse", host="127.0.0.1", port=8000)` | `http://localhost:8000/sse` |
+| `http` | Web deployment, API access | `mcp.run(transport="http", host="0.0.0.0", port=8001)` | `http://localhost:8001` |
+| `sse` | Legacy SSE clients | `mcp.run(transport="sse", host="127.0.0.1", port=8001)` | `http://localhost:8001/sse` |
 
-**Recommended for Phase 3**: Use `http` transport for agent integration.
+**Recommended for Phase 3**: Use `http` transport for agent integration. No `path` parameter needed for HTTP transport.
 
 ---
 
@@ -334,12 +334,11 @@ def update_task(
 
 
 if __name__ == "__main__":
-    # HTTP transport for web integration
+    # HTTP transport for web integration (no path parameter needed)
     mcp.run(
         transport="http",
         host="0.0.0.0",
         port=8001,
-        path="/mcp"
     )
 ```
 
@@ -353,8 +352,8 @@ import asyncio
 from fastmcp import Client
 
 async def test_mcp_server():
-    # Connect to HTTP server
-    async with Client("http://localhost:8001/mcp") as client:
+    # Connect to HTTP server (no /mcp path needed)
+    async with Client("http://localhost:8001") as client:
         # List available tools
         tools = await client.list_tools()
         print("Available tools:")
