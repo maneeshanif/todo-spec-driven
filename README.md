@@ -128,13 +128,15 @@ A production-ready web application with persistent storage, Better Auth authenti
 
 ### MCP Tools
 
+> **Note:** User identity is automatically injected from the authenticated session. Tools don't require `user_id` parameter - task isolation is enforced server-side.
+
 | Tool | Parameters | Returns | Description |
 |------|------------|---------|-------------|
-| `add_task` | user_id, title, description? | {task_id, status, title} | Create new task |
-| `list_tasks` | user_id, status? | [{id, title, completed, ...}] | List user's tasks |
-| `complete_task` | user_id, task_id | {task_id, status, title} | Mark task complete |
-| `delete_task` | user_id, task_id | {task_id, status, title} | Delete task |
-| `update_task` | user_id, task_id, title?, description? | {task_id, status, title} | Update task |
+| `add_task` | title, description?, priority?, due_date?, is_recurring?, recurrence_pattern? | {task_id, status, title, priority, due_date} | Create new task |
+| `list_tasks` | status?, priority? | {total, pending_count, completed_count, tasks: [...]} | List user's tasks with filters |
+| `complete_task` | task_id | {task_id, status, title} | Mark task complete |
+| `delete_task` | task_id | {task_id, status, title} | Delete task |
+| `update_task` | task_id, title?, description?, priority?, due_date?, completed?, is_recurring?, recurrence_pattern? | {task_id, status, title, ...} | Update task details |
 
 ---
 
@@ -263,19 +265,60 @@ npm install eventsource-parser
 
 # 3. Configure Gemini API key in backend/.env
 GEMINI_API_KEY=your-gemini-api-key-here
+```
 
-# 4. Run MCP server (separate terminal)
+### Running All Three Servers (Phase 3)
+
+Phase 3 requires **three servers** running simultaneously. Open three terminal windows:
+
+**Terminal 1 - MCP Server (Port 8001):**
+```bash
 cd backend
 uv run python -m src.mcp_server.server
+# Output: 🚀 Starting Todo MCP Server on http://0.0.0.0:8001
+```
 
-# 5. Start backend (separate terminal)
+**Terminal 2 - FastAPI Backend (Port 8000):**
+```bash
 cd backend
-uv run uvicorn src.main:app --reload
+uv run uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
+# Output: Uvicorn running on http://0.0.0.0:8000
+```
 
-# 6. Start frontend (separate terminal)
+**Terminal 3 - Next.js Frontend (Port 3000):**
+```bash
 cd frontend
 npm run dev
+# Output: Ready on http://localhost:3000
 ```
+
+### Quick Start Commands (Copy-Paste Ready)
+
+```bash
+# Option 1: Run all in background (Linux/Mac)
+cd backend && uv run python -m src.mcp_server.server &
+cd backend && uv run uvicorn src.main:app --reload &
+cd frontend && npm run dev &
+
+# Option 2: Using separate terminals
+# Terminal 1:
+cd /path/to/todo-web-hackthon/backend && uv run python -m src.mcp_server.server
+
+# Terminal 2:
+cd /path/to/todo-web-hackthon/backend && uv run uvicorn src.main:app --reload
+
+# Terminal 3:
+cd /path/to/todo-web-hackthon/frontend && npm run dev
+```
+
+### Server URLs
+
+| Server | URL | Purpose |
+|--------|-----|---------|
+| MCP Server | http://localhost:8001 | FastMCP task tools (AI agent connects here) |
+| Backend API | http://localhost:8000 | FastAPI REST endpoints + Chat API |
+| Frontend | http://localhost:3000 | Next.js web application |
+| API Docs | http://localhost:8000/docs | Swagger UI documentation |
 
 ### Accessing the Chat Interface
 
