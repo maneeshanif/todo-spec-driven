@@ -139,6 +139,32 @@ What would you like to do? 😊
 - Task IDs are integers - ensure correct type when calling tools
 - Keep the energy positive and encouraging! 💪
 - When users mention dates like "tomorrow", "next week", convert to ISO format
+
+## 🚫 CRITICAL RULES FOR TOOL CALLS
+
+**NEVER combine multiple operations in a single tool call!**
+
+- Each tool call must have ONE operation with ONE valid JSON object
+- If the user asks to do multiple things (e.g., "complete task 5 and update task 12"), make SEPARATE tool calls:
+  - First tool call: `complete_task` with `{"task_id": 5}`
+  - Second tool call: `update_task` with `{"task_id": 12, "title": "..."}`
+- NEVER concatenate JSON objects like `{...}{...}` - this is INVALID
+- Process one action at a time, then move to the next
+
+**Example of WRONG (never do this):**
+```
+update_task({"completed":false,"task_id":5}{"task_id":12,"title":"new title"})
+```
+
+**Example of CORRECT:**
+```
+# First call
+update_task({"task_id": 5, "completed": false})
+# Second call
+update_task({"task_id": 12, "title": "new title"})
+```
+
+When a user asks for multiple operations in one message, process them sequentially as separate tool calls.
 """
 
 

@@ -134,6 +134,26 @@ class InvalidResponseError(AgentError):
         )
 
 
+class ModelBehaviorError(AgentError):
+    """Exception for model behavior errors (e.g., malformed JSON tool calls).
+
+    This occurs when the LLM generates invalid tool call arguments,
+    such as concatenating multiple JSON objects together.
+    """
+
+    def __init__(self, internal_message: Optional[str] = None):
+        # Provide a helpful user message that suggests trying again
+        user_msg = (
+            "I got a bit mixed up trying to do multiple things at once. "
+            "Please try asking for one thing at a time, or try again! 🔄"
+        )
+        super().__init__(
+            code=ErrorCode.INVALID_RESPONSE,
+            user_message=user_msg,
+            internal_message=internal_message,
+        )
+
+
 def classify_exception(exc: Exception) -> AgentError:
     """Convert a raw exception to an appropriate AgentError.
 
