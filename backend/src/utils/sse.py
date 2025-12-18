@@ -182,6 +182,171 @@ async def stream_events(
         yield event
 
 
+# =====================================================
+# Verbose Events - Detailed agent lifecycle indicators
+# =====================================================
+
+
+def create_verbose_event(
+    event_type: str,
+    message: str,
+    agent_name: str | None = None,
+    tool_name: str | None = None,
+    call_id: str | None = None,
+    data: dict[str, Any] | None = None,
+) -> ServerSentEvent:
+    """Create a verbose SSE event for agent lifecycle.
+
+    These events provide granular visibility into agent execution:
+    - agent_start: Agent initialized
+    - agent_end: Agent finished
+    - llm_start: LLM call starting
+    - llm_end: LLM response received
+    - mcp_request: MCP tool request sent
+    - mcp_response: MCP tool response received
+    - handoff: Agent handoff occurred
+
+    Args:
+        event_type: The verbose event type
+        message: Human-readable description
+        agent_name: Name of the agent (optional)
+        tool_name: Name of the tool (optional)
+        call_id: Tool call ID (optional)
+        data: Additional event data (optional)
+
+    Returns:
+        ServerSentEvent with the specified verbose event type
+    """
+    event_data = {
+        "message": message,
+    }
+    if agent_name:
+        event_data["agent_name"] = agent_name
+    if tool_name:
+        event_data["tool_name"] = tool_name
+    if call_id:
+        event_data["call_id"] = call_id
+    if data:
+        event_data.update(data)
+
+    return format_sse_event(event_type, event_data)
+
+
+def create_agent_start_event(
+    agent_name: str,
+    message: str = "Agent initialized",
+) -> ServerSentEvent:
+    """Create SSE event for agent start."""
+    return create_verbose_event("agent_start", message, agent_name=agent_name)
+
+
+def create_agent_end_event(
+    agent_name: str,
+    message: str = "Agent finished",
+) -> ServerSentEvent:
+    """Create SSE event for agent end."""
+    return create_verbose_event("agent_end", message, agent_name=agent_name)
+
+
+def create_llm_start_event(
+    agent_name: str,
+    model: str = "gemini-2.5-flash",
+) -> ServerSentEvent:
+    """Create SSE event for LLM call starting."""
+    return create_verbose_event(
+        "llm_start",
+        f"Calling LLM ({model})...",
+        agent_name=agent_name,
+        data={"model": model},
+    )
+
+
+def create_llm_end_event(
+    agent_name: str,
+) -> ServerSentEvent:
+    """Create SSE event for LLM response received."""
+    return create_verbose_event(
+        "llm_end",
+        "LLM response received",
+        agent_name=agent_name,
+    )
+
+
+def create_mcp_request_event(
+    tool_name: str,
+    call_id: str,
+    agent_name: str | None = None,
+) -> ServerSentEvent:
+    """Create SSE event for MCP tool request sent."""
+    return create_verbose_event(
+        "mcp_request",
+        f"MCP Request → {tool_name}",
+        agent_name=agent_name,
+        tool_name=tool_name,
+        call_id=call_id,
+    )
+
+
+def create_mcp_response_event(
+    tool_name: str,
+    call_id: str,
+    agent_name: str | None = None,
+) -> ServerSentEvent:
+    """Create SSE event for MCP tool response received."""
+    return create_verbose_event(
+        "mcp_response",
+        f"MCP Response ← {tool_name}",
+        agent_name=agent_name,
+        tool_name=tool_name,
+        call_id=call_id,
+    )
+
+
+def create_handoff_event(
+    from_agent: str,
+    to_agent: str,
+) -> ServerSentEvent:
+    """Create SSE event for agent handoff."""
+    return create_verbose_event(
+        "handoff",
+        f"Handoff: {from_agent} → {to_agent}",
+        agent_name=to_agent,
+        data={"from_agent": from_agent, "to_agent": to_agent},
+    )
+
+
+# =====================================================
+# RunItem Events - All 6 RunItem types from SDK
+# =====================================================
+
+
+def create_handoff_call_event(
+    tool: str,
+    call_id: str,
+) -> ServerSentEvent:
+    """Create SSE event for handoff call (LLM calling handoff tool).
+
+    This is the handoff_call_item from RunItem types.
+    """
+    return format_sse_event("handoff_call", {
+        "tool": tool,
+        "call_id": call_id,
+    })
+
+
+def create_reasoning_event(
+    content: str,
+) -> ServerSentEvent:
+    """Create SSE event for reasoning/thinking from LLM.
+
+    This is the reasoning_item from RunItem types.
+    Shows the LLM's internal reasoning process.
+    """
+    return format_sse_event("reasoning", {
+        "content": content,
+    })
+
+
 __all__ = [
     "format_sse_event",
     "create_token_event",
@@ -192,4 +357,16 @@ __all__ = [
     "create_thinking_event",
     "create_agent_updated_event",
     "stream_events",
+    # Verbose events
+    "create_verbose_event",
+    "create_agent_start_event",
+    "create_agent_end_event",
+    "create_llm_start_event",
+    "create_llm_end_event",
+    "create_mcp_request_event",
+    "create_mcp_response_event",
+    "create_handoff_event",
+    # RunItem events
+    "create_handoff_call_event",
+    "create_reasoning_event",
 ]

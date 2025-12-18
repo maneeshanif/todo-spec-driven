@@ -204,6 +204,7 @@ export default function VoiceAssistantPage() {
   const [currentAgent, setCurrentAgent] = useState("TodoBot");
   const [streamingContent, setStreamingContent] = useState("");
   const [activeToolCalls, setActiveToolCalls] = useState<ActiveToolCall[]>([]);
+  const [workflowComplete, setWorkflowComplete] = useState(false);
   const [conversationId, setConversationId] = useState<number | null>(null);
 
   // Conversation history
@@ -228,6 +229,7 @@ export default function VoiceAssistantPage() {
     setParsedResponse(null);
     setStreamingContent("");
     setActiveToolCalls([]);
+    setWorkflowComplete(false);
     setIsThinking(false);
     setThinkingMessage("");
     speak("Starting a new conversation. How can I help you?");
@@ -303,6 +305,7 @@ export default function VoiceAssistantPage() {
     setIsProcessing(true);
     setStreamingContent("");
     setActiveToolCalls([]);
+    setWorkflowComplete(false);
     setResponse("");
     setParsedResponse(null);
 
@@ -377,6 +380,7 @@ export default function VoiceAssistantPage() {
             setConversationId(newConversationId);
             setIsProcessing(false);
             setIsThinking(false);
+            setWorkflowComplete(true);
 
             // Get the final response, parse it, and speak clean version
             setStreamingContent((finalContent) => {
@@ -739,8 +743,8 @@ export default function VoiceAssistantPage() {
               </motion.div>
             )}
 
-            {/* Thinking Indicator */}
-            {isThinking && (
+            {/* Thinking Indicator - Keep visible even when tools start */}
+            {(isThinking || activeToolCalls.length > 0) && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -757,7 +761,7 @@ export default function VoiceAssistantPage() {
                   <div className="flex-1 text-left">
                     <p className="text-xs tracking-wider uppercase mb-1" style={{ color: colors.goldDark }}>
                       <Bot className="w-3 h-3 inline mr-1" />
-                      {currentAgent} is thinking...
+                      {currentAgent} is {isThinking ? 'thinking' : 'working'}...
                     </p>
                     {thinkingMessage && (
                       <p className="text-sm" style={{ color: colors.textMuted }}>{thinkingMessage}</p>
@@ -767,44 +771,57 @@ export default function VoiceAssistantPage() {
               </motion.div>
             )}
 
-            {/* Tool Calls Indicator */}
+            {/* Tool Calls Indicator - Hybrid Workflow Display */}
             {activeToolCalls.length > 0 && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="p-6 border rounded-lg"
-                style={{ backgroundColor: `${colors.gold}10`, borderColor: colors.gold }}
+                style={{ backgroundColor: `${colors.gold}10`, borderColor: workflowComplete ? colors.green : colors.gold }}
               >
                 <div className="flex items-start gap-3">
-                  <Wrench className="w-5 h-5 shrink-0 mt-1" style={{ color: colors.goldDark }} />
+                  <Wrench className="w-5 h-5 shrink-0 mt-1" style={{ color: workflowComplete ? colors.green : colors.goldDark }} />
                   <div className="flex-1 text-left">
-                    <p className="text-xs tracking-wider uppercase mb-2" style={{ color: colors.goldDark }}>
-                      Actions:
-                    </p>
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-xs tracking-wider uppercase" style={{ color: workflowComplete ? colors.green : colors.goldDark }}>
+                        🔗 Hybrid Workflow - Tool Execution
+                      </p>
+                      {workflowComplete && (
+                        <span className="text-xs px-2 py-1 rounded-full flex items-center gap-1" style={{ backgroundColor: `${colors.green}20`, color: colors.green }}>
+                          <CheckCircle2 className="w-3 h-3" />
+                          Workflow Complete
+                        </span>
+                      )}
+                    </div>
                     <div className="space-y-2">
                       {activeToolCalls.map((tc) => (
                         <div
                           key={tc.callId}
-                          className="flex items-center gap-2 text-sm"
-                          style={{ color: colors.text }}
+                          className="flex items-center gap-2 text-sm p-2 rounded-lg"
+                          style={{ 
+                            backgroundColor: tc.status === 'completed' ? `${colors.green}10` : `${colors.background}50`,
+                            borderLeft: `3px solid ${tc.status === 'completed' ? colors.green : colors.goldDark}`
+                          }}
                         >
                           <span>{getToolEmoji(tc.tool)}</span>
-                          <span>{getToolDescription(tc.tool)}</span>
+                          <span className="flex-1">{getToolDescription(tc.tool)}</span>
                           {tc.status === 'executing' && (
                             <motion.span
                               animate={{ opacity: [1, 0.5, 1] }}
                               transition={{ repeat: Infinity, duration: 1 }}
-                              className="text-xs px-2 py-0.5 rounded"
+                              className="text-xs px-2 py-0.5 rounded flex items-center gap-1"
                               style={{ backgroundColor: `${colors.gold}30`, color: colors.goldDark }}
                             >
+                              <Loader2 className="w-3 h-3 animate-spin" />
                               Running...
                             </motion.span>
                           )}
                           {tc.status === 'completed' && (
                             <span
-                              className="text-xs px-2 py-0.5 rounded"
+                              className="text-xs px-2 py-0.5 rounded flex items-center gap-1"
                               style={{ backgroundColor: `${colors.green}20`, color: colors.green }}
                             >
+                              <CheckCircle2 className="w-3 h-3" />
                               Done
                             </span>
                           )}
@@ -828,9 +845,9 @@ export default function VoiceAssistantPage() {
                   <Sparkles className="w-5 h-5 shrink-0 mt-1" style={{ color: colors.goldDark }} />
                   <div className="flex-1 text-left">
                     <p className="text-xs tracking-wider uppercase mb-1" style={{ color: colors.goldDark }}>
-                      {currentAgent}:
+                      ✨ Generating Response from {currentAgent}:
                     </p>
-                    <p className="text-sm" style={{ color: colors.textMuted }}>Generating response...</p>
+                    <p className="text-sm" style={{ color: colors.textMuted }}>Processing your request with hybrid AI...</p>
                     <motion.span
                       animate={{ opacity: [1, 0] }}
                       transition={{ repeat: Infinity, duration: 0.5 }}

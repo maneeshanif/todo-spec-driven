@@ -13,7 +13,26 @@ Transform the Phase 2 web application into an AI-powered chatbot interface with 
 - **MCP Server** - FastMCP with 5 task operation tools
 - **SSE Streaming** - Real-time response streaming with token-by-token display
 - **Conversation History** - Persistent chat storage with sidebar navigation
-- **ChatKit UI** - Modern chat interface components
+- **Modern UI** - Responsive chat interface with markdown support
+- **Loading Indicators** - Visual feedback during AI processing
+- **Auto-scroll** - Automatic scrolling to new messages
+- **Keyboard Shortcuts** - Enter to send, Shift+Enter for newline
+- **Error Handling** - Graceful error messages for failures
+- **Security** - Rate limiting, input sanitization, and prompt injection protection
+
+### Hybrid Voice + AI Chat Interface
+
+The Voice Assistant page now features a **Hybrid UI** that combines voice commands with real AI chat:
+
+- **Real AI Integration** - Voice commands are processed by the Gemini-powered AI agent (not dummy responses)
+- **Multi-stage Speech Feedback** - Hear "Thinking...", tool notifications, and final responses
+- **Streaming Responses** - Real-time token streaming with visual indicators
+- **Task List Cards** - Beautiful card-based UI for task lists with priority badges
+- **Conversation History Panel** - Toggle sidebar to view chat history
+- **New Chat Button** - Start fresh conversations while preserving history
+- **Verbose Mode Toggle** - Switch between verbose/compact streaming indicators
+- **Example Commands** - Clickable command suggestions for quick testing
+- **Context Awareness** - Follow-up questions maintain conversation context
 
 ### Natural Language Commands
 
@@ -410,10 +429,12 @@ data: {"conversation_id": 123, "message_id": 456}
 
 - **JWT Authentication**: All chat endpoints require valid JWT tokens
 - **User Isolation**: Users can only access their own conversations and tasks
-- **Rate Limiting**: 30 messages/minute per user
-- **Input Validation**: Message length limited to 4000 characters
-- **Input Sanitization**: Protection against prompt injection attacks
+- **Rate Limiting**: 30 messages/minute per user (enforced by middleware)
+- **Input Validation**: Message length limited to 4000 characters (enforced by Pydantic)
+- **Input Sanitization**: Protection against prompt injection attacks (automatic sanitization)
+- **Graceful Error Handling**: User-friendly error messages for AI model failures
 - **Audit Trail**: Tool calls are logged for security review
+- **HTTPS Required**: All production traffic uses HTTPS encryption
 
 ---
 

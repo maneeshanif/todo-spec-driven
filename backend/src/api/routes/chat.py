@@ -49,7 +49,12 @@ from src.utils.sse import (
     create_error_event,
     create_thinking_event,
     create_agent_updated_event,
+    create_verbose_event,
+    create_handoff_call_event,
+    create_handoff_event,
+    create_reasoning_event,
 )
+from src.utils.sanitize import sanitize_user_input, is_potentially_malicious
 
 logger = logging.getLogger(__name__)
 
@@ -81,6 +86,20 @@ async def send_message(
     conversation_service = ConversationService(session)
 
     try:
+        # Check for suspicious patterns first
+        is_suspicious = is_potentially_malicious(request.message)
+        if is_suspicious:
+            logger.warning(f"Suspicious input detected from user {user_id}")
+        
+        # Sanitize user input to prevent prompt injection
+        sanitized_message = sanitize_user_input(request.message)
+        
+        if not sanitized_message.strip():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Message cannot be empty after sanitization"
+            )
+        
         # Get or create conversation
         conversation = await conversation_service.get_or_create(
             user_id=user_id,
@@ -94,14 +113,14 @@ async def send_message(
         await conversation_service.add_message(
             conversation_id=conversation.id,
             role="user",
-            content=request.message,
+            content=sanitized_message,
         )
 
         # Run agent with native MCP integration
         # The runner handles agent creation and MCP server connection internally
         response = await run_agent(
             user_id=user_id,
-            message=request.message,
+            message=sanitized_message,
             history=history,
         )
 
@@ -190,12 +209,36 @@ async def send_message_stream(
     - `agent_updated`: Agent changed (multi-agent scenarios)
     - `done`: Completion with conversation_id and message_id
     - `error`: Error message if something goes wrong
+
+    When verbose=True, also emits:
+    - `agent_start`: Agent initialized
+    - `agent_end`: Agent finished
+    - `llm_start`: LLM call starting (calling Gemini)
+    - `llm_end`: LLM response received
+    - `mcp_request`: MCP tool request sent
+    - `mcp_response`: MCP tool response received
+    - `handoff`: Agent handoff occurred (multi-agent)
     """
     user_id = current_user["id"]
     conversation_service = ConversationService(session)
 
     async def generate():
         try:
+            # Check for suspicious patterns first
+            is_suspicious = is_potentially_malicious(request.message)
+            if is_suspicious:
+                logger.warning(f"Suspicious input detected from user {user_id}")
+            
+            # Sanitize user input to prevent prompt injection
+            sanitized_message = sanitize_user_input(request.message)
+            
+            if not sanitized_message.strip():
+                yield create_error_event(
+                    "Message cannot be empty after sanitization",
+                    error_code="EMPTY_MESSAGE"
+                )
+                return
+            
             # Get or create conversation
             conversation = await conversation_service.get_or_create(
                 user_id=user_id,
@@ -209,7 +252,7 @@ async def send_message_stream(
             await conversation_service.add_message(
                 conversation_id=conversation.id,
                 role="user",
-                content=request.message,
+                content=sanitized_message,
             )
 
             # Track full response and tool calls
@@ -220,8 +263,9 @@ async def send_message_stream(
             # The runner handles agent creation and MCP server connection internally
             async for event in run_agent_streamed(
                 user_id=user_id,
-                message=request.message,
+                message=sanitized_message,
                 history=history,
+                verbose=request.verbose,  # Pass verbose flag
             ):
                 # Thinking event - agent is processing
                 if event.type == "thinking":
@@ -269,6 +313,47 @@ async def send_message_stream(
                     yield create_error_event(
                         message=event.content or "Something went wrong on my end. Please try again.",
                         code=error_code,
+                    )
+
+                # =====================================================
+                # RunItem events - All 6 RunItem types from SDK
+                # =====================================================
+
+                # Handoff call event - LLM is calling handoff to another agent
+                elif event.type == "handoff_call":
+                    yield create_handoff_call_event(
+                        tool=event.data.get("tool", "handoff") if event.data else "handoff",
+                        call_id=event.data.get("call_id", "") if event.data else "",
+                    )
+
+                # Handoff event - Agent handoff occurred
+                elif event.type == "handoff":
+                    yield create_handoff_event(
+                        from_agent=event.data.get("from_agent", "Unknown") if event.data else "Unknown",
+                        to_agent=event.data.get("to_agent", "Unknown") if event.data else "Unknown",
+                    )
+
+                # Reasoning event - LLM's reasoning/thinking process
+                elif event.type == "reasoning":
+                    yield create_reasoning_event(
+                        content=event.content or "",
+                    )
+
+                # =====================================================
+                # Verbose events - detailed agent lifecycle indicators
+                # =====================================================
+                elif event.type in (
+                    "agent_start", "agent_end",
+                    "llm_start", "llm_end",
+                    "mcp_request", "mcp_response",
+                ):
+                    yield create_verbose_event(
+                        event_type=event.type,
+                        message=event.content or "",
+                        agent_name=event.data.get("agent_name") if event.data else None,
+                        tool_name=event.data.get("tool_name") if event.data else None,
+                        call_id=event.data.get("call_id") if event.data else None,
+                        data=event.data,
                     )
 
             # Store assistant response

@@ -239,14 +239,12 @@ export function ConversationItem({
             <>
               <p className="text-sm font-medium truncate">{displayTitle}</p>
               {conversation.preview && (
-                <p className="text-xs text-muted-foreground truncate max-w-full">
-                  {conversation.preview.length > 50
-                    ? `${conversation.preview.slice(0, 50)}...`
-                    : conversation.preview}
+                <p className="text-xs text-muted-foreground truncate">
+                  {sanitizePreview(conversation.preview, 15)}
                 </p>
               )}
               {!hideDate && !conversation.preview && (
-                <p className="text-xs text-muted-foreground">{formattedDate}</p>
+                <p className="text-xs text-muted-foreground truncate">{formattedDate}</p>
               )}
             </>
           )}
@@ -258,7 +256,12 @@ export function ConversationItem({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-6 w-6 opacity-0 group-hover:opacity-100"
+                className={cn(
+                  "h-6 w-6 shrink-0 transition-opacity",
+                  // Always visible with slight transparency, full opacity on hover or when selected
+                  "opacity-70 hover:opacity-100",
+                  isSelected && "opacity-100"
+                )}
                 onClick={(e) => e.stopPropagation()}
               >
                 <MoreVertical className="h-4 w-4" />
@@ -333,4 +336,49 @@ function formatDate(dateString: string): string {
   } else {
     return date.toLocaleDateString();
   }
+}
+
+/**
+ * Sanitize preview text by removing markdown formatting and tables
+ */
+function sanitizePreview(text: string, maxLength: number): string {
+  // Remove markdown tables (lines with pipes)
+  let cleaned = text
+    .split('\n')
+    .filter(line => !line.includes('|'))
+    .join(' ');
+  
+  // Remove markdown headers
+  cleaned = cleaned.replace(/^#{1,6}\s+/gm, '');
+  
+  // Remove bold/italic markers
+  cleaned = cleaned.replace(/[*_]{1,3}/g, '');
+  
+  // Remove code blocks and inline code
+  cleaned = cleaned.replace(/```[\s\S]*?```/g, '');
+  cleaned = cleaned.replace(/`[^`]+`/g, '');
+  
+  // Remove links but keep text
+  cleaned = cleaned.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
+  
+  // Remove extra whitespace
+  cleaned = cleaned.replace(/\s+/g, ' ').trim();
+  
+  // If empty after cleaning, return empty string (don't show preview)
+  if (!cleaned) {
+    return '';
+  }
+  
+  // Truncate to max length
+  if (cleaned.length > maxLength) {
+    // Try to break at word boundary
+    const truncated = cleaned.slice(0, maxLength);
+    const lastSpace = truncated.lastIndexOf(' ');
+    if (lastSpace > maxLength * 0.6) {
+      return truncated.slice(0, lastSpace) + '...';
+    }
+    return truncated + '...';
+  }
+  
+  return cleaned;
 }
