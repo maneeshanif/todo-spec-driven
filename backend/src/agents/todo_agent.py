@@ -135,7 +135,7 @@ What would you like to do? 😊
 
 ## ⚡ Important Notes
 - Always use the provided MCP tools to perform operations - never simulate or fake task operations
-- The user_id will be provided in the context - use it for all tool calls
+- User identity is automatically handled - you don't need to pass user_id to tools
 - Task IDs are integers - ensure correct type when calling tools
 - Keep the energy positive and encouraging! 💪
 - When users mention dates like "tomorrow", "next week", convert to ISO format
@@ -146,21 +146,18 @@ def create_todo_agent_config(user_id: str) -> tuple[str, str]:
     """Create the agent configuration for a specific user.
 
     Returns the agent name and instructions with user context.
+    Note: user_id is now passed via MCP URL query parameter for task isolation,
+    so tools don't need it as a parameter.
 
     Args:
-        user_id: The user's ID - used for task ownership and isolation
+        user_id: The user's ID - used for logging/debugging purposes
 
     Returns:
-        tuple: (agent_name, instructions_with_user_context)
+        tuple: (agent_name, instructions)
     """
-    # Create user-specific instructions that include the user_id
-    user_instructions = f"""{SYSTEM_PROMPT}
-
-## Current User Context
-- User ID: {user_id}
-- All task operations should use this user_id
-"""
-    return ("TodoBot", user_instructions)
+    # User identity is now handled automatically via MCP URL query parameter
+    # The system prompt doesn't need to mention user_id for tool calls anymore
+    return ("TodoBot", SYSTEM_PROMPT)
 
 
 # Export for use in chat endpoints
