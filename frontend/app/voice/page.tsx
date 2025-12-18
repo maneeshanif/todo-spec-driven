@@ -798,8 +798,8 @@ export default function VoiceAssistantPage() {
                         <div
                           key={tc.callId}
                           className="flex items-center gap-2 text-sm p-2 rounded-lg"
-                          style={{ 
-                            backgroundColor: tc.status === 'completed' ? `${colors.green}10` : `${colors.background}50`,
+                          style={{
+                            backgroundColor: tc.status === 'completed' ? `${colors.green}10` : `${colors.bg}50`,
                             borderLeft: `3px solid ${tc.status === 'completed' ? colors.green : colors.goldDark}`
                           }}
                         >
