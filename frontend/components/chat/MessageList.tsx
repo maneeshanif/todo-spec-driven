@@ -17,18 +17,20 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { cn } from '@/lib/utils';
 import type { Message, ToolCall } from '@/types/chat';
-import { Bot, User, Wrench, CheckCircle, XCircle } from 'lucide-react';
+import { Bot, User, Wrench, CheckCircle, XCircle, ListTodo, Plus, Calendar, Search } from 'lucide-react';
 
 interface MessageListProps {
   messages: Message[];
   streamingContent?: string;
   className?: string;
+  onSuggestedPrompt?: (prompt: string) => void;
 }
 
 export function MessageList({
   messages,
   streamingContent,
   className,
+  onSuggestedPrompt,
 }: MessageListProps) {
   const endRef = useRef<HTMLDivElement>(null);
 
@@ -37,12 +39,54 @@ export function MessageList({
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, streamingContent]);
 
+  const suggestedPrompts = [
+    { icon: ListTodo, text: "Show me all my tasks", color: "text-blue-600" },
+    { icon: Plus, text: "Add a new task: Buy groceries", color: "text-green-600" },
+    { icon: Calendar, text: "What tasks are due today?", color: "text-purple-600" },
+    { icon: Search, text: "Find tasks with priority high", color: "text-orange-600" },
+  ];
+
   if (messages.length === 0 && !streamingContent) {
     return (
-      <div className={cn('flex flex-col items-center justify-center h-full text-muted-foreground px-4', className)}>
-        <Bot className="h-10 w-10 sm:h-12 sm:w-12 mb-4 opacity-50" />
-        <p className="text-base sm:text-lg font-medium text-center">Start a conversation</p>
-        <p className="text-xs sm:text-sm text-center">Ask me to help manage your tasks!</p>
+      <div className={cn('flex flex-col items-center justify-center h-full text-muted-foreground px-4 py-8', className)}>
+        <div className="max-w-2xl w-full space-y-6">
+          {/* Welcome header */}
+          <div className="text-center space-y-2">
+            <Bot className="h-12 w-12 sm:h-16 sm:w-16 mx-auto mb-4 text-primary/70" />
+            <h2 className="text-xl sm:text-2xl font-semibold text-foreground">Welcome to Todo Assistant</h2>
+            <p className="text-sm sm:text-base text-muted-foreground">
+              I'm your AI-powered task manager. I can help you create, organize, and track your tasks.
+            </p>
+          </div>
+
+          {/* Quick start suggestions */}
+          <div className="space-y-3">
+            <p className="text-xs sm:text-sm font-medium text-center text-muted-foreground uppercase tracking-wide">
+              Try asking me:
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {suggestedPrompts.map((prompt, index) => (
+                <button
+                  key={index}
+                  onClick={() => onSuggestedPrompt?.(prompt.text)}
+                  className="flex items-center gap-3 p-4 rounded-lg border border-border bg-card hover:bg-accent hover:border-primary/50 transition-all duration-200 text-left group"
+                >
+                  <prompt.icon className={cn("h-5 w-5 shrink-0", prompt.color)} />
+                  <span className="text-sm text-foreground group-hover:text-primary transition-colors">
+                    {prompt.text}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Additional info */}
+          <div className="text-center pt-4 border-t border-border">
+            <p className="text-xs text-muted-foreground">
+              💡 Powered by hybrid AI agents with real-time task management
+            </p>
+          </div>
+        </div>
       </div>
     );
   }

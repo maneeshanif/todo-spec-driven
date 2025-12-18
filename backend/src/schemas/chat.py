@@ -25,6 +25,10 @@ class ChatRequest(BaseModel):
 
     conversation_id: Optional[int] = None
     message: str = Field(..., min_length=1, max_length=4000)
+    verbose: bool = Field(
+        default=False,
+        description="Enable verbose mode to emit detailed agent lifecycle events"
+    )
 
 
 class ChatResponse(BaseModel):

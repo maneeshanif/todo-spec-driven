@@ -13,7 +13,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { chatApi } from '@/lib/api/chat';
 import { streamChatMessage } from '@/lib/sse/client';
-import type { Conversation, Message, ToolCall, ActiveToolCall } from '@/types/chat';
+import type { Conversation, Message, ToolCall, ActiveToolCall, ToolLifecyclePhase } from '@/types/chat';
 
 interface ConversationState {
   // Data
@@ -27,6 +27,12 @@ interface ConversationState {
   isThinking: boolean;
   thinkingMessage: string;
   currentAgent: string;
+
+  // RunItem state for hybrid UI (reasoning, handoff)
+  reasoning: string;
+  isHandingOff: boolean;
+  handoffFromAgent: string;
+  handoffToAgent: string;
 
   // Loading states
   isLoading: boolean;
@@ -54,15 +60,21 @@ interface ConversationActions {
 
   // Messaging
   sendMessage: (content: string) => Promise<void>;
-  sendMessageStreaming: (content: string) => Promise<void>;
+  sendMessageStreaming: (content: string, verboseCallbacks?: Partial<import('@/lib/sse/client').StreamCallbacks>) => Promise<void>;
 
   // Streaming state updates (for hybrid UI)
   appendStreamToken: (token: string) => void;
   setThinking: (thinking: boolean, message?: string, agent?: string) => void;
-  addStreamToolCall: (toolCall: ToolCall) => void;
+  addStreamToolCall: (toolCall: ToolCall, agentName?: string, model?: string) => void;
   updateToolCallResult: (callId: string, output: unknown) => void;
+  updateToolCallPhase: (callId: string, phase: ToolLifecyclePhase) => void;
   updateAgent: (agent: string) => void;
   finishStreaming: (conversationId: number, messageId: number) => void;
+
+  // RunItem state updates (for hybrid UI - reasoning, handoff)
+  setReasoning: (reasoning: string) => void;
+  appendReasoning: (text: string) => void;
+  setHandoff: (isHandingOff: boolean, fromAgent?: string, toAgent?: string) => void;
 
   // State management
   setStreaming: (streaming: boolean) => void;
@@ -86,6 +98,12 @@ const initialState: ConversationState = {
   isThinking: false,
   thinkingMessage: '',
   currentAgent: 'TodoBot',
+  // RunItem state
+  reasoning: '',
+  isHandingOff: false,
+  handoffFromAgent: '',
+  handoffToAgent: '',
+  // Loading states
   isLoading: false,
   isStreaming: false,
   isSending: false,
@@ -275,7 +293,7 @@ export const useConversationStore = create<ConversationStore>()(
 
       // Send a message with SSE streaming (hybrid UI)
       sendMessageStreaming: async (content: string) => {
-        const { currentConversation, messages, appendStreamToken, setThinking, addStreamToolCall, updateToolCallResult, updateAgent, finishStreaming } = get();
+        const { currentConversation, messages, appendStreamToken, setThinking, addStreamToolCall, updateToolCallResult, updateAgent, finishStreaming, setReasoning, appendReasoning, setHandoff } = get();
 
         // Create optimistic user message
         const userMessage: Message = {
@@ -293,8 +311,15 @@ export const useConversationStore = create<ConversationStore>()(
           error: null,
           streamingContent: '',
           streamingToolCalls: [],
-          isThinking: false,
-          thinkingMessage: '',
+          // Show thinking immediately with "Sending request" message
+          isThinking: true,
+          thinkingMessage: 'Sending your request to the server...',
+          currentAgent: 'TodoBot',
+          // Reset RunItem state
+          reasoning: '',
+          isHandingOff: false,
+          handoffFromAgent: '',
+          handoffToAgent: '',
         });
 
         try {
@@ -302,13 +327,15 @@ export const useConversationStore = create<ConversationStore>()(
             currentConversation?.id ?? null,
             content,
             {
-              // Thinking event - show spinner
+              // Thinking event - update thinking message (already showing from initial state)
               onThinking: (message, agent) => {
-                setThinking(true, message, agent);
+                // Update the thinking message to show progress
+                setThinking(true, message || 'Processing your request...', agent);
               },
               // Token event - append to content
               onToken: (token) => {
                 setThinking(false); // Stop thinking when we get tokens
+                setHandoff(false); // Stop handoff indicator when we get tokens
                 appendStreamToken(token);
               },
               // Tool call event - show tool indicator
@@ -337,7 +364,25 @@ export const useConversationStore = create<ConversationStore>()(
                   isStreaming: false,
                   isSending: false,
                   isThinking: false,
+                  isHandingOff: false,
                 });
+              },
+              // =====================================================
+              // RunItem events - Reasoning, Handoff
+              // =====================================================
+              // Reasoning event - LLM's internal thinking process
+              onReasoning: (reasoningText) => {
+                appendReasoning(reasoningText);
+              },
+              // Handoff call event - LLM is calling handoff tool
+              onHandoffCall: (tool, callId) => {
+                setHandoff(true);
+              },
+              // Handoff event - Agent handoff occurred
+              onHandoff: (fromAgent, toAgent) => {
+                setHandoff(true, fromAgent, toAgent);
+                // Update current agent after handoff
+                updateAgent(toAgent);
               },
             }
           );
@@ -348,6 +393,7 @@ export const useConversationStore = create<ConversationStore>()(
             isStreaming: false,
             isSending: false,
             isThinking: false,
+            isHandingOff: false,
           });
         }
       },
@@ -368,33 +414,85 @@ export const useConversationStore = create<ConversationStore>()(
         }));
       },
 
-      // Add a tool call during streaming
-      addStreamToolCall: (toolCall: ToolCall) => {
+      // Add a tool call during streaming with lifecycle tracking
+      addStreamToolCall: (toolCall: ToolCall, agentName?: string, model?: string) => {
+        const { currentAgent } = get();
         const activeToolCall: ActiveToolCall = {
           callId: toolCall.id,
           tool: toolCall.tool,
           args: toolCall.arguments,
           status: 'executing',
+          // Lifecycle tracking
+          lifecyclePhase: 'tool_running',
+          lifecycleHistory: ['agent_start', 'llm_calling', 'mcp_requesting', 'tool_running'],
+          agentName: agentName || currentAgent,
+          model: model || 'gemini-2.5-flash',
         };
         set((state) => ({
           streamingToolCalls: [...state.streamingToolCalls, activeToolCall],
         }));
       },
 
-      // Update tool call with result
+      // Update tool call lifecycle phase
+      updateToolCallPhase: (callId: string, phase: ToolLifecyclePhase) => {
+        set((state) => ({
+          streamingToolCalls: state.streamingToolCalls.map((tc) => {
+            if (tc.callId === callId) {
+              const history = tc.lifecycleHistory || [];
+              return {
+                ...tc,
+                lifecyclePhase: phase,
+                lifecycleHistory: history.includes(phase) ? history : [...history, phase],
+              };
+            }
+            return tc;
+          }),
+        }));
+      },
+
+      // Update tool call with result and complete lifecycle
       updateToolCallResult: (callId: string, output: unknown) => {
         set((state) => ({
-          streamingToolCalls: state.streamingToolCalls.map((tc) =>
-            tc.callId === callId
-              ? { ...tc, status: 'completed' as const, result: output }
-              : tc
-          ),
+          streamingToolCalls: state.streamingToolCalls.map((tc) => {
+            if (tc.callId === callId) {
+              const history = tc.lifecycleHistory || [];
+              return {
+                ...tc,
+                status: 'completed' as const,
+                result: output,
+                lifecyclePhase: 'completed' as ToolLifecyclePhase,
+                lifecycleHistory: [...history, 'mcp_responded', 'completed'] as ToolLifecyclePhase[],
+              };
+            }
+            return tc;
+          }),
         }));
       },
 
       // Update current agent name
       updateAgent: (agent: string) => {
         set({ currentAgent: agent });
+      },
+
+      // Set reasoning text
+      setReasoning: (reasoning: string) => {
+        set({ reasoning });
+      },
+
+      // Append to reasoning text
+      appendReasoning: (text: string) => {
+        set((state) => ({
+          reasoning: state.reasoning + text,
+        }));
+      },
+
+      // Set handoff state
+      setHandoff: (isHandingOff: boolean, fromAgent?: string, toAgent?: string) => {
+        set({
+          isHandingOff,
+          handoffFromAgent: fromAgent || '',
+          handoffToAgent: toAgent || '',
+        });
       },
 
       // Finish streaming and create final message
@@ -438,6 +536,11 @@ export const useConversationStore = create<ConversationStore>()(
           isStreaming: false,
           isThinking: false,
           thinkingMessage: '',
+          // Reset RunItem state
+          reasoning: '',
+          isHandingOff: false,
+          handoffFromAgent: '',
+          handoffToAgent: '',
         }));
 
         // Refresh conversations list silently (no loading state)
@@ -519,3 +622,16 @@ export const useChatError = () => useConversationStore((state) => state.error);
 
 export const useIsSidebarOpen = () =>
   useConversationStore((state) => state.isSidebarOpen);
+
+// RunItem state selectors
+export const useReasoning = () =>
+  useConversationStore((state) => state.reasoning);
+
+export const useIsHandingOff = () =>
+  useConversationStore((state) => state.isHandingOff);
+
+export const useHandoffFromAgent = () =>
+  useConversationStore((state) => state.handoffFromAgent);
+
+export const useHandoffToAgent = () =>
+  useConversationStore((state) => state.handoffToAgent);

@@ -9,24 +9,38 @@ The agent automatically discovers and uses tools from the MCP server.
 
 Streaming uses Runner.run_streamed() which returns a result object
 (NOT an async context manager). Iterate with: async for event in result.stream_events()
+
+VERBOSE MODE: When verbose=True, emits detailed SSE events for:
+- agent_start/agent_end: Agent lifecycle
+- llm_start/llm_end: LLM (Gemini) calls
+- mcp_request/mcp_response: MCP tool requests and responses
 """
 
 import logging
-from dataclasses import dataclass
-from typing import AsyncGenerator, Optional
+import asyncio
+from dataclasses import dataclass, field
+from typing import AsyncGenerator, Optional, List
 
-from agents import Agent, Runner, ItemHelpers
+from agents import Agent, Runner, ItemHelpers, enable_verbose_stdout_logging
 from agents.mcp import MCPServerStreamableHttp
 from agents.items import (
     TResponseInputItem,
     MessageOutputItem,
     ToolCallItem,
     ToolCallOutputItem,
+    HandoffCallItem,
+    HandoffOutputItem,
+    ReasoningItem,
 )
 from openai.types.responses import ResponseTextDeltaEvent
 
 from src.agents.config import get_gemini_model, get_mcp_server_url
-from src.agents.hooks import run_hooks
+from src.agents.hooks import (
+    run_hooks,
+    VerboseEvent,
+    VerboseEventType,
+    set_verbose_callback,
+)
 from src.agents.errors import (
     AgentError,
     classify_exception,
@@ -55,6 +69,15 @@ class StreamEvent:
     - 'agent_updated': Agent changed (for multi-agent scenarios)
     - 'done': Streaming completed
     - 'error': Error occurred
+
+    Verbose event types (when verbose=True):
+    - 'agent_start': Agent initialized
+    - 'agent_end': Agent finished
+    - 'llm_start': LLM call starting
+    - 'llm_end': LLM response received
+    - 'mcp_request': MCP tool request sent
+    - 'mcp_response': MCP tool response received
+    - 'handoff': Agent handoff occurred
     """
 
     type: str
@@ -188,6 +211,7 @@ async def run_agent_streamed(
     user_id: str,
     message: str,
     history: Optional[list[dict[str, str]]] = None,
+    verbose: bool = False,
 ) -> AsyncGenerator[StreamEvent, None]:
     """Run the agent with streaming output.
 
@@ -199,6 +223,8 @@ async def run_agent_streamed(
         user_id: The user's ID for task operations
         message: The user's message to process
         history: Optional conversation history
+        verbose: If True, emit detailed lifecycle events (agent_start,
+                 llm_start, llm_end, mcp_request, mcp_response)
 
     Yields:
         StreamEvent objects for each event type:
@@ -209,6 +235,15 @@ async def run_agent_streamed(
         - agent_updated: Agent changed (multi-agent)
         - done: Completion signal
         - error: Error occurred
+
+        When verbose=True, also yields:
+        - agent_start: Agent initialized
+        - agent_end: Agent finished
+        - llm_start: LLM call starting
+        - llm_end: LLM response received
+        - mcp_request: MCP tool request sent
+        - mcp_response: MCP tool response received
+        - handoff: Agent handoff occurred
     """
     # Build input with history if provided
     input_messages: list[TResponseInputItem] = []
@@ -226,11 +261,29 @@ async def run_agent_streamed(
         "content": message,
     })
 
-    logger.info(f"Starting streamed agent run for user {user_id} with {len(input_messages)} messages")
+    logger.info(f"Starting streamed agent run for user {user_id} with {len(input_messages)} messages (verbose={verbose})")
 
     mcp_url = get_mcp_server_url()
     tool_calls: list[dict] = []
     full_content = ""
+
+    # Queue to receive verbose events from hooks (thread-safe)
+    verbose_queue: asyncio.Queue[VerboseEvent] = asyncio.Queue() if verbose else None
+
+    # Set up verbose callback if enabled
+    if verbose:
+        # Enable SDK's verbose stdout logging for debugging
+        enable_verbose_stdout_logging()
+
+        def verbose_callback(event: VerboseEvent) -> None:
+            """Callback for hooks to emit verbose events."""
+            try:
+                # Put event in queue (non-blocking)
+                verbose_queue.put_nowait(event)
+            except asyncio.QueueFull:
+                logger.warning(f"Verbose event queue full, dropping: {event.type}")
+
+        set_verbose_callback(verbose_callback)
 
     try:
         # Use native MCP integration via async context manager
@@ -267,8 +320,34 @@ async def run_agent_streamed(
                 hooks=run_hooks,
             )
 
+            # Helper to drain verbose queue and yield events
+            async def drain_verbose_queue():
+                """Drain any pending verbose events from the queue."""
+                if not verbose_queue:
+                    return
+                while not verbose_queue.empty():
+                    try:
+                        verbose_event = verbose_queue.get_nowait()
+                        yield StreamEvent(
+                            type=verbose_event.type.value,
+                            content=verbose_event.message,
+                            data={
+                                "agent_name": verbose_event.agent_name,
+                                "tool_name": verbose_event.tool_name,
+                                "call_id": verbose_event.call_id,
+                                **(verbose_event.data or {}),
+                            },
+                        )
+                    except asyncio.QueueEmpty:
+                        break
+
             # Iterate over stream events
             async for event in result.stream_events():
+                # Drain any verbose events that came in
+                if verbose:
+                    async for verbose_stream_event in drain_verbose_queue():
+                        yield verbose_stream_event
+
                 event_type = event.type
 
                 # Raw response events - contains text deltas for token-by-token streaming
@@ -348,6 +427,54 @@ async def run_agent_streamed(
                                 content=text,
                             )
 
+                    # Handoff call item - LLM is calling handoff to another agent
+                    elif item.type == "handoff_call_item":
+                        raw = item.raw_item
+                        yield StreamEvent(
+                            type="handoff_call",
+                            content=f"Initiating handoff to another agent",
+                            data={
+                                "tool": getattr(raw, "name", "handoff"),
+                                "call_id": getattr(raw, "call_id", None) or getattr(raw, "id", ""),
+                            },
+                        )
+
+                    # Handoff output item - Agent handoff occurred
+                    elif item.type == "handoff_output_item":
+                        source_agent = getattr(item, "source_agent", None)
+                        target_agent = getattr(item, "target_agent", None)
+                        source_name = source_agent.name if source_agent else "Unknown"
+                        target_name = target_agent.name if target_agent else "Unknown"
+                        yield StreamEvent(
+                            type="handoff",
+                            content=f"Handoff: {source_name} → {target_name}",
+                            data={
+                                "from_agent": source_name,
+                                "to_agent": target_name,
+                            },
+                        )
+
+                    # Reasoning item - LLM's reasoning/thinking process
+                    elif item.type == "reasoning_item":
+                        raw = item.raw_item
+                        # ResponseReasoningItem has a 'summary' field with reasoning text
+                        reasoning_text = ""
+                        if hasattr(raw, "summary"):
+                            for part in raw.summary:
+                                if hasattr(part, "text"):
+                                    reasoning_text += part.text
+                        if reasoning_text:
+                            yield StreamEvent(
+                                type="reasoning",
+                                content=reasoning_text,
+                                data={"type": "reasoning"},
+                            )
+
+            # Drain any remaining verbose events
+            if verbose:
+                async for verbose_stream_event in drain_verbose_queue():
+                    yield verbose_stream_event
+
             # Get final output if we didn't stream any content
             if not full_content and result.final_output:
                 full_content = str(result.final_output)
@@ -382,6 +509,10 @@ async def run_agent_streamed(
             content=classified.user_message,
             data={"code": classified.code.value},
         )
+    finally:
+        # Clean up verbose callback to prevent memory leaks
+        if verbose:
+            set_verbose_callback(None)
 
 
 __all__ = [

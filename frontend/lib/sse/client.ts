@@ -12,7 +12,8 @@
  * - Proper cleanup on component unmount
  */
 
-import type { ToolCall, ActiveToolCall } from '@/types/chat';
+import type React from 'react';
+import type { ToolCall, ActiveToolCall, ToolLifecyclePhase } from '@/types/chat';
 
 // SSE Configuration for reconnection and health monitoring
 export interface SSEConfig {
@@ -91,6 +92,32 @@ interface ErrorEvent {
   code?: string;
 }
 
+// Verbose event types for detailed agent lifecycle visibility
+interface VerboseEvent {
+  message: string;
+  agent_name?: string;
+  tool_name?: string;
+  call_id?: string;
+  model?: string;
+  from_agent?: string;
+  to_agent?: string;
+}
+
+// RunItem event types - All 6 RunItem types from OpenAI Agents SDK
+interface HandoffCallEvent {
+  tool: string;
+  call_id: string;
+}
+
+interface HandoffEvent {
+  from_agent: string;
+  to_agent: string;
+}
+
+interface ReasoningEvent {
+  content: string;
+}
+
 // Callback types for hybrid UI
 export interface StreamCallbacks {
   /** Agent is thinking/processing - show spinner */
@@ -107,6 +134,28 @@ export interface StreamCallbacks {
   onDone?: (conversationId: number, messageId: number) => void;
   /** Error occurred - show error message */
   onError?: (error: Error) => void;
+
+  // RunItem events - All 6 RunItem types from OpenAI Agents SDK
+  /** Handoff call - LLM is calling handoff tool (handoff_call_item) */
+  onHandoffCall?: (tool: string, callId: string) => void;
+  /** Handoff completed - Agent handoff occurred (handoff_output_item) */
+  onHandoff?: (fromAgent: string, toAgent: string) => void;
+  /** Reasoning - LLM's internal thinking process (reasoning_item) */
+  onReasoning?: (content: string) => void;
+
+  // Verbose callbacks (only called when verbose=true in request)
+  /** Agent initialized */
+  onAgentStart?: (agentName: string, message: string) => void;
+  /** Agent finished */
+  onAgentEnd?: (agentName: string, message: string) => void;
+  /** LLM call starting (calling Gemini) */
+  onLLMStart?: (agentName: string, model: string) => void;
+  /** LLM response received */
+  onLLMEnd?: (agentName: string) => void;
+  /** MCP tool request sent */
+  onMCPRequest?: (toolName: string, callId: string, agentName?: string) => void;
+  /** MCP tool response received */
+  onMCPResponse?: (toolName: string, callId: string, agentName?: string) => void;
 }
 
 /**
@@ -425,6 +474,65 @@ function handleSSEEvent(
       break;
     }
 
+    // Verbose events - detailed agent lifecycle
+    case 'agent_start': {
+      const event = data as VerboseEvent;
+      callbacks.onAgentStart?.(event.agent_name || 'Agent', event.message);
+      break;
+    }
+
+    case 'agent_end': {
+      const event = data as VerboseEvent;
+      callbacks.onAgentEnd?.(event.agent_name || 'Agent', event.message);
+      break;
+    }
+
+    case 'llm_start': {
+      const event = data as VerboseEvent;
+      callbacks.onLLMStart?.(event.agent_name || 'Agent', event.model || 'gemini-2.5-flash');
+      break;
+    }
+
+    case 'llm_end': {
+      const event = data as VerboseEvent;
+      callbacks.onLLMEnd?.(event.agent_name || 'Agent');
+      break;
+    }
+
+    case 'mcp_request': {
+      const event = data as VerboseEvent;
+      callbacks.onMCPRequest?.(event.tool_name || '', event.call_id || '', event.agent_name);
+      break;
+    }
+
+    case 'mcp_response': {
+      const event = data as VerboseEvent;
+      callbacks.onMCPResponse?.(event.tool_name || '', event.call_id || '', event.agent_name);
+      break;
+    }
+
+    // =====================================================
+    // RunItem events - All 6 RunItem types from SDK
+    // =====================================================
+
+    case 'handoff_call': {
+      const event = data as HandoffCallEvent;
+      callbacks.onHandoffCall?.(event.tool, event.call_id);
+      break;
+    }
+
+    case 'handoff': {
+      const event = data as HandoffEvent;
+      callbacks.onHandoff?.(event.from_agent || '', event.to_agent || '');
+      break;
+    }
+
+    case 'reasoning': {
+      const event = data as ReasoningEvent;
+      callbacks.onReasoning?.(event.content);
+      break;
+    }
+
     default:
       console.warn('[SSE] Unknown event type:', eventType);
   }
@@ -496,6 +604,120 @@ export function createInitialStreamingState() {
     currentAgent: 'TodoBot',
     activeToolCalls: [] as ActiveToolCall[],
     content: '',
+    // RunItem fields
+    reasoning: '',
+    isHandingOff: false,
+    handoffFromAgent: '',
+    handoffToAgent: '',
+  };
+}
+
+/**
+ * Create a new ActiveToolCall with lifecycle tracking.
+ */
+export function createActiveToolCall(
+  toolCall: ToolCall,
+  options?: {
+    agentName?: string;
+    model?: string;
+    initialPhase?: ToolLifecyclePhase;
+  }
+): ActiveToolCall {
+  return {
+    callId: toolCall.id,
+    tool: toolCall.tool,
+    args: toolCall.arguments,
+    status: 'executing',
+    lifecyclePhase: options?.initialPhase || 'tool_running',
+    lifecycleHistory: options?.initialPhase ? [options.initialPhase] : ['agent_start', 'llm_calling', 'mcp_requesting'],
+    agentName: options?.agentName,
+    model: options?.model,
+  };
+}
+
+/**
+ * Update a tool call's lifecycle phase.
+ */
+export function updateToolCallPhase(
+  toolCalls: ActiveToolCall[],
+  callId: string,
+  phase: ToolLifecyclePhase
+): ActiveToolCall[] {
+  return toolCalls.map((tc) => {
+    if (tc.callId === callId) {
+      const history = tc.lifecycleHistory || [];
+      return {
+        ...tc,
+        lifecyclePhase: phase,
+        lifecycleHistory: history.includes(phase) ? history : [...history, phase],
+      };
+    }
+    return tc;
+  });
+}
+
+/**
+ * Complete a tool call with result.
+ */
+export function completeToolCall(
+  toolCalls: ActiveToolCall[],
+  callId: string,
+  result: unknown
+): ActiveToolCall[] {
+  return toolCalls.map((tc) => {
+    if (tc.callId === callId) {
+      const history = tc.lifecycleHistory || [];
+      return {
+        ...tc,
+        status: 'completed',
+        result,
+        lifecyclePhase: 'completed',
+        lifecycleHistory: [...history, 'mcp_responded', 'completed'],
+      };
+    }
+    return tc;
+  });
+}
+
+/**
+ * Helper to create callbacks that track tool lifecycle.
+ * Use this with streamChatMessage for full lifecycle tracking.
+ */
+export function createLifecycleTrackingCallbacks(
+  setToolCalls: React.Dispatch<React.SetStateAction<ActiveToolCall[]>>,
+  options?: {
+    agentName?: string;
+    model?: string;
+  }
+): Partial<StreamCallbacks> {
+  let currentModel = options?.model || 'gemini-2.5-flash';
+  let currentAgent = options?.agentName || 'TodoBot';
+
+  return {
+    onAgentStart: (agentName) => {
+      currentAgent = agentName;
+    },
+    onLLMStart: (agentName, model) => {
+      currentAgent = agentName;
+      currentModel = model;
+    },
+    onToolCall: (toolCall) => {
+      const activeToolCall = createActiveToolCall(toolCall, {
+        agentName: currentAgent,
+        model: currentModel,
+        initialPhase: 'tool_running',
+      });
+      setToolCalls((prev) => [...prev, activeToolCall]);
+    },
+    onMCPRequest: (toolName, callId) => {
+      setToolCalls((prev) => updateToolCallPhase(prev, callId, 'mcp_requesting'));
+    },
+    onMCPResponse: (toolName, callId) => {
+      setToolCalls((prev) => updateToolCallPhase(prev, callId, 'mcp_responded'));
+    },
+    onToolResult: (callId, result) => {
+      setToolCalls((prev) => completeToolCall(prev, callId, result));
+    },
   };
 }
 
@@ -505,6 +727,10 @@ export default {
   getToolEmoji,
   getToolDescription,
   createInitialStreamingState,
+  createActiveToolCall,
+  updateToolCallPhase,
+  completeToolCall,
+  createLifecycleTrackingCallbacks,
   DEFAULT_SSE_CONFIG,
 };
 
