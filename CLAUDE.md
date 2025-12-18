@@ -6,41 +6,161 @@ You are an expert AI assistant specializing in Spec-Driven Development (SDD). Yo
 
 ---
 
-## ⚠️ CRITICAL: Pre-Implementation Requirements
+## 🚨 ABSOLUTE REQUIREMENTS - ENFORCED FOR ALL QUERIES
 
-### 🔍 Context7 MCP - ALWAYS USE FIRST
+### ⛔ STOP! Before ANY Action
 
-**BEFORE writing ANY code or making implementation decisions, you MUST:**
+**You MUST complete these steps IN ORDER before writing ANY code:**
 
-1. **Fetch latest documentation** using Context7 MCP for ALL technologies:
-   ```
-   Use: mcp_context7_resolve-library-id → mcp_context7_get-library-docs
-   ```
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│  STEP 1: INVOKE SKILL (if applicable)                                   │
+│  → Check if a skill matches the task                                    │
+│  → Use Skill tool to invoke it BEFORE any code generation               │
+│                                                                         │
+│  STEP 2: FETCH CONTEXT7 DOCS                                            │
+│  → mcp_context7_resolve-library-id → mcp_context7_get-library-docs      │
+│  → Fetch docs for ALL technologies being used                           │
+│                                                                         │
+│  STEP 3: DELEGATE TO SUBAGENT                                           │
+│  → Use Task tool with appropriate subagent_type                         │
+│  → NEVER write code directly - always delegate                          │
+│                                                                         │
+│  STEP 4: READ SPECS                                                     │
+│  → Read constitution, spec, plan before implementation                  │
+└─────────────────────────────────────────────────────────────────────────┘
+```
 
-2. **Required Context7 lookups for Phase 2:**
-   - `nextjs` - Next.js 16+ App Router patterns
-   - `fastapi` - FastAPI 0.115+ best practices
-   - `sqlmodel` - SQLModel ORM usage
-   - `better-auth` - Authentication patterns
-   - `shadcn-ui` - Component library
-   - `framer-motion` - Animation patterns
-   - `tailwindcss` - Tailwind CSS 4.0
-   - `zustand` - State management (MANDATORY for frontend)
-   - `axios` - HTTP client (MANDATORY for frontend)
-   - `aceternity-ui` - Visual effects (MANDATORY for landing page)
+**VIOLATION OF THESE STEPS IS FORBIDDEN. NO EXCEPTIONS.**
 
-3. **Required Context7 lookups for Phase 3 (AI Chatbot):**
-   - `openai-agents-sdk` - OpenAI Agents SDK patterns
-   - `fastmcp` - FastMCP server implementation
-   - `litellm` - Multi-LLM support (for Gemini)
-   - `openai-chatkit` - ChatKit React components
-   - `sse` - Server-Sent Events patterns
+---
 
-4. **Never assume** - Always verify current API patterns from Context7
+## 🎯 SKILL INVOCATION - MANDATORY FIRST STEP
 
-### 📋 Constitution & Specs - MANDATORY READING
+### How Skills Work
 
-**Before ANY implementation task, read these in order:**
+Skills are specialized, reusable procedures stored in `.claude/skills/`. You MUST invoke them using the **Skill tool** BEFORE any implementation.
+
+**Invocation Pattern:**
+```
+Skill(skill: "skill-name")
+```
+
+### Skill Matching Table - USE FOR EVERY QUERY
+
+| When User Asks About... | INVOKE SKILL | Then Use Agent |
+|-------------------------|--------------|----------------|
+| FastAPI setup, backend project init | `fastapi-setup` | `backend-api-builder` |
+| Next.js setup, frontend project init | `nextjs-setup` | `frontend-ui-builder` |
+| Shadcn/ui components, button, card, input | `shadcn-ui-setup` | `frontend-ui-builder` |
+| Neon database, PostgreSQL, connection | `neon-db-setup` | `database-designer` |
+| Authentication, login, signup, JWT | `better-auth-integration` | `backend-api-builder` |
+| OpenAI Agents SDK, AI agent, Gemini | `openai-agents-setup` | `ai-agent-builder` |
+| FastMCP server, MCP tools | `fastmcp-server-setup` | `mcp-server-builder` |
+| Chat API, chat endpoint | `chat-api-integration` | `backend-api-builder` |
+| ChatKit, chat UI components | `openai-chatkit-setup` | `chatbot-ui-builder` |
+| SSE streaming, real-time responses | `streaming-sse-setup` | `backend-api-builder` |
+| Conversation history, chat sidebar | `conversation-management` | `chatbot-ui-builder` |
+
+### Skill Directory Reference
+
+| Skill Name | Path | Purpose |
+|------------|------|---------|
+| `fastapi-setup` | `.claude/skills/fastapi-setup/SKILL.md` | FastAPI project initialization |
+| `nextjs-setup` | `.claude/skills/nextjs-setup/SKILL.md` | Next.js project initialization |
+| `shadcn-ui-setup` | `.claude/skills/shadcn-ui-setup/SKILL.md` | Shadcn/ui component setup |
+| `neon-db-setup` | `.claude/skills/neon-db-setup/SKILL.md` | Neon PostgreSQL configuration |
+| `better-auth-integration` | `.claude/skills/better-auth-integration/SKILL.md` | Better Auth implementation |
+| `openai-agents-setup` | `.claude/skills/openai-agents-setup/SKILL.md` | OpenAI Agents + Gemini |
+| `fastmcp-server-setup` | `.claude/skills/fastmcp-server-setup/SKILL.md` | FastMCP server creation |
+| `chat-api-integration` | `.claude/skills/chat-api-integration/SKILL.md` | Chat API endpoint |
+| `openai-chatkit-setup` | `.claude/skills/openai-chatkit-setup/SKILL.md` | ChatKit React UI |
+| `streaming-sse-setup` | `.claude/skills/streaming-sse-setup/SKILL.md` | SSE streaming setup |
+| `conversation-management` | `.claude/skills/conversation-management/SKILL.md` | Conversation history UI |
+
+---
+
+## 🤖 SUBAGENT DELEGATION - MANDATORY FOR ALL CODE
+
+### ABSOLUTE RULE: NEVER WRITE CODE DIRECTLY
+
+**All code generation MUST be delegated to a specialized subagent using the Task tool.**
+
+```
+Task(
+  subagent_type: "agent-name",
+  prompt: "detailed task description",
+  description: "short description"
+)
+```
+
+### Agent Matching Table - USE FOR EVERY CODE TASK
+
+| Code Type | DELEGATE TO AGENT | subagent_type |
+|-----------|-------------------|---------------|
+| FastAPI endpoints, routes, middleware | Backend API Builder | `backend-api-builder` |
+| FastAPI services, business logic | Backend API Builder | `backend-api-builder` |
+| SQLModel models, schemas | Database Designer | `database-designer` |
+| Alembic migrations | Database Designer | `database-designer` |
+| React components, pages | Frontend UI Builder | `frontend-ui-builder` |
+| Next.js pages, layouts | Frontend UI Builder | `frontend-ui-builder` |
+| Zustand stores | Frontend UI Builder | `frontend-ui-builder` |
+| OpenAI Agents SDK code | AI Agent Builder | `ai-agent-builder` |
+| FastMCP server, tools | MCP Server Builder | `mcp-server-builder` |
+| ChatKit components, chat UI | Chatbot UI Builder | `chatbot-ui-builder` |
+
+### Agent Definitions
+
+| Agent | File | Capabilities |
+|-------|------|--------------|
+| `backend-api-builder` | `.claude/agents/backend-api-builder.md` | FastAPI, services, middleware, auth |
+| `frontend-ui-builder` | `.claude/agents/frontend-ui-builder.md` | React, Next.js, Shadcn, Zustand |
+| `database-designer` | `.claude/agents/database-designer.md` | SQLModel, Alembic, PostgreSQL |
+| `ai-agent-builder` | `.claude/agents/ai-agent-builder.md` | OpenAI Agents SDK, Gemini |
+| `mcp-server-builder` | `.claude/agents/mcp-server-builder.md` | FastMCP, tool definitions |
+| `chatbot-ui-builder` | `.claude/agents/chatbot-ui-builder.md` | ChatKit, conversation UI |
+| `ui-ux-designer` | `.claude/agents/ui-ux-designer.md` | UI/UX design, wireframes |
+
+---
+
+## 🔍 CONTEXT7 MCP - MANDATORY DOCUMENTATION LOOKUP
+
+### BEFORE Writing ANY Code
+
+**You MUST fetch latest documentation using Context7 MCP:**
+
+```
+Step 1: mcp__context7__resolve-library-id(libraryName: "library-name")
+Step 2: mcp__context7__get-library-docs(context7CompatibleLibraryID: "/org/project")
+```
+
+### Required Lookups by Technology
+
+**Phase 2 (Foundation):**
+- `nextjs` - Next.js 16+ App Router patterns
+- `fastapi` - FastAPI 0.115+ best practices
+- `sqlmodel` - SQLModel ORM usage
+- `better-auth` - Authentication patterns
+- `shadcn-ui` - Component library
+- `framer-motion` - Animation patterns
+- `tailwindcss` - Tailwind CSS 4.0
+- `zustand` - State management
+- `axios` - HTTP client
+- `aceternity-ui` - Visual effects
+
+**Phase 3 (AI Chatbot):**
+- `openai-agents-sdk` - OpenAI Agents SDK patterns
+- `fastmcp` - FastMCP server implementation
+- `litellm` - Multi-LLM support (for Gemini)
+- `sse-starlette` - Server-Sent Events
+
+**NEVER ASSUME API PATTERNS - ALWAYS VERIFY WITH CONTEXT7!**
+
+---
+
+## 📋 SPEC READING - MANDATORY BEFORE IMPLEMENTATION
+
+### Required Reading Order
 
 **For Phase 3 (Current):**
 
@@ -61,58 +181,64 @@ You are an expert AI assistant specializing in Spec-Driven Development (SDD). Yo
 | 2 | Specification | User stories & acceptance | `prompts/spec-prompt-phase-2.md` |
 | 3 | Plan | Architecture & approach | `prompts/plan-prompt-phase-2.md` |
 
-**Enforcement:** If you haven't read the relevant specs, STOP and read them first.
+**ENFORCEMENT: If you haven't read the relevant specs, STOP and read them first.**
 
 ---
 
-## 🤖 Subagent & Skill Enforcement
+## 🔄 COMPLETE WORKFLOW - FOLLOW FOR EVERY REQUEST
 
-### MANDATORY Agent Delegation
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                    MANDATORY WORKFLOW                                   │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│  1. ANALYZE REQUEST                                                     │
+│     └─ Identify: What technology? What type of code?                    │
+│                                                                         │
+│  2. INVOKE SKILL (if applicable)                                        │
+│     └─ Skill(skill: "matching-skill-name")                              │
+│     └─ Read SKILL.md for patterns and examples                          │
+│                                                                         │
+│  3. FETCH CONTEXT7 DOCS                                                 │
+│     └─ mcp__context7__resolve-library-id                                │
+│     └─ mcp__context7__get-library-docs                                  │
+│                                                                         │
+│  4. READ SPECS (if implementation task)                                 │
+│     └─ Constitution → Spec → Plan → Feature specs                       │
+│                                                                         │
+│  5. DELEGATE TO SUBAGENT                                                │
+│     └─ Task(subagent_type: "matching-agent", prompt: "...")             │
+│     └─ Include skill patterns and Context7 info in prompt               │
+│                                                                         │
+│  6. CREATE PHR (after completion)                                       │
+│     └─ Record prompt history in history/prompts/                        │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+```
 
-You MUST delegate to specialized agents based on task type:
+### Example: User asks "Add a new task API endpoint"
 
-**Phase 2 & 3 Core Agents:**
+```
+1. ANALYZE: Backend code, FastAPI endpoint
+2. SKILL: Skill(skill: "fastapi-setup") - read patterns
+3. CONTEXT7: Fetch FastAPI docs
+4. SPECS: Read specs/api/rest-endpoints.md
+5. DELEGATE: Task(subagent_type: "backend-api-builder", prompt: "...")
+6. PHR: Create prompt history record
+```
 
-| Task Type | Agent | Trigger |
-|-----------|-------|--------|
-| FastAPI endpoints, services, middleware | `@backend-api-builder` | Any backend code |
-| React components, pages, hooks | `@frontend-ui-builder` | Any frontend code |
-| Database schema, models, migrations | `@database-designer` | Any DB work |
+### Example: User asks "Create chat UI with streaming"
 
-**Phase 3 AI/Chatbot Agents:**
-
-| Task Type | Agent | Trigger |
-|-----------|-------|--------|
-| OpenAI Agents SDK, MCP integration | `@ai-agent-builder` | AI agent code |
-| FastMCP server, tool definitions | `@mcp-server-builder` | MCP server code |
-| ChatKit UI, conversation components | `@chatbot-ui-builder` | Chat UI code |
-
-**Rule:** Never write backend/frontend/database/AI code directly. ALWAYS invoke the appropriate agent.
-
-### MANDATORY Skill Usage
-
-Before setup tasks, reference the appropriate skill:
-
-**Phase 2 Skills (Foundation):**
-
-| Setup Task | Skill | Location |
-|------------|-------|----------|
-| Initialize FastAPI | `fastapi-setup` | `.claude/skills/fastapi-setup/SKILL.md` |
-| Initialize Next.js | `nextjs-setup` | `.claude/skills/nextjs-setup/SKILL.md` |
-| Add Shadcn components | `shadcn-ui-setup` | `.claude/skills/shadcn-ui-setup/SKILL.md` |
-| Configure Neon DB | `neon-db-setup` | `.claude/skills/neon-db-setup/SKILL.md` |
-| Implement auth | `better-auth-integration` | `.claude/skills/better-auth-integration/SKILL.md` |
-
-**Phase 3 Skills (AI Chatbot):**
-
-| Setup Task | Skill | Location |
-|------------|-------|----------|
-| OpenAI Agents + Gemini | `openai-agents-setup` | `.claude/skills/openai-agents-setup/SKILL.md` |
-| FastMCP server | `fastmcp-server-setup` | `.claude/skills/fastmcp-server-setup/SKILL.md` |
-| Chat API endpoint | `chat-api-integration` | `.claude/skills/chat-api-integration/SKILL.md` |
-| ChatKit React UI | `openai-chatkit-setup` | `.claude/skills/openai-chatkit-setup/SKILL.md` |
-| SSE streaming | `streaming-sse-setup` | `.claude/skills/streaming-sse-setup/SKILL.md` |
-| Conversation history | `conversation-management` | `.claude/skills/conversation-management/SKILL.md` |
+```
+1. ANALYZE: Frontend code, ChatKit, SSE
+2. SKILLS:
+   - Skill(skill: "openai-chatkit-setup")
+   - Skill(skill: "streaming-sse-setup")
+3. CONTEXT7: Fetch Next.js, ChatKit docs
+4. SPECS: Read specs/ui/chat-components.md
+5. DELEGATE: Task(subagent_type: "chatbot-ui-builder", prompt: "...")
+6. PHR: Create prompt history record
+```
 
 ---
 

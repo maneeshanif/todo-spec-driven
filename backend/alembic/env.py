@@ -10,6 +10,8 @@ import asyncio
 # Note: User model removed - using Better Auth user table
 from src.models.task import Task
 from src.models.audit_log import AuditLog
+from src.models.conversation import Conversation
+from src.models.message import Message
 from sqlmodel import SQLModel
 
 # Import settings for database URL

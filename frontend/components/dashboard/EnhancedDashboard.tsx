@@ -63,11 +63,11 @@ export default function EnhancedDashboard() {
     setFilters({ completed: status });
   };
 
-  const handleFilterByPriority = (priority: string | undefined) => {
+  const handleFilterByPriority = (priority: 'high' | 'medium' | 'low' | undefined) => {
     setFilters({ priority });
   };
 
-  const handleSort = (sortBy: string, sortOrder: 'asc' | 'desc') => {
+  const handleSort = (sortBy: 'title' | 'priority' | 'created_at' | 'due_date' | 'updated_at', sortOrder: 'asc' | 'desc') => {
     setFilters({ sortBy, sortOrder });
   };
 

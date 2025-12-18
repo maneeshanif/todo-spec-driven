@@ -18,6 +18,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
     Configuration:
     - Auth endpoints: 5 requests per minute
+    - Chat endpoints: 30 requests per minute
     - General endpoints: 100 requests per minute
     """
 
@@ -30,6 +31,8 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         self.limits = {
             "/api/auth/login": (5, 60),  # 5 requests per 60 seconds
             "/api/auth/signup": (3, 60),  # 3 requests per 60 seconds (stricter)
+            "/api/chat": (30, 60),  # 30 requests per 60 seconds (chat messages)
+            "/api/chat/stream": (30, 60),  # 30 requests per 60 seconds (streaming chat)
             "default": (100, 60),  # 100 requests per 60 seconds for other endpoints
         }
 

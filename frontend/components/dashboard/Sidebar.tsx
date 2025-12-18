@@ -38,7 +38,7 @@ const menuItems = [
   { icon: Calendar, label: "Today", href: "/tasks/today" },
   { icon: Calendar, label: "Upcoming", href: "/tasks/upcoming" },
   { icon: BarChart3, label: "Analytics", href: "/analytics" },
-  { icon: MessageSquare, label: "AI Chat", href: "/ai-chat" },
+  { icon: MessageSquare, label: "AI Chat", href: "/chat" },
   { icon: Mic, label: "Voice Assistant", href: "/voice" },
   { icon: Settings, label: "Settings", href: "/settings" },
 ];

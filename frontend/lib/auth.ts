@@ -3,6 +3,10 @@ import { nextCookies } from "better-auth/next-js";
 import { bearer, jwt } from "better-auth/plugins";
 import { Pool } from "pg";
 
+// Token expiration constants
+const SEVEN_DAYS_IN_SECONDS = 60 * 60 * 24 * 7; // 7 days
+const ONE_DAY_IN_SECONDS = 60 * 60 * 24; // 1 day
+
 export const auth = betterAuth({
   database: new Pool({
     connectionString: process.env.DATABASE_URL!,
@@ -21,14 +25,20 @@ export const auth = betterAuth({
     },
   },
   session: {
+    expiresIn: SEVEN_DAYS_IN_SECONDS, // Session lasts 7 days
+    updateAge: ONE_DAY_IN_SECONDS, // Refresh session expiration every 1 day
     cookieCache: {
       enabled: true,
       maxAge: 5 * 60, // Cache for 5 minutes
     },
   },
   plugins: [
-    bearer(), // Enable Bearer token for backend API authentication
-    jwt(), // JWT tokens for backend API authentication (uses default settings)
+    bearer(), // Bearer token support
+    jwt({
+      jwt: {
+        expirationTime: "7d", // JWT tokens last 7 days
+      },
+    }),
     nextCookies(), // Must be last plugin in array
   ],
   secret: process.env.BETTER_AUTH_SECRET!,

@@ -6,6 +6,36 @@
 
 ---
 
+## 🚨 ABSOLUTE REQUIREMENTS - READ FIRST
+
+### ⛔ STOP! Before ANY Frontend Work
+
+**You MUST complete these steps IN ORDER:**
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│  STEP 1: READ ROOT CLAUDE.md                                            │
+│  → ../CLAUDE.md contains project-wide rules                             │
+│  → All rules from root apply here                                       │
+│                                                                         │
+│  STEP 2: INVOKE SKILL (MANDATORY)                                       │
+│  → Skill(skill: "matching-skill-name")                                  │
+│  → See Skill Matching Table below                                       │
+│                                                                         │
+│  STEP 3: FETCH CONTEXT7 DOCS (MANDATORY)                                │
+│  → mcp__context7__resolve-library-id                                    │
+│  → mcp__context7__get-library-docs                                      │
+│                                                                         │
+│  STEP 4: DELEGATE TO SUBAGENT (MANDATORY)                               │
+│  → Task(subagent_type: "agent-name", prompt: "...")                     │
+│  → NEVER write frontend code directly                                   │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+**VIOLATION OF THESE STEPS IS FORBIDDEN. NO EXCEPTIONS.**
+
+---
+
 ## Coupling with Root CLAUDE.md
 
 This file extends the root `../CLAUDE.md`. **ALWAYS read the root file first** for:
@@ -22,41 +52,89 @@ This file extends the root `../CLAUDE.md`. **ALWAYS read the root file first** f
 
 ---
 
-## CRITICAL: Pre-Implementation Requirements
+## 🎯 FRONTEND SKILL INVOCATION - MANDATORY
 
-### Context7 MCP - ALWAYS USE FIRST
+### Skill Matching Table - USE FOR EVERY FRONTEND TASK
 
-**BEFORE writing ANY frontend code, you MUST fetch latest docs:**
+| When User Asks About... | INVOKE SKILL | Then Use Agent |
+|-------------------------|--------------|----------------|
+| Next.js setup, project init, pages | `nextjs-setup` | `frontend-ui-builder` |
+| Shadcn/ui components, button, card | `shadcn-ui-setup` | `frontend-ui-builder` |
+| ChatKit setup, chat components | `openai-chatkit-setup` | `chatbot-ui-builder` |
+| SSE streaming, real-time UI | `streaming-sse-setup` | `chatbot-ui-builder` |
+| Conversation history, chat sidebar | `conversation-management` | `chatbot-ui-builder` |
+| Authentication UI, login, signup | `better-auth-integration` | `frontend-ui-builder` |
+
+### Frontend Skills Reference
+
+| Skill Name | Path | Purpose |
+|------------|------|---------|
+| `nextjs-setup` | `../.claude/skills/nextjs-setup/SKILL.md` | Next.js project initialization |
+| `shadcn-ui-setup` | `../.claude/skills/shadcn-ui-setup/SKILL.md` | Shadcn/ui component setup |
+| `openai-chatkit-setup` | `../.claude/skills/openai-chatkit-setup/SKILL.md` | ChatKit React UI |
+| `streaming-sse-setup` | `../.claude/skills/streaming-sse-setup/SKILL.md` | SSE streaming client |
+| `conversation-management` | `../.claude/skills/conversation-management/SKILL.md` | Conversation history UI |
+| `better-auth-integration` | `../.claude/skills/better-auth-integration/SKILL.md` | Better Auth frontend |
+
+---
+
+## 🤖 FRONTEND AGENT DELEGATION - MANDATORY
+
+### ABSOLUTE RULE: NEVER WRITE FRONTEND CODE DIRECTLY
+
+**All frontend code generation MUST be delegated to a specialized subagent:**
+
+| Code Type | DELEGATE TO AGENT | subagent_type |
+|-----------|-------------------|---------------|
+| React components | Frontend UI Builder | `frontend-ui-builder` |
+| Next.js pages, layouts | Frontend UI Builder | `frontend-ui-builder` |
+| Zustand stores | Frontend UI Builder | `frontend-ui-builder` |
+| Axios API modules | Frontend UI Builder | `frontend-ui-builder` |
+| React hooks | Frontend UI Builder | `frontend-ui-builder` |
+| ChatKit components | Chatbot UI Builder | `chatbot-ui-builder` |
+| Chat interface, messages | Chatbot UI Builder | `chatbot-ui-builder` |
+| Conversation sidebar | Chatbot UI Builder | `chatbot-ui-builder` |
+| SSE client components | Chatbot UI Builder | `chatbot-ui-builder` |
+| UI/UX wireframes, design | UI/UX Designer | `ui-ux-designer` |
+
+### Agent Invocation Pattern
+
+```
+Task(
+  subagent_type: "frontend-ui-builder",
+  prompt: "Create a React component for...",
+  description: "Create UI component"
+)
+```
+
+---
+
+## 🔍 CONTEXT7 MCP - MANDATORY DOCUMENTATION LOOKUP
+
+### BEFORE Writing ANY Frontend Code
+
+**You MUST fetch latest docs using Context7:**
 
 ```
 # Phase 2 (Foundation)
-1. mcp_context7_resolve-library-id("nextjs") → get-library-docs
-2. mcp_context7_resolve-library-id("zustand") → get-library-docs
-3. mcp_context7_resolve-library-id("axios") → get-library-docs
-4. mcp_context7_resolve-library-id("shadcn-ui") → get-library-docs
+1. mcp__context7__resolve-library-id(libraryName: "nextjs")
+2. mcp__context7__resolve-library-id(libraryName: "zustand")
+3. mcp__context7__resolve-library-id(libraryName: "axios")
+4. mcp__context7__resolve-library-id(libraryName: "shadcn-ui")
+5. mcp__context7__resolve-library-id(libraryName: "framer-motion")
 
 # Phase 3 (AI Chatbot)
-5. mcp_context7_resolve-library-id("openai-chatkit") → get-library-docs
-6. mcp_context7_resolve-library-id("eventsource") → get-library-docs
-7. mcp_context7_resolve-library-id("framer-motion") → get-library-docs
+6. mcp__context7__resolve-library-id(libraryName: "openai-chatkit")
+7. mcp__context7__resolve-library-id(libraryName: "eventsource")
 ```
 
-**Never assume API patterns - verify with Context7 first!**
+**NEVER ASSUME API PATTERNS - ALWAYS VERIFY WITH CONTEXT7!**
 
-### Agent Requirements
+---
 
-**Frontend code MUST be generated by these agents:**
+## 📋 SPEC READING - MANDATORY
 
-| Task Type | Agent | Trigger |
-|-----------|-------|--------|
-| React components, pages, hooks | `@frontend-ui-builder` | Any UI code |
-| ChatKit UI, conversation components | `@chatbot-ui-builder` | Chat UI code |
-
-Do NOT write frontend code directly. Always delegate to the appropriate agent.
-
-### Required Spec Reading
-
-Before implementing any frontend feature:
+### Required Spec Reading Before Implementation
 
 | Spec | Path | Purpose |
 |------|------|--------|
@@ -65,15 +143,63 @@ Before implementing any frontend feature:
 | Chat Components | `../specs/ui/chat-components.md` | Chat UI specs |
 | Chatbot Feature | `../specs/features/chatbot.md` | AI chatbot requirements |
 
-### Required Skills
+---
 
-| Task | Skill | Read First |
-|------|-------|------------|
-| Project setup | `nextjs-setup` | `.claude/skills/nextjs-setup/SKILL.md` |
-| Shadcn components | `shadcn-ui-setup` | `.claude/skills/shadcn-ui-setup/SKILL.md` |
-| ChatKit setup | `openai-chatkit-setup` | `.claude/skills/openai-chatkit-setup/SKILL.md` |
-| SSE client | `streaming-sse-setup` | `.claude/skills/streaming-sse-setup/SKILL.md` |
-| Conversation UI | `conversation-management` | `.claude/skills/conversation-management/SKILL.md` |
+## 🔄 COMPLETE FRONTEND WORKFLOW
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                    MANDATORY FRONTEND WORKFLOW                          │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│  1. IDENTIFY TASK TYPE                                                  │
+│     └─ Component? Page? Store? Hook? Chat UI?                           │
+│                                                                         │
+│  2. INVOKE SKILL                                                        │
+│     └─ Skill(skill: "matching-skill-name")                              │
+│     └─ Read examples and patterns from SKILL.md                         │
+│                                                                         │
+│  3. FETCH CONTEXT7 DOCS                                                 │
+│     └─ Fetch docs for Next.js, Zustand, Shadcn, etc.                    │
+│     └─ For chat: fetch ChatKit, SSE docs                                │
+│                                                                         │
+│  4. READ RELEVANT SPECS                                                 │
+│     └─ UI spec, component spec, feature spec                            │
+│                                                                         │
+│  5. DELEGATE TO SUBAGENT                                                │
+│     └─ Task(subagent_type: "frontend-ui-builder", prompt: "...")        │
+│     └─ Or Task(subagent_type: "chatbot-ui-builder", prompt: "...")      │
+│                                                                         │
+│  6. VERIFY & TEST                                                       │
+│     └─ Check TypeScript types, test component                           │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+### Example: User asks "Create a dashboard component"
+
+```
+1. IDENTIFY: React component
+2. SKILLS:
+   - Skill(skill: "nextjs-setup")
+   - Skill(skill: "shadcn-ui-setup")
+3. CONTEXT7: Fetch Next.js, Shadcn docs
+4. SPECS: Read specs/ui/components.md
+5. DELEGATE: Task(subagent_type: "frontend-ui-builder", prompt: "...")
+```
+
+### Example: User asks "Build chat interface with streaming"
+
+```
+1. IDENTIFY: Chat UI + SSE streaming
+2. SKILLS:
+   - Skill(skill: "openai-chatkit-setup")
+   - Skill(skill: "streaming-sse-setup")
+   - Skill(skill: "conversation-management")
+3. CONTEXT7: Fetch ChatKit, SSE docs
+4. SPECS: Read specs/ui/chat-components.md
+5. DELEGATE: Task(subagent_type: "chatbot-ui-builder", prompt: "...")
+```
 
 ---
 
