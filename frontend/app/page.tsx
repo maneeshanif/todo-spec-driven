@@ -73,7 +73,7 @@ export default function Home() {
     });
   }, []);
 
-  const title = "TaskFlow";
+  const title = "TaskWhisper";
 
   return (
     <div className="relative min-h-screen overflow-hidden" style={{ backgroundColor: colors.bg }}>
@@ -125,7 +125,7 @@ export default function Home() {
                 className="text-sm tracking-[0.3em] uppercase"
                 style={{ color: colors.gold }}
               >
-                TaskFlow®
+                TaskWhisper®
               </motion.div>
               <motion.nav
                 initial={{ opacity: 0, x: 20 }}
@@ -162,7 +162,7 @@ export default function Home() {
                 className="text-center text-sm md:text-base tracking-[0.2em] uppercase mb-4 max-w-md"
                 style={{ color: colors.textMuted }}
               >
-                The Art of Productivity
+                Just Whisper It, Done.
               </motion.p>
 
               {/* Subtitle */}
@@ -173,7 +173,7 @@ export default function Home() {
                 className="text-center text-lg md:text-xl font-light max-w-lg"
                 style={{ color: colors.cream, opacity: 0.7, fontFamily: "serif", fontStyle: "italic" }}
               >
-                Elevate your workflow with elegance
+                AI-powered task management through natural conversation
               </motion.p>
 
               {/* Credit */}
@@ -263,7 +263,7 @@ function MainContent({ colors }: { colors: Colors }) {
         style={{ backgroundColor: `${colors.bg}ee` }}
       >
         <div className="text-sm tracking-[0.3em] uppercase" style={{ color: colors.goldDark }}>
-          TaskFlow®
+          TaskWhisper®
         </div>
         <nav className="hidden md:flex items-center gap-12">
           <Link href="/login" className="text-xs tracking-[0.2em] uppercase transition-colors hover:opacity-100 opacity-60" style={{ color: colors.text }}>
@@ -306,7 +306,7 @@ function MainContent({ colors }: { colors: Colors }) {
             className="text-xs tracking-[0.4em] uppercase mb-8"
             style={{ color: colors.goldDark }}
           >
-            The Future of Productivity
+            Just Whisper It, Done.
           </motion.p>
 
           <h1
@@ -322,7 +322,7 @@ function MainContent({ colors }: { colors: Colors }) {
             className="text-lg md:text-xl font-light max-w-xl mx-auto mb-12"
             style={{ color: colors.textMuted, fontFamily: "serif", fontStyle: "italic" }}
           >
-            Where elegance meets efficiency. Transform your daily tasks into a refined experience.
+            AI-powered task management through natural conversation. Just whisper your tasks and watch them happen.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-6 justify-center">
@@ -463,8 +463,8 @@ function MainContent({ colors }: { colors: Colors }) {
               className="text-2xl md:text-4xl font-extralight leading-relaxed mb-12"
               style={{ color: colors.text, fontFamily: "serif", fontStyle: "italic" }}
             >
-              "TaskFlow has transformed my daily routine into an elegant experience.
-              It's not just a todo app—it's a lifestyle upgrade."
+              "TaskWhisper has transformed how I manage my day. I just tell it what I need,
+              and it handles everything. It's like having a personal assistant who truly listens."
             </blockquote>
             <div className="flex items-center justify-center gap-4">
               <div className="w-12 h-12 rounded-full" style={{ backgroundColor: colors.goldDark }} />
@@ -524,7 +524,7 @@ function MainContent({ colors }: { colors: Colors }) {
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-center gap-8">
             <div className="text-sm tracking-[0.3em] uppercase" style={{ color: colors.goldDark }}>
-              TaskFlow®
+              TaskWhisper®
             </div>
 
             <nav className="flex gap-8 text-xs tracking-wider uppercase" style={{ color: colors.textMuted }}>
@@ -534,7 +534,7 @@ function MainContent({ colors }: { colors: Colors }) {
             </nav>
 
             <p className="text-xs" style={{ color: colors.textMuted }}>
-              © 2025 TaskFlow. All rights reserved.
+              © 2025 TaskWhisper. All rights reserved.
             </p>
           </div>
 

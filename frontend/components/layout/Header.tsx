@@ -83,10 +83,10 @@ export function Header({ onSearch, onThemeToggle, user }: HeaderProps) {
             </SheetContent>
           </Sheet>
           <Link href="/dashboard" className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center">
-              <span className="text-white font-bold text-lg">T</span>
+            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center">
+              <span className="text-white font-bold text-lg">W</span>
             </div>
-            <span className="hidden sm:block text-xl font-bold">TaskFlow</span>
+            <span className="hidden sm:block text-xl font-bold bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">TaskWhisper</span>
           </Link>
         </div>
 

@@ -127,7 +127,7 @@ export default function SignupPage() {
             Create Account
           </h1>
           <p className="text-sm tracking-wide" style={{ color: colors.textMuted }}>
-            Start your journey with TaskFlow
+            Just whisper it, done.
           </p>
         </div>
 

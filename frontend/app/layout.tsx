@@ -15,8 +15,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "TaskFlow - AI-Powered Productivity",
-  description: "World-class task management with AI agents, voice commands, and stunning UI",
+  title: "TaskWhisper - Just Whisper It, Done",
+  description: "AI-powered task management through natural conversation. Just whisper your tasks and watch them happen.",
+  keywords: ["task management", "AI assistant", "productivity", "voice commands", "todo app"],
+  authors: [{ name: "TaskWhisper" }],
+  icons: {
+    icon: "/icon.svg",
+  },
 };
 
 export default function RootLayout({

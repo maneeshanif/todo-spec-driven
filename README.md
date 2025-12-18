@@ -1,6 +1,8 @@
-# Todo AI Chatbot - Spec-Driven Development
+# TaskWhisper - Just Whisper It, Done.
 
 A modern, AI-powered todo application built using **Spec-Driven Development** with Claude Code and Spec-Kit Plus.
+
+> **TaskWhisper** - AI-powered task management through natural conversation. Just whisper your tasks and watch them happen.
 
 ## Current Phase: Phase 3 - AI-Powered Todo Chatbot
 

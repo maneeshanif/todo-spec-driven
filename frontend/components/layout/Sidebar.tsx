@@ -57,10 +57,10 @@ export function Sidebar({ categories = [], onAddCategory }: SidebarProps) {
       <div className="flex h-full max-h-screen flex-col gap-2">
         <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
           <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
-            <div className="h-6 w-6 rounded-full bg-primary flex items-center justify-center">
-              <span className="text-white text-xs font-bold">T</span>
+            <div className="h-6 w-6 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center">
+              <span className="text-white text-xs font-bold">W</span>
             </div>
-            <span className="hidden lg:block">TaskFlow</span>
+            <span className="hidden lg:block">TaskWhisper</span>
           </Link>
         </div>
         <div className="flex-1">
@@ -139,7 +139,7 @@ export function Sidebar({ categories = [], onAddCategory }: SidebarProps) {
         </div>
         <div className="mt-auto p-4 border-t">
           <div className="text-xs text-muted-foreground text-center">
-            © {new Date().getFullYear()} TaskFlow
+            © {new Date().getFullYear()} TaskWhisper
           </div>
         </div>
       </div>

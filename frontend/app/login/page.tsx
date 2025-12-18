@@ -118,7 +118,7 @@ export default function LoginPage() {
             Welcome Back
           </h1>
           <p className="text-sm tracking-wide" style={{ color: colors.textMuted }}>
-            Sign in to continue to TaskFlow
+            Just whisper it, done.
           </p>
         </div>
 
