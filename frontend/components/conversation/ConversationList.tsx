@@ -87,7 +87,7 @@ export function ConversationList({
   const groupedConversations = groupByDate(conversations);
 
   return (
-    <ScrollArea className="flex-1">
+    <ScrollArea className="h-full">
       <div className="p-2 space-y-4">
         {DATE_GROUP_ORDER.map((groupName) => {
           const groupConversations = groupedConversations[groupName];

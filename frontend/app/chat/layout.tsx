@@ -6,7 +6,8 @@
  * Features:
  * - Protected route (requires auth)
  * - Full height layout
- * - Header with title
+ * - Header with title and back navigation
+ * - Supports ChatKit with custom ConversationSidebar
  */
 
 import { useEffect } from 'react';
@@ -47,8 +48,8 @@ export default function ChatLayout({
 
   return (
     <div className="h-screen flex flex-col">
-      {/* Header */}
-      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      {/* Header - hidden on mobile (page has its own mobile header) */}
+      <header className="hidden md:flex border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="flex h-14 items-center px-4 gap-4">
           <Button variant="ghost" size="icon" asChild>
             <Link href="/dashboard">
@@ -61,13 +62,13 @@ export default function ChatLayout({
             <h1 className="text-lg font-semibold">TodoBot</h1>
           </div>
 
-          <p className="text-sm text-muted-foreground hidden sm:block">
+          <p className="text-sm text-muted-foreground">
             AI-powered task management
           </p>
         </div>
       </header>
 
-      {/* Main content */}
+      {/* Main content - ChatKit page */}
       <main className="flex-1 overflow-hidden">{children}</main>
     </div>
   );

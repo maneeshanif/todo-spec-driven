@@ -1,16 +1,17 @@
 #!/bin/bash
 # Unified development server startup script
-# Starts both backend (FastAPI) and frontend (Next.js) concurrently
+# Starts backend (FastAPI), frontend (Next.js), and MCP server concurrently
 
 set -e
 
-echo "🚀 Starting Todo Web Application..."
+echo "🚀 Starting Todo Web Application with AI Chatbot..."
 echo ""
 
 # Colors for output
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
+PURPLE='\033[0;35m'
 NC='\033[0m' # No Color
 
 # Get the script directory
@@ -62,6 +63,18 @@ echo ""
 # Wait a bit for backend to start
 sleep 2
 
+# Start MCP server
+echo -e "${PURPLE}🤖 Starting MCP Server (FastMCP on port 8001)...${NC}"
+cd "$BACKEND_DIR"
+uv run python -m src.mcp_server.server > ../mcp.log 2>&1 &
+MCP_PID=$!
+echo "   MCP Server PID: $MCP_PID"
+echo "   Logs: tail -f mcp.log"
+echo ""
+
+# Wait a bit for MCP server to start
+sleep 1
+
 # Start frontend
 echo -e "${GREEN}🎨 Starting Frontend (Next.js on port 3000)...${NC}"
 cd "$FRONTEND_DIR"
@@ -76,12 +89,14 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo -e "${GREEN}✅ Application is running!${NC}"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
-echo "📍 Frontend:  http://localhost:3000"
-echo "📍 Backend:   http://localhost:8000"
-echo "📍 API Docs:  http://localhost:8000/api/docs"
-echo "📍 Health:    http://localhost:8000/api/health"
+echo "📍 Frontend:   http://localhost:3000"
+echo "📍 Backend:    http://localhost:8000"
+echo "📍 MCP Server: http://localhost:8001"
+echo "📍 Chat UI:    http://localhost:3000/chat"
+echo "📍 API Docs:   http://localhost:8000/api/docs"
+echo "📍 Health:     http://localhost:8000/api/health"
 echo ""
-echo "Press Ctrl+C to stop both servers"
+echo "Press Ctrl+C to stop all servers"
 echo ""
 
 # Monitor logs in split view
@@ -89,4 +104,4 @@ echo "📊 Monitoring logs (Ctrl+C to stop)..."
 echo ""
 
 # Wait for background processes
-wait $BACKEND_PID $FRONTEND_PID
+wait $BACKEND_PID $MCP_PID $FRONTEND_PID

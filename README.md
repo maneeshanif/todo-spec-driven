@@ -10,16 +10,17 @@ Transform the Phase 2 web application into an AI-powered chatbot interface with 
 
 ### Phase 3 Features
 
-- **AI Chatbot Interface** - Natural language task management through conversation
+- **AI Chatbot Interface** - Natural language task management through conversation with **ChatKit integration**
 - **OpenAI Agents SDK** - Gemini 2.5 Flash-powered AI assistant
-- **MCP Server** - FastMCP with 5 task operation tools
+- **MCP Server** - FastMCP with 5 task operation tools (add, list, complete, delete, update)
 - **SSE Streaming** - Real-time response streaming with token-by-token display
-- **Conversation History** - Persistent chat storage with sidebar navigation
-- **Modern UI** - Responsive chat interface with markdown support
+- **Conversation History** - Persistent chat storage with sidebar navigation and conversation switching
+- **ChatKit UI** - Production-ready chat interface from OpenAI with theming support
+- **Analytics Dashboard** - Interactive charts with Recharts (Productivity Trend, Task Distribution, Status Overview)
 - **Loading Indicators** - Visual feedback during AI processing
 - **Auto-scroll** - Automatic scrolling to new messages
 - **Keyboard Shortcuts** - Enter to send, Shift+Enter for newline
-- **Error Handling** - Graceful error messages for failures
+- **Error Handling** - Graceful error messages with duplicate response prevention
 - **Security** - Rate limiting, input sanitization, and prompt injection protection
 
 ### Hybrid Voice + AI Chat Interface
@@ -182,13 +183,13 @@ A production-ready web application with persistent storage, Better Auth authenti
 │   └── ui/                  # Component & page specs
 │
 ├── .claude/                  # Claude Code configuration
-│   ├── agents/              # Specialized development agents
-│   │   ├── backend-api-builder.md
+│   ├── agents/              # Specialized development agents (with skills coupling)
+│   │   ├── backend-api-builder.md   # skills: chatkit-backend, better-auth-integration
 │   │   ├── frontend-ui-builder.md
 │   │   ├── database-designer.md
-│   │   ├── ai-agent-builder.md     (Phase 3)
-│   │   ├── mcp-server-builder.md   (Phase 3)
-│   │   └── chatbot-ui-builder.md   (Phase 3)
+│   │   ├── ai-agent-builder.md      (Phase 3)
+│   │   ├── mcp-server-builder.md    (Phase 3)
+│   │   └── chatbot-ui-builder.md    # skills: chatkit-frontend, conversation-management
 │   └── skills/              # Setup & configuration skills
 │       ├── fastapi-setup/
 │       ├── nextjs-setup/
@@ -197,9 +198,8 @@ A production-ready web application with persistent storage, Better Auth authenti
 │       ├── better-auth-integration/
 │       ├── openai-agents-setup/       (Phase 3)
 │       ├── fastmcp-server-setup/      (Phase 3)
-│       ├── chat-api-integration/      (Phase 3)
-│       ├── openai-chatkit-setup/      (Phase 3)
-│       ├── streaming-sse-setup/       (Phase 3)
+│       ├── chatkit-frontend/          (Phase 3) - ChatKit React + useChatKit
+│       ├── chatkit-backend/           (Phase 3) - SSE endpoint + conversations
 │       └── conversation-management/   (Phase 3)
 │
 ├── history/                  # PHRs and ADRs
@@ -480,6 +480,51 @@ data: {"conversation_id": 123, "message_id": 456}
 - **Graceful Error Handling**: User-friendly error messages for AI model failures
 - **Audit Trail**: Tool calls are logged for security review
 - **HTTPS Required**: All production traffic uses HTTPS encryption
+
+---
+
+## Skills & Agents
+
+This project uses Claude Code with specialized agents coupled to skills for efficient development.
+
+### Active Skills (Phase 3)
+
+| Skill | Purpose | Agent Coupled |
+|-------|---------|---------------|
+| `chatkit-frontend` | ChatKit React UI, useChatKit hook, theming | `chatbot-ui-builder` |
+| `chatkit-backend` | SSE endpoint, conversation persistence | `backend-api-builder` |
+| `conversation-management` | Conversation sidebar, history UI | `chatbot-ui-builder` |
+| `openai-agents-setup` | OpenAI Agents SDK + Gemini | `ai-agent-builder` |
+| `fastmcp-server-setup` | FastMCP server with task tools | `mcp-server-builder` |
+
+### Deprecated Skills
+
+| Old Skill | Use Instead |
+|-----------|-------------|
+| `openai-chatkit-setup` | `chatkit-frontend` |
+| `streaming-sse-setup` | `chatkit-backend` |
+| `chat-api-integration` | `chatkit-backend` |
+
+### Skill Files Structure
+
+Each skill follows this structure:
+```
+.claude/skills/<skill-name>/
+├── SKILL.md          # Main skill file (required)
+├── examples.md       # Code examples (optional)
+├── REFERENCE.md      # API reference (optional)
+└── templates/        # Code templates (optional)
+```
+
+### Agent-Skill Coupling
+
+Agents declare coupled skills in frontmatter:
+```yaml
+---
+name: chatbot-ui-builder
+skills: chatkit-frontend, conversation-management
+---
+```
 
 ---
 

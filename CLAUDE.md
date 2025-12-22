@@ -57,9 +57,8 @@ Skill(skill: "skill-name")
 | Authentication, login, signup, JWT | `better-auth-integration` | `backend-api-builder` |
 | OpenAI Agents SDK, AI agent, Gemini | `openai-agents-setup` | `ai-agent-builder` |
 | FastMCP server, MCP tools | `fastmcp-server-setup` | `mcp-server-builder` |
-| Chat API, chat endpoint | `chat-api-integration` | `backend-api-builder` |
-| ChatKit, chat UI components | `openai-chatkit-setup` | `chatbot-ui-builder` |
-| SSE streaming, real-time responses | `streaming-sse-setup` | `backend-api-builder` |
+| ChatKit frontend, chat UI, useChatKit | `chatkit-frontend` | `chatbot-ui-builder` |
+| ChatKit backend, SSE streaming, /chatkit endpoint | `chatkit-backend` | `backend-api-builder` |
 | Conversation history, chat sidebar | `conversation-management` | `chatbot-ui-builder` |
 
 ### Skill Directory Reference
@@ -73,10 +72,17 @@ Skill(skill: "skill-name")
 | `better-auth-integration` | `.claude/skills/better-auth-integration/SKILL.md` | Better Auth implementation |
 | `openai-agents-setup` | `.claude/skills/openai-agents-setup/SKILL.md` | OpenAI Agents + Gemini |
 | `fastmcp-server-setup` | `.claude/skills/fastmcp-server-setup/SKILL.md` | FastMCP server creation |
-| `chat-api-integration` | `.claude/skills/chat-api-integration/SKILL.md` | Chat API endpoint |
-| `openai-chatkit-setup` | `.claude/skills/openai-chatkit-setup/SKILL.md` | ChatKit React UI |
-| `streaming-sse-setup` | `.claude/skills/streaming-sse-setup/SKILL.md` | SSE streaming setup |
-| `conversation-management` | `.claude/skills/conversation-management/SKILL.md` | Conversation history UI |
+| `chatkit-frontend` | `.claude/skills/chatkit-frontend/SKILL.md` | ChatKit React UI + useChatKit hook |
+| `chatkit-backend` | `.claude/skills/chatkit-backend/SKILL.md` | ChatKit SSE endpoint + conversation persistence |
+| `conversation-management` | `.claude/skills/conversation-management/SKILL.md` | Conversation history sidebar |
+
+### Deprecated Skills (Use Alternatives)
+
+| Deprecated Skill | Use Instead | Reason |
+|------------------|-------------|--------|
+| `openai-chatkit-setup` | `chatkit-frontend` | Consolidated into comprehensive ChatKit frontend skill |
+| `streaming-sse-setup` | `chatkit-backend` | SSE is part of ChatKit backend integration |
+| `chat-api-integration` | `chatkit-backend` | Consolidated into ChatKit backend skill |
 
 ---
 
@@ -100,6 +106,7 @@ Task(
 |-----------|-------------------|---------------|
 | FastAPI endpoints, routes, middleware | Backend API Builder | `backend-api-builder` |
 | FastAPI services, business logic | Backend API Builder | `backend-api-builder` |
+| ChatKit SSE endpoint, /chatkit route | Backend API Builder | `backend-api-builder` |
 | SQLModel models, schemas | Database Designer | `database-designer` |
 | Alembic migrations | Database Designer | `database-designer` |
 | React components, pages | Frontend UI Builder | `frontend-ui-builder` |
@@ -107,19 +114,20 @@ Task(
 | Zustand stores | Frontend UI Builder | `frontend-ui-builder` |
 | OpenAI Agents SDK code | AI Agent Builder | `ai-agent-builder` |
 | FastMCP server, tools | MCP Server Builder | `mcp-server-builder` |
-| ChatKit components, chat UI | Chatbot UI Builder | `chatbot-ui-builder` |
+| ChatKit React UI, useChatKit | Chatbot UI Builder | `chatbot-ui-builder` |
+| Conversation sidebar, history UI | Chatbot UI Builder | `chatbot-ui-builder` |
 
 ### Agent Definitions
 
-| Agent | File | Capabilities |
-|-------|------|--------------|
-| `backend-api-builder` | `.claude/agents/backend-api-builder.md` | FastAPI, services, middleware, auth |
-| `frontend-ui-builder` | `.claude/agents/frontend-ui-builder.md` | React, Next.js, Shadcn, Zustand |
-| `database-designer` | `.claude/agents/database-designer.md` | SQLModel, Alembic, PostgreSQL |
-| `ai-agent-builder` | `.claude/agents/ai-agent-builder.md` | OpenAI Agents SDK, Gemini |
-| `mcp-server-builder` | `.claude/agents/mcp-server-builder.md` | FastMCP, tool definitions |
-| `chatbot-ui-builder` | `.claude/agents/chatbot-ui-builder.md` | ChatKit, conversation UI |
-| `ui-ux-designer` | `.claude/agents/ui-ux-designer.md` | UI/UX design, wireframes |
+| Agent | File | Skills Coupled | Capabilities |
+|-------|------|----------------|--------------|
+| `backend-api-builder` | `.claude/agents/backend-api-builder.md` | `chatkit-backend`, `better-auth-integration` | FastAPI, services, middleware, auth, SSE streaming |
+| `frontend-ui-builder` | `.claude/agents/frontend-ui-builder.md` | - | React, Next.js, Shadcn, Zustand |
+| `database-designer` | `.claude/agents/database-designer.md` | - | SQLModel, Alembic, PostgreSQL |
+| `ai-agent-builder` | `.claude/agents/ai-agent-builder.md` | - | OpenAI Agents SDK, Gemini |
+| `mcp-server-builder` | `.claude/agents/mcp-server-builder.md` | - | FastMCP, tool definitions |
+| `chatbot-ui-builder` | `.claude/agents/chatbot-ui-builder.md` | `chatkit-frontend`, `conversation-management` | ChatKit React, conversation UI |
+| `ui-ux-designer` | `.claude/agents/ui-ux-designer.md` | - | UI/UX design, wireframes |
 
 ---
 

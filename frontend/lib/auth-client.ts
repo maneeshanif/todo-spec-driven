@@ -52,7 +52,8 @@ export async function generateAndStoreJwtToken(): Promise<string | null> {
         console.log('[Auth] Token user ID (sub):', payload?.sub);
         console.log('[Auth] Token user email:', payload?.email);
 
-        localStorage.setItem("bearer_token", token);
+        // Store in both localStorage AND cookie (for Edge runtime access)
+        storeJwtToken(token);
         console.log('[Auth] JWT token stored successfully, length:', token.length);
         return token;
       }
@@ -81,7 +82,8 @@ export async function generateAndStoreJwtToken(): Promise<string | null> {
         console.log('[Auth] JWT token payload (direct fetch):', payload);
         console.log('[Auth] Token user ID (sub):', payload?.sub);
 
-        localStorage.setItem("bearer_token", data.token);
+        // Store in both localStorage AND cookie (for Edge runtime access)
+        storeJwtToken(data.token);
         console.log('[Auth] JWT token stored via direct fetch, length:', data.token.length);
         return data.token;
       }
@@ -99,14 +101,73 @@ export async function generateAndStoreJwtToken(): Promise<string | null> {
 }
 
 /**
+ * Set a cookie with the given name and value.
+ * Used to store the JWT token for Edge runtime access (e.g., ChatKit proxy).
+ */
+function setCookie(name: string, value: string, days: number = 7): void {
+  if (typeof document !== "undefined") {
+    const expires = new Date();
+    expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
+    // Set cookie with SameSite=Lax for security, not HttpOnly so JS can clear it
+    document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/;SameSite=Lax`;
+    console.log(`[Auth] Cookie '${name}' set, expires in ${days} days`);
+  }
+}
+
+/**
+ * Clear a cookie by setting its expiration to the past.
+ */
+function clearCookie(name: string): void {
+  if (typeof document !== "undefined") {
+    document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
+    console.log(`[Auth] Cookie '${name}' cleared`);
+  }
+}
+
+/**
+ * Store JWT token in both localStorage AND as a cookie.
+ * localStorage is for client-side API calls (Axios, SSE).
+ * Cookie is for Edge runtime access (ChatKit proxy).
+ */
+export function storeJwtToken(token: string): void {
+  if (typeof window !== "undefined") {
+    // Store in localStorage for client-side access
+    localStorage.setItem("bearer_token", token);
+    // Also store as cookie for Edge runtime access (ChatKit proxy)
+    setCookie("bearer_token", token, 7);
+    console.log('[Auth] JWT token stored in localStorage AND cookie');
+  }
+}
+
+/**
+ * Sync the bearer_token cookie from localStorage.
+ * Call this on app startup to ensure existing tokens are available to Edge runtime.
+ */
+export function syncTokenCookie(): void {
+  if (typeof window !== "undefined") {
+    const token = localStorage.getItem("bearer_token");
+    if (token) {
+      // Check if cookie already exists
+      const cookieExists = document.cookie.includes("bearer_token=");
+      if (!cookieExists) {
+        console.log('[Auth] Syncing bearer_token cookie from localStorage');
+        setCookie("bearer_token", token, 7);
+      }
+    }
+  }
+}
+
+/**
  * Clear the stored JWT token and auth storage (call on logout)
  */
 export function clearJwtToken(): void {
   if (typeof window !== "undefined") {
     console.log('[Auth] Clearing JWT token and auth storage');
     localStorage.removeItem("bearer_token");
+    // Also clear the cookie
+    clearCookie("bearer_token");
     // Also clear Zustand persist storage to prevent re-hydration of stale token
     localStorage.removeItem("auth-storage");
-    console.log('[Auth] Cleared: bearer_token, auth-storage');
+    console.log('[Auth] Cleared: bearer_token (localStorage + cookie), auth-storage');
   }
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useRef, useState, ReactNode } from 'react';
-import { authClient, generateAndStoreJwtToken } from '@/lib/auth-client';
+import { authClient, generateAndStoreJwtToken, syncTokenCookie } from '@/lib/auth-client';
 import { useAuthStore } from '@/stores/authStore';
 
 interface AuthContextType {
@@ -31,6 +31,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const isClient = useIsClient();
 
   useEffect(() => {
+    // Sync token cookie on startup (for existing users with token in localStorage)
+    if (isClient) {
+      syncTokenCookie();
+    }
+
     // Only fetch session once on client, if no user exists in store
     if (isClient && !user && !hasFetchedSession.current) {
       hasFetchedSession.current = true;
