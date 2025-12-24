@@ -60,6 +60,11 @@ Skill(skill: "skill-name")
 | ChatKit frontend, chat UI, useChatKit | `chatkit-frontend` | `chatbot-ui-builder` |
 | ChatKit backend, SSE streaming, /chatkit endpoint | `chatkit-backend` | `backend-api-builder` |
 | Conversation history, chat sidebar | `conversation-management` | `chatbot-ui-builder` |
+| Dockerfile, Docker Compose, containers | `docker-setup` | `docker-containerization-builder` |
+| Kubernetes, K8s manifests, deployments | `kubernetes-deployment` | `devops-kubernetes-builder` |
+| Helm charts, K8s packaging | `helm-charts-setup` | `aiops-helm-builder` |
+| Minikube, local K8s cluster | `minikube-setup` | `devops-kubernetes-builder` |
+| Docker AI, Gordon, container optimization | `aiops-gordon` | `docker-containerization-builder` |
 
 ### Skill Directory Reference
 
@@ -75,6 +80,11 @@ Skill(skill: "skill-name")
 | `chatkit-frontend` | `.claude/skills/chatkit-frontend/SKILL.md` | ChatKit React UI + useChatKit hook |
 | `chatkit-backend` | `.claude/skills/chatkit-backend/SKILL.md` | ChatKit SSE endpoint + conversation persistence |
 | `conversation-management` | `.claude/skills/conversation-management/SKILL.md` | Conversation history sidebar |
+| `docker-setup` | `.claude/skills/docker-setup/SKILL.md` | Dockerfile & Docker Compose setup |
+| `kubernetes-deployment` | `.claude/skills/kubernetes-deployment/SKILL.md` | K8s manifests & deployments |
+| `helm-charts-setup` | `.claude/skills/helm-charts-setup/SKILL.md` | Helm chart creation |
+| `minikube-setup` | `.claude/skills/minikube-setup/SKILL.md` | Local K8s cluster setup |
+| `aiops-gordon` | `.claude/skills/aiops-gordon/SKILL.md` | Docker AI (Gordon) operations |
 
 ### Deprecated Skills (Use Alternatives)
 
@@ -116,6 +126,9 @@ Task(
 | FastMCP server, tools | MCP Server Builder | `mcp-server-builder` |
 | ChatKit React UI, useChatKit | Chatbot UI Builder | `chatbot-ui-builder` |
 | Conversation sidebar, history UI | Chatbot UI Builder | `chatbot-ui-builder` |
+| Dockerfile, Docker Compose | Docker Containerization Builder | `docker-containerization-builder` |
+| Kubernetes manifests, deployments | DevOps Kubernetes Builder | `devops-kubernetes-builder` |
+| Helm charts, K8s packaging | AIOps Helm Builder | `aiops-helm-builder` |
 
 ### Agent Definitions
 
@@ -128,6 +141,9 @@ Task(
 | `mcp-server-builder` | `.claude/agents/mcp-server-builder.md` | - | FastMCP, tool definitions |
 | `chatbot-ui-builder` | `.claude/agents/chatbot-ui-builder.md` | `chatkit-frontend`, `conversation-management` | ChatKit React, conversation UI |
 | `ui-ux-designer` | `.claude/agents/ui-ux-designer.md` | - | UI/UX design, wireframes |
+| `docker-containerization-builder` | `.claude/agents/docker-containerization-builder.md` | `docker-setup`, `aiops-gordon` | Dockerfile, Docker Compose, container optimization |
+| `devops-kubernetes-builder` | `.claude/agents/devops-kubernetes-builder.md` | `kubernetes-deployment`, `minikube-setup` | K8s manifests, deployments, services |
+| `aiops-helm-builder` | `.claude/agents/aiops-helm-builder.md` | `helm-charts-setup` | Helm charts, K8s packaging |
 
 ---
 
@@ -162,6 +178,12 @@ Step 2: mcp__context7__get-library-docs(context7CompatibleLibraryID: "/org/proje
 - `litellm` - Multi-LLM support (for Gemini)
 - `sse-starlette` - Server-Sent Events
 
+**Phase 4 (Kubernetes Deployment):**
+- `docker` - Docker best practices
+- `kubernetes` - Kubernetes API and patterns
+- `helm` - Helm chart development
+- `minikube` - Local Kubernetes development
+
 **NEVER ASSUME API PATTERNS - ALWAYS VERIFY WITH CONTEXT7!**
 
 ---
@@ -170,7 +192,15 @@ Step 2: mcp__context7__get-library-docs(context7CompatibleLibraryID: "/org/proje
 
 ### Required Reading Order
 
-**For Phase 3 (Current):**
+**For Phase 4 (Current):**
+
+| Order | Document | Purpose | Path |
+|-------|----------|---------|------|
+| 1 | Constitution | Project laws & principles | `constitution-prompt-phase-4.md` |
+| 2 | Specification | User stories & acceptance | `spec-prompt-phase-4.md` |
+| 3 | Plan | Architecture & approach | `plan-prompt-phase-4.md` |
+
+**For Phase 3 (Reference):**
 
 | Order | Document | Purpose | Path |
 |-------|----------|---------|------|
@@ -286,11 +316,17 @@ main (production)
 ├── phase2/integration  → Connect frontend ↔ backend (COMPLETED)
 ├── phase2/deploy       → Vercel + Neon deployment (COMPLETED)
 │
-├── phase3/setup-ai-chatbot  → AI Chatbot implementation (CURRENT)
-├── phase3/mcp-server        → MCP server with task tools
-├── phase3/ai-agent          → OpenAI Agents SDK integration
-├── phase3/chat-ui           → ChatKit frontend
-└── phase3/streaming         → SSE streaming responses
+├── phase3/setup-ai-chatbot  → AI Chatbot implementation (COMPLETED)
+├── phase3/mcp-server        → MCP server with task tools (COMPLETED)
+├── phase3/ai-agent          → OpenAI Agents SDK integration (COMPLETED)
+├── phase3/chat-ui           → ChatKit frontend (COMPLETED)
+├── phase3/streaming         → SSE streaming responses (COMPLETED)
+│
+├── phase4/setup             → Docker & K8s setup (CURRENT)
+├── phase4/docker            → Dockerfiles & Compose
+├── phase4/kubernetes        → K8s manifests & deployments
+├── phase4/helm              → Helm chart creation
+└── phase4/minikube          → Local K8s cluster
 ```
 
 **Naming Convention**: `phase{N}/{task-type}`
@@ -349,78 +385,130 @@ Run in Claude Code CLI:
 
 ---
 
-## 🎯 Phase 3: AI-Powered Todo Chatbot (CURRENT)
+## 🚀 Phase 4: Local Kubernetes Deployment (CURRENT)
 
-**Current Phase**: Phase 3 - AI-Powered Todo Chatbot
-**Due Date**: December 21, 2025
+**Current Phase**: Phase 4 - Local Kubernetes Deployment
+**Due Date**: January 4, 2026
+**Main Branch**: `main` | **Feature Branches**: `phase4/*`
+
+### Phase 4 Overview
+
+Deploy the Evolution of Todo application to a local Kubernetes cluster:
+- **Containerization**: Multi-stage Dockerfiles for all 4 services
+- **Docker Compose**: Development and production configurations
+- **Kubernetes**: Manifests with Kustomize for environment overlays
+- **Helm Charts**: Package management for Kubernetes deployment
+- **Minikube**: Local multi-node cluster (1 control plane + 2 workers)
+- **Docker AI (Gordon)**: Intelligent container operations
+
+### Key Documents
+
+| Document | Purpose |
+|----------|---------|
+| `constitution-prompt-phase-4.md` | Project principles and DevOps standards |
+| `spec-prompt-phase-4.md` | User stories and acceptance criteria |
+| `plan-prompt-phase-4.md` | Implementation plan and architecture |
+
+### Phase 4 Specialized Agents
+
+| Agent | When to Use |
+|-------|-------------|
+| `@docker-containerization-builder` | Dockerfiles, Docker Compose, multi-stage builds |
+| `@devops-kubernetes-builder` | K8s manifests, deployments, services, Minikube |
+| `@aiops-helm-builder` | Helm charts, values files, templates |
+
+### Phase 4 Skills
+
+| Skill | Purpose |
+|-------|---------|
+| `docker-setup` | Create Dockerfiles and Docker Compose |
+| `kubernetes-deployment` | Create K8s manifests with Kustomize |
+| `helm-charts-setup` | Create Helm charts for deployment |
+| `minikube-setup` | Configure local Kubernetes cluster |
+| `aiops-gordon` | Use Docker AI for optimization |
+
+### Phase 4 Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    Minikube Cluster                             │
+│  ┌───────────────┐  ┌───────────────┐  ┌───────────────┐       │
+│  │ Control Plane │  │   Worker 1    │  │   Worker 2    │       │
+│  │   (minikube)  │  │ (minikube-m02)│  │ (minikube-m03)│       │
+│  └───────────────┘  └───────────────┘  └───────────────┘       │
+│                                                                 │
+│  Services (Deployed via Helm):                                  │
+│  ┌─────────┐  ┌─────────┐  ┌────────────┐  ┌──────────┐        │
+│  │Frontend │  │ Backend │  │ MCP Server │  │ AI Agent │        │
+│  │ (Next.js│  │(FastAPI)│  │ (FastMCP)  │  │ (Gemini) │        │
+│  │  :3000) │  │ (:8000) │  │  (:8001)   │  │          │        │
+│  └─────────┘  └─────────┘  └────────────┘  └──────────┘        │
+│                                                                 │
+│  Infrastructure:                                                │
+│  - Ingress (NGINX)                                             │
+│  - ConfigMaps & Secrets                                        │
+│  - HorizontalPodAutoscaler                                     │
+│  - NetworkPolicies                                             │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Phase 4 Implementation Steps
+
+1. **Docker Setup**: Create multi-stage Dockerfiles for all services
+2. **Docker Compose**: Development and production configurations
+3. **Minikube Cluster**: 3-node cluster (1 control + 2 workers)
+4. **K8s Manifests**: Base manifests with Kustomize overlays
+5. **Helm Charts**: Package application as Helm chart
+6. **Load Images**: Build and load images into Minikube
+7. **Deploy**: Deploy using Helm to Minikube
+8. **Validate**: Test all services are accessible
+
+### Quick Commands
+
+```bash
+# Start Minikube cluster
+minikube start --nodes=3 --cpus=2 --memory=4096
+
+# Build and load images
+eval $(minikube docker-env)
+docker build -t evolution-todo/backend:latest ./backend
+docker build -t evolution-todo/frontend:latest ./frontend
+eval $(minikube docker-env --unset)
+
+# Deploy with Helm
+helm install evolution-todo ./helm/evolution-todo -n todo-app --create-namespace
+
+# Access services
+minikube service frontend --url -n todo-app
+
+# Dashboard
+minikube dashboard
+```
+
+---
+
+## 🤖 Phase 3: AI-Powered Todo Chatbot (COMPLETED)
+
+**Status**: ✅ COMPLETED
+**Completed Date**: December 24, 2025
 **Main Branch**: `main` | **Feature Branches**: `phase3/*`
 
-### Phase 3 Overview
+### Phase 3 Summary
 
-Transform the Phase 2 web application into an AI-powered chatbot interface:
+Transformed the Phase 2 web application into an AI-powered chatbot interface:
 - **AI Agent**: OpenAI Agents SDK + Gemini model
 - **MCP Server**: FastMCP with task operation tools
 - **Chat UI**: OpenAI ChatKit React components
 - **Streaming**: Server-Sent Events (SSE) for real-time responses
 - **Persistence**: Conversation history in PostgreSQL
 
-### Key Documents
+### Phase 3 Documents (Reference)
 
 | Document | Purpose |
 |----------|---------|
 | `constitution-prompt-phase-3.md` | Project principles and AI standards |
 | `spec-prompt-phase-3.md` | User stories and acceptance criteria |
 | `plan-prompt-phase-3.md` | Implementation plan and architecture |
-
-### Phase 3 Specialized Agents
-
-| Agent | When to Use |
-|-------|-------------|
-| `@ai-agent-builder` | OpenAI Agents SDK, MCP integration, Gemini config |
-| `@mcp-server-builder` | FastMCP server, tool definitions |
-| `@chatbot-ui-builder` | ChatKit UI, conversation components |
-| `@backend-api-builder` | Chat API endpoints, SSE streaming |
-| `@frontend-ui-builder` | Chat pages, conversation sidebar |
-| `@database-designer` | Conversation/Message models, migrations |
-
-### Phase 3 Skills
-
-| Skill | Purpose |
-|-------|---------|
-| `openai-agents-setup` | Initialize AI agent with Gemini model |
-| `fastmcp-server-setup` | Create MCP server with task tools |
-| `chat-api-integration` | Chat endpoint + agent integration |
-| `openai-chatkit-setup` | ChatKit React component setup |
-| `streaming-sse-setup` | SSE streaming implementation |
-| `conversation-management` | Conversation history UI |
-
-### Phase 3 Implementation Steps
-
-1. **Phase 0**: Research & Setup (OpenAI Agents SDK, FastMCP, ChatKit)
-2. **Phase 1**: Database Models (Conversation, Message tables)
-3. **Phase 2**: MCP Server (5 task tools)
-4. **Phase 3**: AI Agent (Gemini + tool wrappers)
-5. **Phase 4**: Chat API (SSE streaming endpoint)
-6. **Phase 5**: Chat UI (ChatKit + conversation sidebar)
-7. **Phase 6**: Integration Testing
-8. **Phase 7**: Deployment & Documentation
-
-### Quick Commands
-
-```bash
-# Install Phase 3 backend dependencies
-cd backend && uv add openai-agents fastmcp litellm sse-starlette
-
-# Install Phase 3 frontend dependencies
-cd frontend && npm install @openai/chatkit-react eventsource-parser
-
-# Run MCP server (separate terminal)
-cd backend && uv run python -m src.mcp_server.server
-
-# Run development servers
-cd backend && uv run uvicorn src.main:app --reload
-cd frontend && npm run dev
-```
 
 ---
 
@@ -646,9 +734,12 @@ Wait for consent; never auto-create ADRs. Group related decisions (stacks, authe
 ```
 /
 ├── CLAUDE.md                        # This file - Claude Code instructions
-├── constitution-prompt-phase-3.md   # Phase 3 constitution (CURRENT)
-├── spec-prompt-phase-3.md           # Phase 3 specification (CURRENT)
-├── plan-prompt-phase-3.md           # Phase 3 implementation plan (CURRENT)
+├── constitution-prompt-phase-4.md   # Phase 4 constitution (CURRENT)
+├── spec-prompt-phase-4.md           # Phase 4 specification (CURRENT)
+├── plan-prompt-phase-4.md           # Phase 4 implementation plan (CURRENT)
+├── constitution-prompt-phase-3.md   # Phase 3 constitution (reference)
+├── spec-prompt-phase-3.md           # Phase 3 specification (reference)
+├── plan-prompt-phase-3.md           # Phase 3 implementation plan (reference)
 │
 ├── prompts/                         # Phase 2 documents (reference)
 │   ├── constitution-prompt-phase-2.md
@@ -724,7 +815,10 @@ Wait for consent; never auto-create ADRs. Group related decisions (stacks, authe
     │   ├── database-designer.md    # Phase 2
     │   ├── ai-agent-builder.md     # Phase 3
     │   ├── mcp-server-builder.md   # Phase 3
-    │   └── chatbot-ui-builder.md   # Phase 3
+    │   ├── chatbot-ui-builder.md   # Phase 3
+    │   ├── docker-containerization-builder.md  # Phase 4
+    │   ├── devops-kubernetes-builder.md        # Phase 4
+    │   └── aiops-helm-builder.md               # Phase 4
     ├── skills/                     # Reusable skills
     │   ├── fastapi-setup/          # Phase 2
     │   ├── nextjs-setup/           # Phase 2
@@ -736,7 +830,12 @@ Wait for consent; never auto-create ADRs. Group related decisions (stacks, authe
     │   ├── chat-api-integration/   # Phase 3
     │   ├── openai-chatkit-setup/   # Phase 3
     │   ├── streaming-sse-setup/    # Phase 3
-    │   └── conversation-management/ # Phase 3
+    │   ├── conversation-management/ # Phase 3
+    │   ├── docker-setup/           # Phase 4
+    │   ├── kubernetes-deployment/  # Phase 4
+    │   ├── helm-charts-setup/      # Phase 4
+    │   ├── minikube-setup/         # Phase 4
+    │   └── aiops-gordon/           # Phase 4
     └── commands/                   # Slash commands
 ```
 
@@ -753,5 +852,6 @@ Wait for consent; never auto-create ADRs. Group related decisions (stacks, authe
 ## Code Standards
 See `.specify/memory/constitution.md` for code quality, testing, performance, security, and architecture principles.
 
-See `constitution-prompt-phase-3.md` for Phase 3 specific standards (AI chatbot).
+See `constitution-prompt-phase-4.md` for Phase 4 specific standards (Kubernetes deployment).
+See `constitution-prompt-phase-3.md` for Phase 3 reference (AI chatbot).
 See `prompts/constitution-prompt-phase-2.md` for Phase 2 reference (full-stack web app).

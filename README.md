@@ -4,7 +4,27 @@ A modern, AI-powered todo application built using **Spec-Driven Development** wi
 
 > **TaskWhisper** - AI-powered task management through natural conversation. Just whisper your tasks and watch them happen.
 
-## Current Phase: Phase 3 - AI-Powered Todo Chatbot
+## Current Phase: Phase 4 - Local Kubernetes Deployment
+
+Transform the Phase 3 AI-powered Todo Chatbot into a containerized application deployable on Kubernetes (Minikube for local testing, with preparation for Phase 5 production deployment on DigitalOcean DOKS).
+
+### Phase 4 Features
+
+- **Docker Containerization** - Multi-stage Dockerfiles for all 3 services (frontend, backend, MCP server)
+- **Docker Compose** - Single-command local orchestration of all services
+- **Kubernetes Manifests** - Complete K8s manifests with deployments, services, and ingress
+- **Helm Charts** - Package management for multi-environment deployment
+- **Minikube Integration** - Local Kubernetes cluster for development and testing
+- **AIOps Tools** - Docker AI (Gordon), kubectl-ai, and Kagent for intelligent operations
+- **Resource Management** - CPU/memory limits and requests for all pods
+- **Health Probes** - Liveness and readiness probes for self-healing
+- **Service Discovery** - Internal DNS-based service communication
+- **Secrets Management** - Kubernetes Secrets for sensitive configuration
+- **Ingress Configuration** - External access via todo.local (dev) or LoadBalancer (prod)
+
+---
+
+## Phase 3: AI-Powered Todo Chatbot (COMPLETED)
 
 Transform the Phase 2 web application into an AI-powered chatbot interface with natural language task management.
 
@@ -111,22 +131,46 @@ A production-ready web application with persistent storage, Better Auth authenti
 ### System Overview
 
 ```
-+--------------------+       +----------------------+       +------------------+
-|                    |       |                      |       |                  |
-|   Next.js Frontend |<----->|   FastAPI Backend    |<----->|   Neon PostgreSQL|
-|   (Vercel)         |       |   (Port 8000)        |       |                  |
-|                    |       |                      |       +------------------+
-|   - ChatKit UI     |       |   - JWT Auth         |
-|   - Zustand Store  |       |   - Chat Router      |       +------------------+
-|   - SSE Client     |       |   - OpenAI Agents    |<----->|   FastMCP Server |
-|                    |       |     SDK              |       |   (Port 8001)    |
-+--------------------+       +----------------------+       |                  |
-                                      |                     |   - add_task     |
-                                      v                     |   - list_tasks   |
-                              +---------------+             |   - complete_task|
-                              |  Gemini 2.5   |             |   - delete_task  |
-                              |  Flash API    |             |   - update_task  |
-                              +---------------+             +------------------+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                     MINIKUBE KUBERNETES CLUSTER                          │
+│                                                                       │
+│  ┌─────────────────────┐  ┌─────────────────────┐               │
+│  │   FRONTEND POD      │  │   BACKEND POD       │               │
+│  │  (Next.js 16+)     │  │  (FastAPI + AI)     │               │
+│  │  Replicas: 2       │  │  Replicas: 2         │               │
+│  │  Port: 3000         │  │  Port: 8000         │               │
+│  │  CPU: 100-500m     │  │  CPU: 200-1000m    │               │
+│  │  RAM: 128-256Mi     │  │  RAM: 256-512Mi     │               │
+│  └──────────┬──────────┘  └──────────┬──────────┘               │
+│             │                          │                               │
+│             │                          │                               │
+│  ┌──────────▼──────────────────────────▼───────────────────────────┐   │
+│  │                NEON POSTGRESQL (EXTERNAL)                  │   │
+│  │         Serverless - cloud.neon.tech                       │   │
+│  └───────────────────────────────────────────────────────────────────┘   │
+│             │                          │                               │
+│             ▼                          ▼                               │
+│  ┌─────────────────────┐  ┌─────────────────────┐               │
+│  │  MCP SERVER POD     │  │   INGRESS (NGINX)  │               │
+│  │  (FastMCP)         │  │  todo.local          │               │
+│  │  Replicas: 1       │  │  Routes: / → Frontend              │
+│  │  Port: 8001         │  └─────────────────────┘               │
+│  │  CPU: 100-300m     │                                         │
+│  │  RAM: 64-128Mi      │                                         │
+│  └─────────────────────┘                                         │
+│                                                                     │
+│  Service Discovery:                                                   │
+│  - Frontend → Backend: http://backend:8000                      │
+│  - Backend → MCP: http://mcp-server:8001                        │
+│  - User → App: http://todo.local (via Ingress)                 │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+AIOps Layer:
+┌───────────────────────────────────────────────────────────────────────────┐
+│  Docker AI (Gordon) │  kubectl-ai │  Kagent              │
+│  Docker optimization │  K8s operations  │  Cluster monitoring  │
+└───────────────────────────────────────────────────────────────────────────┘
 ```
 
 ### MCP Tools
@@ -175,8 +219,43 @@ A production-ready web application with persistent storage, Better Auth authenti
 │   ├── tests/               # Pytest tests
 │   └── alembic/             # Database migrations
 │
+├── k8s/                       # Phase 4 - Kubernetes manifests
+│   ├── 00-namespace.yaml       # Namespace: todo-app
+│   ├── 01-configmap.yaml       # Non-sensitive configuration
+│   ├── 02-secret.yaml         # Secrets (API keys, etc)
+│   ├── 03-mcp-server-deployment.yaml
+│   ├── 04-mcp-server-service.yaml
+│   ├── 05-backend-deployment.yaml
+│   ├── 06-backend-service.yaml
+│   ├── 07-frontend-deployment.yaml
+│   ├── 08-frontend-service.yaml
+│   └── 09-ingress.yaml         # External access configuration
+│
+├── helm/                      # Phase 4 - Helm charts
+│   └── todo-app/
+│       ├── Chart.yaml
+│       ├── values.yaml          # Default values
+│       ├── values-dev.yaml      # Minikube local
+│       ├── values-staging.yaml  # Pre-production
+│       ├── values-prod.yaml     # Production (Phase 5)
+│       └── templates/
+│           ├── _helpers.tpl
+│           ├── NOTES.txt
+│           ├── deployment.yaml
+│           ├── service.yaml
+│           ├── ingress.yaml
+│           ├── configmap.yaml
+│           ├── secret.yaml
+│           └── hpa.yaml           # Horizontal Pod Autoscaler (Phase 5)
+│
+├── docs/                      # Phase 4 - Deployment documentation
+│   ├── DEPLOYMENT.md           # Deployment guide
+│   ├── MINIKUBE-SETUP.md      # Minikube setup guide
+│   └── AIOPS.md               # AIOps tools reference
+│
 ├── specs/                    # Feature specifications
 │   ├── 001-phase-2-web-app/ # Phase 2 specs
+│   ├── 001-k8s-local-deploy/ # Phase 4 specs (Kubernetes deployment)
 │   ├── features/            # Feature specs
 │   ├── api/                 # API documentation
 │   ├── database/            # Schema specifications
@@ -189,7 +268,10 @@ A production-ready web application with persistent storage, Better Auth authenti
 │   │   ├── database-designer.md
 │   │   ├── ai-agent-builder.md      (Phase 3)
 │   │   ├── mcp-server-builder.md    (Phase 3)
-│   │   └── chatbot-ui-builder.md    # skills: chatkit-frontend, conversation-management
+│   │   ├── chatbot-ui-builder.md    # skills: chatkit-frontend, conversation-management
+│   │   ├── docker-containerization-builder.md  (Phase 4)
+│   │   ├── devops-kubernetes-builder.md        (Phase 4)
+│   │   └── aiops-helm-builder.md               (Phase 4)
 │   └── skills/              # Setup & configuration skills
 │       ├── fastapi-setup/
 │       ├── nextjs-setup/
@@ -200,7 +282,12 @@ A production-ready web application with persistent storage, Better Auth authenti
 │       ├── fastmcp-server-setup/      (Phase 3)
 │       ├── chatkit-frontend/          (Phase 3) - ChatKit React + useChatKit
 │       ├── chatkit-backend/           (Phase 3) - SSE endpoint + conversations
-│       └── conversation-management/   (Phase 3)
+│       ├── conversation-management/   (Phase 3)
+│       ├── docker-setup/             (Phase 4)
+│       ├── kubernetes-deployment/    (Phase 4)
+│       ├── helm-charts-setup/        (Phase 4)
+│       ├── minikube-setup/           (Phase 4)
+│       └── aiops-gordon/            (Phase 4)
 │
 ├── history/                  # PHRs and ADRs
 │   ├── prompts/             # Prompt History Records
@@ -211,9 +298,13 @@ A production-ready web application with persistent storage, Better Auth authenti
 │   ├── spec-prompt-phase-2.md
 │   └── plan-prompt-phase-2.md
 │
-├── constitution-prompt-phase-3.md    # Phase 3 constitution
-├── spec-prompt-phase-3.md            # Phase 3 specification
-├── plan-prompt-phase-3.md            # Phase 3 implementation plan
+├── constitution-prompt-phase-4.md    # Phase 4 constitution (CURRENT)
+├── spec-prompt-phase-4.md            # Phase 4 specification (CURRENT)
+├── plan-prompt-phase-4.md            # Phase 4 implementation plan (CURRENT)
+├── constitution-prompt-phase-3.md    # Phase 3 constitution (reference)
+├── spec-prompt-phase-3.md            # Phase 3 specification (reference)
+├── plan-prompt-phase-3.md            # Phase 3 implementation plan (reference)
+├── docker-compose.yml                # Phase 4 - Docker Compose for local dev
 └── CLAUDE.md                         # Root agent orchestrator
 ```
 
@@ -223,11 +314,19 @@ A production-ready web application with persistent storage, Better Auth authenti
 
 ### Prerequisites
 
+**For Phase 2/3 (Development):**
 - Python 3.13+
 - Node.js 20+
 - PostgreSQL or Neon account
 - UV package manager (`pip install uv`)
 - Gemini API Key (for Phase 3 AI features)
+
+**For Phase 4 (Kubernetes Deployment):**
+- Docker Desktop 4.53+ (with Docker AI/Gordon support)
+- Minikube (latest version)
+- kubectl compatible with cluster version
+- Helm 3.15+
+- (Optional) Go 1.21+ for kubectl-ai and Kagent
 
 ### Backend Setup
 
@@ -328,6 +427,89 @@ cd /path/to/todo-web-hackthon/frontend && npm run dev
 2. Log in with your account
 3. Click "Chat" in the navigation
 4. Start typing natural language commands to manage tasks
+
+---
+
+### Phase 4 Kubernetes Deployment (Minikube)
+
+For containerized deployment with Kubernetes, see [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md) for complete instructions.
+
+#### Docker Compose (Quick Local Deployment)
+
+```bash
+# Run all services with Docker Compose
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop services
+docker-compose down
+```
+
+#### Minikube (Local Kubernetes Cluster)
+
+```bash
+# 1. Start Minikube with required resources
+minikube start --cpus=4 --memory=8192 --driver=docker
+minikube addons enable ingress
+
+# 2. Build and load Docker images to Minikube
+eval $(minikube docker-env)
+docker build -t todo-frontend:latest ./frontend
+docker build -t todo-backend:latest ./backend
+docker build -f backend/Dockerfile.mcp -t todo-mcp-server:latest ./backend
+eval $(minikube docker-env --unset)
+
+# 3. Create secrets from your .env files
+kubectl create namespace todo-app
+kubectl create secret generic app-secrets --from-env-file=backend/.env -n todo-app
+
+# 4. Deploy to Kubernetes
+kubectl apply -f k8s/ -n todo-app
+
+# 5. Wait for pods to be ready
+kubectl wait --for=condition=ready pod -l app=frontend -n todo-app --timeout=120s
+
+# 6. Get Minikube IP and add to /etc/hosts
+minikube ip
+# Add to /etc/hosts: <minikube-ip> todo.local
+
+# 7. Access application
+open http://todo.local
+```
+
+#### Helm Chart Installation
+
+```bash
+# Install with Helm (recommended for production-like environments)
+helm install todo-app ./helm/todo-app \
+  -f ./helm/todo-app/values-dev.yaml \
+  -n todo-app \
+  --create-namespace \
+  --set secrets.databaseUrl="postgresql://..." \
+  --set secrets.geminiApiKey="..." \
+  --set secrets.betterAuthSecret="..."
+```
+
+#### Kubernetes Commands Reference
+
+```bash
+# View pod status
+kubectl get pods -n todo-app
+
+# View services
+kubectl get svc -n todo-app
+
+# View logs for a specific pod
+kubectl logs -f deployment/backend -n todo-app
+
+# Scale a deployment
+kubectl scale deployment backend --replicas=3 -n todo-app
+
+# Delete everything
+kubectl delete namespace todo-app
+```
 
 ---
 
@@ -469,9 +651,13 @@ data: {"conversation_id": 123, "message_id": 456}
 | MCP tool execution | < 500ms |
 | Conversation load | < 1 second |
 | Concurrent sessions | 100+ |
+| **Phase 4: Pod startup time** | < 30 seconds |
+| **Phase 4: Image build time** | < 5 minutes |
+| **Phase 4: Container image size** | Frontend <200MB, Backend <500MB, MCP <100MB |
 
 ### Security Measures
 
+**Phase 2/3 (Application):**
 - **JWT Authentication**: All chat endpoints require valid JWT tokens
 - **User Isolation**: Users can only access their own conversations and tasks
 - **Rate Limiting**: 30 messages/minute per user (enforced by middleware)
@@ -481,13 +667,22 @@ data: {"conversation_id": 123, "message_id": 456}
 - **Audit Trail**: Tool calls are logged for security review
 - **HTTPS Required**: All production traffic uses HTTPS encryption
 
+**Phase 4 (Kubernetes):**
+- **Non-root Containers**: All containers run as non-root user
+- **Minimal Base Images**: Use alpine/slim images to reduce attack surface
+- **Resource Limits**: All pods have CPU and memory limits defined
+- **Health Probes**: Liveness and readiness probes for self-healing
+- **Secrets Management**: Sensitive data in Kubernetes Secret resources, not in manifests
+- **Network Policies**: Services communicate only through defined endpoints
+- **Image Scanning**: Use Docker Scout or Trivy for vulnerability scanning
+
 ---
 
 ## Skills & Agents
 
 This project uses Claude Code with specialized agents coupled to skills for efficient development.
 
-### Active Skills (Phase 3)
+### Active Skills (Phase 4)
 
 | Skill | Purpose | Agent Coupled |
 |-------|---------|---------------|
@@ -496,6 +691,11 @@ This project uses Claude Code with specialized agents coupled to skills for effi
 | `conversation-management` | Conversation sidebar, history UI | `chatbot-ui-builder` |
 | `openai-agents-setup` | OpenAI Agents SDK + Gemini | `ai-agent-builder` |
 | `fastmcp-server-setup` | FastMCP server with task tools | `mcp-server-builder` |
+| `docker-setup` | Dockerfile creation, Docker Compose | `docker-containerization-builder` |
+| `kubernetes-deployment` | K8s manifests, Minikube operations | `devops-kubernetes-builder` |
+| `helm-charts-setup` | Helm chart creation and values | `aiops-helm-builder` |
+| `minikube-setup` | Minikube installation and operations | `devops-kubernetes-builder` |
+| `aiops-gordon` | Docker AI (Gordon) usage | `docker-containerization-builder` |
 
 ### Deprecated Skills
 
@@ -560,14 +760,25 @@ This project follows **Spec-Driven Development**:
 ## See Also
 
 - [CLAUDE.md](./CLAUDE.md) - Root agent orchestrator
-- [Phase 3 Constitution](./constitution-prompt-phase-3.md)
-- [Phase 3 Specification](./spec-prompt-phase-3.md)
-- [Phase 3 Plan](./plan-prompt-phase-3.md)
+- [Phase 4 Constitution](./constitution-prompt-phase-4.md) - DevOps principles and K8s standards
+- [Phase 4 Specification](./spec-prompt-phase-4.md) - K8s deployment user stories
+- [Phase 4 Plan](./plan-prompt-phase-4.md) - K8s implementation architecture
+- [Phase 4 Tasks](./specs/001-k8s-local-deploy/tasks.md) - 65 implementation tasks
+- [Phase 3 Constitution](./constitution-prompt-phase-3.md) - AI principles and standards
+- [Phase 3 Specification](./spec-prompt-phase-3.md) - AI chatbot features
+- [Phase 3 Plan](./plan-prompt-phase-3.md) - AI implementation architecture
 - [Backend README](./backend/README.md)
 - [Frontend README](./frontend/README.md)
 
 ### External Documentation
 
+**Phase 4 (Kubernetes):**
+- [Kubernetes Documentation](https://kubernetes.io/docs/)
+- [Minikube Documentation](https://minikube.sigs.k8s.io/docs/)
+- [Helm Documentation](https://helm.sh/docs/)
+- [Docker AI (Gordon)](https://docs.docker.com/ai/gordon/)
+
+**Phase 3 (AI Chatbot):**
 - [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/)
 - [FastMCP GitHub](https://github.com/jlowin/fastmcp)
 - [OpenAI ChatKit](https://platform.openai.com/docs/guides/chatkit)
