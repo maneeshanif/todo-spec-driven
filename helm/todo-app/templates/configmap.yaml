@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "todo-app.fullname" . }}-config
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "todo-app.labels" . | nindent 4 }}
+data:
+  # Environment
+  NODE_ENV: {{ .Values.frontend.env.NODE_ENV | quote }}
+
+  # Service Discovery (Internal K8s DNS)
+  NEXT_PUBLIC_API_URL: {{ printf "http://%s-backend:%d" (include "todo-app.fullname" .) (int .Values.backend.service.port) | quote }}
+  NEXT_PUBLIC_MCP_URL: {{ printf "http://%s-mcp-server:%d" (include "todo-app.fullname" .) (int .Values.mcpServer.service.port) | quote }}
+  MCP_SERVER_URL: {{ printf "http://%s-mcp-server:%d/mcp" (include "todo-app.fullname" .) (int .Values.mcpServer.service.port) | quote }}
+
+  # Better Auth URL for JWT validation (backend needs to reach frontend's JWKS endpoint)
+  BETTER_AUTH_URL: {{ printf "http://%s-frontend:%d" (include "todo-app.fullname" .) (int .Values.frontend.service.port) | quote }}
+
+  # Next.js Configuration
+  NEXT_TELEMETRY_DISABLED: {{ .Values.frontend.env.NEXT_TELEMETRY_DISABLED | quote }}

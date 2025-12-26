@@ -1,0 +1,191 @@
+# Default values for todo-app
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# Global configuration
+global:
+  namespace: todo-app
+  imagePullPolicy: IfNotPresent
+  registry: docker.io
+
+# Frontend configuration (Next.js)
+frontend:
+  enabled: true
+  replicaCount: 2
+
+  image:
+    repository: todo-frontend
+    tag: "latest"
+    pullPolicy: IfNotPresent
+
+  service:
+    type: ClusterIP
+    port: 80
+    targetPort: 3000
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+
+  autoscaling:
+    enabled: false
+    minReplicas: 2
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 70
+
+  livenessProbe:
+    path: /
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+  readinessProbe:
+    path: /
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 3
+
+  env:
+    NODE_ENV: "production"
+    NEXT_TELEMETRY_DISABLED: "1"
+
+# Backend configuration (FastAPI)
+backend:
+  enabled: true
+  replicaCount: 2
+
+  image:
+    repository: todo-backend
+    tag: "latest"
+    pullPolicy: IfNotPresent
+
+  service:
+    type: ClusterIP
+    port: 8000
+    targetPort: 8000
+
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 512Mi
+
+  autoscaling:
+    enabled: false
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+
+  livenessProbe:
+    path: /health
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+  readinessProbe:
+    path: /health
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 3
+
+# MCP Server configuration (FastMCP)
+mcpServer:
+  enabled: true
+  replicaCount: 1
+
+  image:
+    repository: todo-mcp-server
+    tag: "latest"
+    pullPolicy: IfNotPresent
+
+  service:
+    type: ClusterIP
+    port: 8001
+    targetPort: 8001
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 64Mi
+    limits:
+      cpu: 300m
+      memory: 128Mi
+
+  livenessProbe:
+    path: /health
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+  readinessProbe:
+    path: /health
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 3
+
+# Ingress configuration
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+  hosts:
+    - host: todo.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+  # Example TLS configuration:
+  # tls:
+  #   - secretName: todo-tls
+  #     hosts:
+  #       - todo.example.com
+
+  # Access control configuration (T048a)
+  # Options: none, basic, ip-allowlist
+  auth:
+    # enabled: Enable basic authentication
+    enabled: false
+    # type: Authentication type (basic, ip-allowlist)
+    type: basic
+    # message: Realm message for basic auth popup
+    message: "Authentication Required"
+    # IP allowlist example (comma-separated):
+    # ipAllowlist: "10.0.0.0/8,192.168.0.0/16"
+
+# Secrets configuration
+# IMPORTANT: Set these values when deploying to production
+secrets:
+  # Database connection (Neon PostgreSQL)
+  # Example: postgresql://user:password@host:5432/database?sslmode=require
+  databaseUrl: ""
+
+  # AI/LLM API Keys
+  geminiApiKey: ""
+
+  # Authentication Secret (generate with: openssl rand -hex 32)
+  betterAuthSecret: ""
+
+  # OpenAI ChatKit Domain Key (Frontend)
+  openaiDomainKey: ""
+
+  # JWT Secret Key (required for backend auth)
+  # Generate with: openssl rand -base64 32
+  secretKey: ""
+
+  # Basic Auth credentials (for ingress.auth.enabled=true)
+  # Generate htpasswd: htpasswd -nb username password | base64
+  basicAuthUsername: ""
+  basicAuthPassword: ""

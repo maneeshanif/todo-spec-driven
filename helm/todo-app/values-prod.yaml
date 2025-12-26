@@ -1,0 +1,111 @@
+# Production values for production deployment
+# This file overrides values.yaml for production environment
+
+global:
+  namespace: todo-app
+  imagePullPolicy: IfNotPresent
+  registry: ghcr.io/maneeshanif  # GitHub Container Registry
+
+frontend:
+  enabled: true
+  replicaCount: 3
+
+  image:
+    repository: todo-frontend
+    tag: "1.0.0"  # Use semantic versioning in production
+    pullPolicy: IfNotPresent
+
+  service:
+    type: ClusterIP
+    port: 80
+    targetPort: 3000
+
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 512Mi
+
+  autoscaling:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+
+backend:
+  enabled: true
+  replicaCount: 3
+
+  image:
+    repository: todo-backend
+    tag: "1.0.0"
+    pullPolicy: IfNotPresent
+
+  service:
+    type: ClusterIP
+    port: 8000
+    targetPort: 8000
+
+  resources:
+    requests:
+      cpu: 500m
+      memory: 512Mi
+    limits:
+      cpu: 2000m
+      memory: 1Gi
+
+  autoscaling:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+
+mcpServer:
+  enabled: true
+  replicaCount: 2
+
+  image:
+    repository: todo-mcp-server
+    tag: "1.0.0"
+    pullPolicy: IfNotPresent
+
+  service:
+    type: ClusterIP
+    port: 8001
+    targetPort: 8001
+
+  resources:
+    requests:
+      cpu: 200m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+  hosts:
+    - host: todo.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: todo-prod-tls
+      hosts:
+        - todo.example.com
+
+# Secrets - MUST be set via external secret management (e.g., Sealed Secrets, External Secrets Operator)
+# NEVER commit production secrets to version control
+secrets:
+  databaseUrl: ""  # Set via: --set secrets.databaseUrl="..."
+  geminiApiKey: ""  # Set via: --set secrets.geminiApiKey="..."
+  betterAuthSecret: ""  # Set via: --set secrets.betterAuthSecret="..."
+  openaiDomainKey: ""  # Set via: --set secrets.openaiDomainKey="..."

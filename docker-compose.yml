@@ -1,0 +1,88 @@
+version: '3.9'
+
+services:
+  # MCP Server - FastMCP server with task operation tools
+  mcp-server:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.mcp
+    container_name: todo-mcp-server
+    ports:
+      - "8001:8001"
+    env_file:
+      - backend/.env
+    environment:
+      # Override specific environment variables for Docker Compose
+      - MCP_SERVER_PORT=8001
+      - HOST=0.0.0.0
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - todo-network
+
+  # Backend - FastAPI + SQLModel + OpenAI Agents SDK
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: todo-backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - backend/.env
+    environment:
+      # Override specific environment variables for Docker Compose
+      - MCP_SERVER_URL=http://mcp-server:8001
+      - HOST=0.0.0.0
+      - PORT=8000
+    depends_on:
+      mcp-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+    networks:
+      - todo-network
+
+  # Frontend - Next.js 16+ with ChatKit
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: todo-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - NEXT_TELEMETRY_DISABLED=1
+      - NEXT_PUBLIC_API_URL=http://backend:8000
+      - NEXT_PUBLIC_MCP_URL=http://mcp-server:8001
+      - NEXT_PUBLIC_APP_NAME=Todo Web Application
+      - NEXT_PUBLIC_APP_VERSION=1.0.0
+    depends_on:
+      backend:
+        condition: service_healthy
+      mcp-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+    networks:
+      - todo-network
+
+networks:
+  todo-network:
+    driver: bridge

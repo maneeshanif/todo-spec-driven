@@ -397,19 +397,71 @@ def update_task(
 
 
 def run_server() -> None:
-    """Run the MCP server with HTTP transport."""
+    """Run the MCP server with HTTP transport and health endpoint."""
+    import uvicorn
+    from starlette.applications import Starlette
+    from starlette.routing import Route, Mount
+    from starlette.responses import JSONResponse
+
     # Get port from environment or use default
     port = int(os.environ.get("MCP_SERVER_PORT", "8001"))
 
-    print(f"🚀 Starting Todo MCP Server on http://0.0.0.0:{port}")
-    print(f"📦 Database: {SYNC_DATABASE_URL[:50]}..." if len(SYNC_DATABASE_URL) > 50 else f"📦 Database: {SYNC_DATABASE_URL}")
-    print("🔧 Available tools: add_task, list_tasks, complete_task, delete_task, update_task")
+    async def health_endpoint(request):
+        """Health check endpoint for Docker/Kubernetes.
 
-    mcp.run(
-        transport="http",
-        host="0.0.0.0",
-        port=port,
-    )
+        Returns JSON with service status, name, and version.
+        This endpoint is used by container orchestration for liveness/readiness probes.
+        """
+        return JSONResponse(
+            {
+                "status": "healthy",
+                "service": "todo-mcp-server",
+                "version": "1.0.0",
+                "timestamp": datetime.utcnow().isoformat() + "Z"
+            }
+        )
+
+    # Create MCP app with Streamable HTTP transport
+    # Required for OpenAI Agents SDK's MCPServerStreamableHttp client
+    try:
+        from fastmcp.server.http import create_streamable_http_app
+
+        # Create Streamable HTTP app - single endpoint for requests/responses
+        # Path "/" means endpoint is at mount point (/mcp)
+        mcp_app = create_streamable_http_app(mcp, streamable_http_path="/")
+
+        # IMPORTANT: Must pass lifespan from mcp_app to parent Starlette app
+        # This initializes the StreamableHTTPSessionManager task group
+        app = Starlette(
+            routes=[
+                Route("/health", health_endpoint, methods=["GET"]),
+                Mount("/mcp", app=mcp_app),
+            ],
+            lifespan=mcp_app.lifespan,  # Required for FastMCP!
+        )
+
+        print(f"🚀 Starting Todo MCP Server on http://0.0.0.0:{port}")
+        print(f"📦 Database: {SYNC_DATABASE_URL[:50]}..." if len(SYNC_DATABASE_URL) > 50 else f"📦 Database: {SYNC_DATABASE_URL}")
+        print("🔧 Available tools: add_task, list_tasks, complete_task, delete_task, update_task")
+        print(f"🏥 Health check: http://0.0.0.0:{port}/health")
+        print(f"🔌 MCP endpoint: http://0.0.0.0:{port}/mcp (Streamable HTTP)")
+
+        uvicorn.run(app, host="0.0.0.0", port=port, log_level="info")
+
+    except ImportError:
+        # Fallback to mcp.run() with streamable-http transport
+        logger.warning("create_streamable_http_app not available, using mcp.run()")
+
+        print(f"🚀 Starting Todo MCP Server on http://0.0.0.0:{port}")
+        print(f"📦 Database: {SYNC_DATABASE_URL[:50]}..." if len(SYNC_DATABASE_URL) > 50 else f"📦 Database: {SYNC_DATABASE_URL}")
+        print("🔧 Available tools: add_task, list_tasks, complete_task, delete_task, update_task")
+        print("⚠️  Health check: Configure at ingress/proxy level")
+
+        mcp.run(
+            transport="streamable-http",
+            host="0.0.0.0",
+            port=port,
+        )
 
 
 if __name__ == "__main__":

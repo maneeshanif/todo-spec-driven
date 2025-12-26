@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcp-server
+  namespace: todo-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mcp-server
+  template:
+    metadata:
+      labels:
+        app: mcp-server
+    spec:
+      containers:
+      - name: mcp-server
+        image: evolution-todo/mcp-server:latest
+        ports:
+        - containerPort: 8001
+          name: http
+        env:
+        - name: MCP_SERVER_PORT
+          value: "8001"
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: database-url
+
+        # Liveness probe - checks if container is alive
+        # Kubernetes will restart the container if this fails
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8001
+            scheme: HTTP
+          initialDelaySeconds: 10  # Wait 10s after container starts
+          periodSeconds: 10         # Check every 10s
+          timeoutSeconds: 5         # Timeout after 5s
+          successThreshold: 1       # 1 success = healthy
+          failureThreshold: 3       # 3 failures = restart container
+
+        # Readiness probe - checks if container is ready to serve traffic
+        # Kubernetes will not send traffic to pod if this fails
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8001
+            scheme: HTTP
+          initialDelaySeconds: 5    # Wait 5s after container starts
+          periodSeconds: 5          # Check every 5s
+          timeoutSeconds: 3         # Timeout after 3s
+          successThreshold: 1       # 1 success = ready
+          failureThreshold: 2       # 2 failures = not ready
+
+        # Startup probe - checks if application has started
+        # This is useful for slow-starting applications
+        startupProbe:
+          httpGet:
+            path: /health
+            port: 8001
+            scheme: HTTP
+          initialDelaySeconds: 0    # Start checking immediately
+          periodSeconds: 3          # Check every 3s
+          timeoutSeconds: 3         # Timeout after 3s
+          successThreshold: 1       # 1 success = started
+          failureThreshold: 10      # 10 failures (30s) = startup failed
+
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi

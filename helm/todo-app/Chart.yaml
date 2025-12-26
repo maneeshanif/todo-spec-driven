@@ -1,0 +1,17 @@
+apiVersion: v2
+name: todo-app
+description: A Helm chart for Evolution of Todo - AI-Powered Task Manager
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - todo
+  - chatbot
+  - nextjs
+  - fastapi
+  - mcp
+  - kubernetes
+home: https://github.com/maneeshanif/todo-web-hackthon
+maintainers:
+  - name: Manees Hanif
+    email: your@email.com

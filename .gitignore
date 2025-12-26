@@ -68,3 +68,16 @@ frontend/.vercel
 # OS
 Thumbs.db
 .DS_Store
+
+# Kubernetes secrets (Phase 4)
+k8s/*-secrets*.yaml
+*.secret.yaml
+kubeconfig*
+*.key
+*.crt
+*.pem
+
+# Helm values with secrets
+helm/**/values-secret*.yaml
+helm/**/*.secret.yaml
+helm/todo-app/values-secrets.yaml

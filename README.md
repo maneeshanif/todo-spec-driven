@@ -432,64 +432,113 @@ cd /path/to/todo-web-hackthon/frontend && npm run dev
 
 ### Phase 4 Kubernetes Deployment (Minikube)
 
-For containerized deployment with Kubernetes, see [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md) for complete instructions.
+Deploy the application to a local Kubernetes cluster using Minikube and Helm.
 
-#### Docker Compose (Quick Local Deployment)
+**Documentation:**
+- [Complete Deployment Flow](./docs/phase-4-flow.md) - A-to-Z guide explaining the entire deployment pipeline
+- [Deployment Guide](./docs/DEPLOYMENT.md) - Step-by-step deployment instructions
+- [Minikube Setup](./docs/MINIKUBE-SETUP.md) - Minikube installation and configuration
+- [AIOps Tools](./docs/AIOPS.md) - Docker AI, kubectl-ai, and Kagent reference
+
+#### Prerequisites Check
 
 ```bash
-# Run all services with Docker Compose
+# Verify all tools are installed
+docker --version          # Docker 24.0+
+minikube version          # Minikube v1.32+
+kubectl version --client  # kubectl compatible with cluster
+helm version              # Helm 3.15+
+
+# Required API keys (get before deployment)
+# - Neon PostgreSQL connection string
+# - Gemini API key (https://ai.google.dev/)
+# - Better Auth secret (generate: openssl rand -base64 32)
+# - OpenAI ChatKit domain key (optional, for production)
+```
+
+#### Option 1: Docker Compose (Quick Local Deployment)
+
+```bash
+# 1. Configure environment
+cp backend/.env.example backend/.env
+# Edit backend/.env with your DATABASE_URL, GEMINI_API_KEY, etc.
+
+# 2. Run all services
 docker-compose up -d
 
-# View logs
+# 3. View logs
 docker-compose logs -f
 
-# Stop services
+# 4. Access application
+open http://localhost:3000
+
+# 5. Stop services
 docker-compose down
 ```
 
-#### Minikube (Local Kubernetes Cluster)
+#### Option 2: Helm on Minikube (Recommended)
 
+**Step 1: Start Minikube Cluster**
 ```bash
-# 1. Start Minikube with required resources
+# Start with sufficient resources
 minikube start --cpus=4 --memory=8192 --driver=docker
-minikube addons enable ingress
 
-# 2. Build and load Docker images to Minikube
+# Enable required addons
+minikube addons enable ingress
+minikube addons enable metrics-server
+
+# Verify cluster is running
+kubectl get nodes
+```
+
+**Step 2: Build Docker Images Inside Minikube**
+```bash
+# Connect to Minikube's Docker daemon
 eval $(minikube docker-env)
+
+# Build all 3 images (names must match values-dev.yaml)
 docker build -t todo-frontend:latest ./frontend
 docker build -t todo-backend:latest ./backend
 docker build -f backend/Dockerfile.mcp -t todo-mcp-server:latest ./backend
+
+# Verify images are built
+docker images | grep todo
+
+# Disconnect from Minikube Docker
 eval $(minikube docker-env --unset)
-
-# 3. Create secrets from your .env files
-kubectl create namespace todo-app
-kubectl create secret generic app-secrets --from-env-file=backend/.env -n todo-app
-
-# 4. Deploy to Kubernetes
-kubectl apply -f k8s/ -n todo-app
-
-# 5. Wait for pods to be ready
-kubectl wait --for=condition=ready pod -l app=frontend -n todo-app --timeout=120s
-
-# 6. Get Minikube IP and add to /etc/hosts
-minikube ip
-# Add to /etc/hosts: <minikube-ip> todo.local
-
-# 7. Access application
-open http://todo.local
 ```
 
-#### Helm Chart Installation
-
+**Step 3: Deploy with Helm**
 ```bash
-# Install with Helm (recommended for production-like environments)
-helm install todo-app ./helm/todo-app \
-  -f ./helm/todo-app/values-dev.yaml \
+# Install/upgrade with all required secrets
+helm upgrade --install todo-app ./helm/todo-app \
   -n todo-app \
   --create-namespace \
-  --set secrets.databaseUrl="postgresql://..." \
-  --set secrets.geminiApiKey="..." \
-  --set secrets.betterAuthSecret="..."
+  -f ./helm/todo-app/values-dev.yaml \
+  --set secrets.databaseUrl="postgresql+asyncpg://USER:PASS@HOST/DB?ssl=require" \
+  --set secrets.geminiApiKey="YOUR_GEMINI_API_KEY" \
+  --set secrets.betterAuthSecret="YOUR_SECRET_KEY" \
+  --set secrets.secretKey="YOUR_SECRET_KEY" \
+  --set secrets.openaiDomainKey="YOUR_CHATKIT_DOMAIN_KEY"
+
+# Wait for pods to be ready
+kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=todo-app -n todo-app --timeout=180s
+
+# Check pod status
+kubectl get pods -n todo-app
+```
+
+**Step 4: Access the Application**
+```bash
+# Option A: Port forwarding (recommended for development)
+kubectl port-forward svc/todo-app-frontend 3000:80 -n todo-app &
+kubectl port-forward svc/todo-app-backend 8000:8000 -n todo-app &
+
+# Access at http://localhost:3000
+
+# Option B: Ingress (requires /etc/hosts entry)
+echo "$(minikube ip) todo.local" | sudo tee -a /etc/hosts
+# Access at http://todo.local
 ```
 
 #### Kubernetes Commands Reference
@@ -501,15 +550,36 @@ kubectl get pods -n todo-app
 # View services
 kubectl get svc -n todo-app
 
-# View logs for a specific pod
-kubectl logs -f deployment/backend -n todo-app
+# View logs for a specific deployment
+kubectl logs -f deployment/todo-app-frontend -n todo-app
+kubectl logs -f deployment/todo-app-backend -n todo-app
+kubectl logs -f deployment/todo-app-mcp-server -n todo-app
 
-# Scale a deployment
-kubectl scale deployment backend --replicas=3 -n todo-app
+# Check Helm release
+helm list -n todo-app
+
+# Upgrade after code changes
+eval $(minikube docker-env)
+docker build -t todo-app/backend:latest ./backend
+eval $(minikube docker-env --unset)
+kubectl rollout restart deployment/todo-app-backend -n todo-app
 
 # Delete everything
+helm uninstall todo-app -n todo-app
 kubectl delete namespace todo-app
+minikube stop
 ```
+
+#### Troubleshooting
+
+| Issue | Solution |
+|-------|----------|
+| Pods stuck in `ImagePullBackOff` | Images not in Minikube. Run `eval $(minikube docker-env)` before `docker build` |
+| Backend 500 on `/api/tasks` | Check `BETTER_AUTH_URL` points to frontend service (not localhost) |
+| Frontend "default secret" error | Ensure `BETTER_AUTH_SECRET` is set in Helm secrets |
+| Database connection refused | Check `DATABASE_URL` format and Neon database is accessible |
+| MCP "Session terminated" | Verify `MCP_SERVER_URL` includes `/mcp` path |
+| Port forwarding stops | Restart: `kubectl port-forward svc/todo-app-frontend 3000:80 -n todo-app &` |
 
 ---
 
@@ -759,14 +829,29 @@ This project follows **Spec-Driven Development**:
 
 ## See Also
 
+### Project Documentation
+
 - [CLAUDE.md](./CLAUDE.md) - Root agent orchestrator
+
+### Phase 4 (Kubernetes Deployment)
+
+- [Phase 4 Deployment Flow](./docs/phase-4-flow.md) - Complete A-to-Z deployment pipeline guide
+- [Deployment Guide](./docs/DEPLOYMENT.md) - Step-by-step deployment instructions
+- [Minikube Setup](./docs/MINIKUBE-SETUP.md) - Minikube installation and configuration
+- [AIOps Reference](./docs/AIOPS.md) - Docker AI, kubectl-ai, Kagent tools
 - [Phase 4 Constitution](./constitution-prompt-phase-4.md) - DevOps principles and K8s standards
 - [Phase 4 Specification](./spec-prompt-phase-4.md) - K8s deployment user stories
 - [Phase 4 Plan](./plan-prompt-phase-4.md) - K8s implementation architecture
-- [Phase 4 Tasks](./specs/001-k8s-local-deploy/tasks.md) - 65 implementation tasks
+- [Phase 4 Tasks](./specs/001-k8s-local-deploy/tasks.md) - 65 implementation tasks (all complete)
+
+### Phase 3 (AI Chatbot)
+
 - [Phase 3 Constitution](./constitution-prompt-phase-3.md) - AI principles and standards
 - [Phase 3 Specification](./spec-prompt-phase-3.md) - AI chatbot features
 - [Phase 3 Plan](./plan-prompt-phase-3.md) - AI implementation architecture
+
+### Application
+
 - [Backend README](./backend/README.md)
 - [Frontend README](./frontend/README.md)
 

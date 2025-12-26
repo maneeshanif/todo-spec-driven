@@ -1,0 +1,84 @@
+# ============================================
+# Multi-Stage Dockerfile for MCP Server
+# ============================================
+# Image: evolution-todo/mcp-server:latest
+# Target Size: <300MB (optimized for FastMCP server)
+# Port: 8001
+# Health: GET /health
+# ============================================
+
+# ============================================
+# Stage 1: Builder
+# ============================================
+FROM python:3.13-slim AS builder
+
+# Set working directory
+WORKDIR /app
+
+# Install system dependencies for building
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install UV package manager
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+
+# Copy dependency files
+COPY pyproject.toml uv.lock ./
+
+# Install dependencies into virtual environment
+# MCP server uses same dependencies as backend (fastmcp, sqlmodel, etc.)
+RUN uv sync --frozen --no-dev
+
+# ============================================
+# Stage 2: Runtime
+# ============================================
+FROM python:3.13-slim AS runtime
+
+# Set working directory
+WORKDIR /app
+
+# Install only runtime dependencies
+# - libpq5: PostgreSQL client library (runtime only, no dev headers)
+# - curl: For health checks (required by Docker/K8s)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq5 \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/app \
+    PATH="/app/.venv/bin:$PATH" \
+    MCP_SERVER_PORT=8001
+
+# Create non-root user (uid 1000 for consistency)
+RUN groupadd -r appuser --gid=1000 && \
+    useradd -r -g appuser --uid=1000 --no-log-init appuser
+
+# Copy virtual environment from builder
+COPY --from=builder --chown=appuser:appuser /app/.venv /app/.venv
+
+# Copy MCP server source code
+# MCP server code is at src/mcp_server/ and needs src/models/ for Task model
+COPY --chown=appuser:appuser src/ ./src/
+
+# Change ownership of app directory
+RUN chown -R appuser:appuser /app
+
+# Switch to non-root user
+USER appuser
+
+# Expose MCP server port
+EXPOSE 8001
+
+# Health check using curl to /health endpoint
+# Interval: 30s, Timeout: 10s, Start period: 30s, Retries: 3
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost:8001/health || exit 1
+
+# Start MCP server
+# Using python -m to run as module (as per server.py documentation)
+CMD ["python", "-m", "src.mcp_server.server"]

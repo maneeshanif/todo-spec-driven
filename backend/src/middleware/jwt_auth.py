@@ -17,11 +17,14 @@ from typing import Dict, Optional, Any
 import logging
 import time
 import asyncio
+import os
 
 logger = logging.getLogger(__name__)
 
-# Better Auth URL - should match frontend
-BETTER_AUTH_URL = "http://localhost:3000"
+# Better Auth URL - configurable via environment variable
+# In Kubernetes, this should be the frontend service URL (e.g., http://todo-app-frontend:80)
+# Locally, this is typically http://localhost:3000
+BETTER_AUTH_URL = os.environ.get("BETTER_AUTH_URL", "http://localhost:3000")
 
 # Cached JWKS data
 _jwks_cache: Optional[Dict[str, Any]] = None

@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mcp-server
+  namespace: todo-app
+  labels:
+    app: mcp-server
+    tier: backend
+    component: mcp
+spec:
+  type: ClusterIP
+  selector:
+    app: mcp-server
+  ports:
+  - name: http
+    port: 8001
+    targetPort: 8001
+    protocol: TCP

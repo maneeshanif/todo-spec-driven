@@ -1,0 +1,122 @@
+Thank you for installing {{ .Chart.Name }}!
+
+Your release is named {{ .Release.Name }}.
+
+To learn more about the release, try:
+
+  $ helm status {{ .Release.Name }} -n {{ .Values.global.namespace }}
+  $ helm get all {{ .Release.Name }} -n {{ .Values.global.namespace }}
+
+===================================================================
+  Evolution of Todo - AI-Powered Task Manager
+  Version: {{ .Chart.AppVersion }}
+===================================================================
+
+1. Get the application URL by running these commands:
+
+{{- if .Values.ingress.enabled }}
+{{- range $host := .Values.ingress.hosts }}
+  {{- range .paths }}
+  http{{ if $.Values.ingress.tls }}s{{ end }}://{{ $host.host }}{{ .path }}
+  {{- end }}
+{{- end }}
+
+  Don't forget to add the following to your /etc/hosts file (for local development):
+
+  $(minikube ip) {{ (index .Values.ingress.hosts 0).host }}
+
+{{- else if contains "NodePort" .Values.frontend.service.type }}
+
+  export NODE_PORT=$(kubectl get --namespace {{ .Values.global.namespace }} -o jsonpath="{.spec.ports[0].nodePort}" services {{ include "todo-app.fullname" . }}-frontend)
+  export NODE_IP=$(kubectl get nodes --namespace {{ .Values.global.namespace }} -o jsonpath="{.items[0].status.addresses[0].address}")
+  echo http://$NODE_IP:$NODE_PORT
+
+{{- else if contains "LoadBalancer" .Values.frontend.service.type }}
+
+     NOTE: It may take a few minutes for the LoadBalancer IP to be available.
+           You can watch the status by running 'kubectl get --namespace {{ .Values.global.namespace }} svc -w {{ include "todo-app.fullname" . }}-frontend'
+
+  export SERVICE_IP=$(kubectl get svc --namespace {{ .Values.global.namespace }} {{ include "todo-app.fullname" . }}-frontend --template "{{"{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}"}}")
+  echo http://$SERVICE_IP:{{ .Values.frontend.service.port }}
+
+{{- else if contains "ClusterIP" .Values.frontend.service.type }}
+
+  kubectl --namespace {{ .Values.global.namespace }} port-forward service/{{ include "todo-app.fullname" . }}-frontend {{ .Values.frontend.service.port }}:{{ .Values.frontend.service.port }}
+  echo "Visit http://127.0.0.1:{{ .Values.frontend.service.port }} to access the application"
+
+{{- end }}
+
+2. Check the status of the pods:
+
+  kubectl get pods -n {{ .Values.global.namespace }} -l "app.kubernetes.io/instance={{ .Release.Name }}"
+
+3. View logs for a specific component:
+
+  # Frontend logs
+  kubectl logs -n {{ .Values.global.namespace }} -l "app.kubernetes.io/component=frontend" --tail=100 -f
+
+  # Backend logs
+  kubectl logs -n {{ .Values.global.namespace }} -l "app.kubernetes.io/component=backend" --tail=100 -f
+
+  # MCP Server logs
+  kubectl logs -n {{ .Values.global.namespace }} -l "app.kubernetes.io/component=mcp-server" --tail=100 -f
+
+4. Upgrade the release:
+
+  helm upgrade {{ .Release.Name }} todo-app \
+    --namespace {{ .Values.global.namespace }} \
+    --values values-dev.yaml \
+    --set frontend.image.tag=v1.1.0
+
+5. Rollback to a previous version:
+
+  helm rollback {{ .Release.Name }} -n {{ .Values.global.namespace }}
+
+6. Uninstall the release:
+
+  helm uninstall {{ .Release.Name }} -n {{ .Values.global.namespace }}
+
+===================================================================
+  IMPORTANT: Configure Secrets
+===================================================================
+
+Before the application can function properly, you MUST set the following secrets:
+
+  helm upgrade {{ .Release.Name }} todo-app \
+    --namespace {{ .Values.global.namespace }} \
+    --set secrets.databaseUrl="postgresql://user:pass@host:5432/db" \
+    --set secrets.geminiApiKey="your-gemini-api-key" \
+    --set secrets.betterAuthSecret="$(openssl rand -hex 32)" \
+    --set secrets.openaiDomainKey="your-openai-domain-key"
+
+Or create a values-secrets.yaml file with sensitive data and use:
+
+  helm upgrade {{ .Release.Name }} todo-app \
+    --namespace {{ .Values.global.namespace }} \
+    --values values-dev.yaml \
+    --values values-secrets.yaml
+
+===================================================================
+  Useful Commands
+===================================================================
+
+# Scale a deployment
+kubectl scale deployment {{ include "todo-app.fullname" . }}-backend \
+  --replicas=5 -n {{ .Values.global.namespace }}
+
+# Port-forward to backend API
+kubectl port-forward -n {{ .Values.global.namespace }} \
+  service/{{ include "todo-app.fullname" . }}-backend 8000:8000
+
+# Port-forward to MCP server
+kubectl port-forward -n {{ .Values.global.namespace }} \
+  service/{{ include "todo-app.fullname" . }}-mcp-server 8001:8001
+
+# Execute command in a pod
+kubectl exec -it -n {{ .Values.global.namespace }} \
+  deployment/{{ include "todo-app.fullname" . }}-backend -- /bin/sh
+
+# View events
+kubectl get events -n {{ .Values.global.namespace }} --sort-by='.lastTimestamp'
+
+For more information, visit: {{ .Chart.Home }}

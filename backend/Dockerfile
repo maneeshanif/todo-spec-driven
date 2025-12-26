@@ -6,7 +6,7 @@ FROM python:3.13-slim AS builder
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies required for building Python packages
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     libpq-dev \
@@ -18,14 +18,9 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 # Copy dependency files
 COPY pyproject.toml uv.lock ./
 
-# Install dependencies to /install
-RUN uv sync --frozen --no-dev --no-cache --target /install
-
-# Copy source code
-COPY src/ ./src/
-
-# Run migrations (if needed)
-# RUN uv run alembic upgrade head
+# Install dependencies into virtual environment
+# UV automatically creates .venv in the current directory
+RUN uv sync --frozen --no-dev
 
 # ============================================
 # Stage 2: Runtime
@@ -35,7 +30,7 @@ FROM python:3.13-slim AS runtime
 # Set working directory
 WORKDIR /app
 
-# Install only runtime dependencies
+# Install runtime dependencies only
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq5 \
     curl \
@@ -44,22 +39,19 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PYTHONPATH=/app/src \
-    API_PORT=8000
+    PATH="/app/.venv/bin:$PATH" \
+    PYTHONPATH=/app
 
 # Create non-root user
-RUN groupadd -r appuser && useradd -r -g appuser appuser
+RUN useradd -m -u 1000 appuser
 
-# Copy installed dependencies from builder
-COPY --from=builder --chown=appuser:appuser /install /usr/local
+# Copy virtual environment from builder
+COPY --from=builder --chown=appuser:appuser /app/.venv /app/.venv
 
-# Copy source code
+# Copy application code
 COPY --chown=appuser:appuser src/ ./src/
 COPY --chown=appuser:appuser alembic.ini ./
 COPY --chown=appuser:appuser alembic/ ./alembic/
-
-# Change ownership
-RUN chown -R appuser:appuser /app
 
 # Switch to non-root user
 USER appuser
@@ -69,7 +61,7 @@ EXPOSE 8000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-    CMD curl -f http://localhost:8000/api/health || exit 1
+    CMD curl -f http://localhost:8000/health || exit 1
 
 # Start application
 CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]

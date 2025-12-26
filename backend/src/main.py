@@ -97,6 +97,16 @@ async def general_exception_handler(request: Request, exc: Exception):
 app.include_router(api_router)
 
 
+@app.get("/health")
+async def health():
+    """Simple health check endpoint for Docker/Kubernetes liveness probe."""
+    return {
+        "status": "healthy",
+        "service": "todo-api",
+        "version": "1.0.0"
+    }
+
+
 @app.get("/api/health")
 async def health_check():
     """Health check endpoint."""

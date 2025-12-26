@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  mcp-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: todo-mcp-server
+    ports:
+      - "8001:8001"
+    environment:
+      - MCP_SERVER_PORT=8001
+      - DATABASE_URL=postgresql://user:password@postgres:5432/todoapp
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    # Docker health check configuration
+    healthcheck:
+      # Use curl or wget to check the /health endpoint
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      # Alternative using wget if curl is not available:
+      # test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8001/health"]
+      # Alternative using Python (always available in Python container):
+      # test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8001/health')"]
+
+      interval: 10s      # Check every 10 seconds
+      timeout: 5s        # Timeout after 5 seconds
+      retries: 3         # Retry 3 times before marking unhealthy
+      start_period: 30s  # Grace period for container startup
+
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16
+    container_name: todo-postgres
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=todoapp
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:

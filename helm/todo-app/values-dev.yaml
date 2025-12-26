@@ -1,0 +1,99 @@
+# Development values for Minikube
+# This file overrides values.yaml for local development
+
+global:
+  namespace: todo-app
+  imagePullPolicy: Never  # Use local images in Minikube
+  registry: ""  # No registry prefix for local images
+
+frontend:
+  enabled: true
+  replicaCount: 1  # Lower replicas for dev
+
+  image:
+    repository: todo-frontend
+    tag: "latest"
+    pullPolicy: Never
+
+  service:
+    type: NodePort  # Expose via NodePort for easy access
+    port: 80
+    targetPort: 3000
+
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+
+  autoscaling:
+    enabled: false  # Disable autoscaling in dev
+
+backend:
+  enabled: true
+  replicaCount: 1
+
+  image:
+    repository: todo-backend
+    tag: "latest"
+    pullPolicy: Never
+
+  service:
+    type: NodePort
+    port: 8000
+    targetPort: 8000
+    nodePort: 30800
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+
+  autoscaling:
+    enabled: false
+
+mcpServer:
+  enabled: true
+  replicaCount: 1
+
+  image:
+    repository: todo-mcp-server
+    tag: "latest"
+    pullPolicy: Never
+
+  service:
+    type: ClusterIP
+    port: 8001
+    targetPort: 8001
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 300m
+      memory: 256Mi
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+  hosts:
+    - host: todo.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+# Secrets - set these via command line or values-secrets.yaml
+secrets:
+  databaseUrl: ""
+  geminiApiKey: ""
+  betterAuthSecret: ""
+  openaiDomainKey: ""

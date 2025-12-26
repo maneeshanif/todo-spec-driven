@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  namespace: todo-app
+  labels:
+    app: frontend
+    tier: frontend
+    component: web
+spec:
+  type: NodePort  # NodePort for Minikube - change to LoadBalancer for cloud
+  selector:
+    app: frontend
+  ports:
+  - name: http
+    port: 80
+    targetPort: 3000
+    protocol: TCP
+    # NodePort will be auto-assigned by Kubernetes (30000-32767 range)

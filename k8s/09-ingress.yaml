@@ -1,0 +1,41 @@
+# Ingress for Todo Application
+# Provides external access via NGINX Ingress Controller
+# Access: http://todo.local (add to /etc/hosts: $(minikube ip) todo.local)
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: todo-ingress
+  namespace: todo-app
+  labels:
+    app.kubernetes.io/name: todo-app
+    app.kubernetes.io/component: ingress
+  annotations:
+    # NGINX Ingress Controller annotations
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
+spec:
+  ingressClassName: nginx
+  rules:
+  # Primary host: todo.local
+  - host: todo.local
+    http:
+      paths:
+      # Route all traffic to frontend
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: frontend
+            port:
+              number: 80
+      # Optional: Direct API access (if needed)
+      # - path: /api
+      #   pathType: Prefix
+      #   backend:
+      #     service:
+      #       name: backend
+      #       port:
+      #         number: 8000

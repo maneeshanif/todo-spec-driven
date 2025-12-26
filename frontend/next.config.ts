@@ -4,6 +4,9 @@ const nextConfig: NextConfig = {
   // Enable React Compiler for better performance
   reactCompiler: true,
 
+  // Standalone output for Docker deployment
+  output: 'standalone',
+
   // Image optimization
   images: {
     formats: ['image/avif', 'image/webp'],
