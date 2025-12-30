@@ -36,6 +36,11 @@ class Settings(BaseSettings):
     MCP_SERVER_URL: str = "http://localhost:8001"
     MCP_SERVER_PORT: int = 8001
 
+    # Phase 5: Dapr Configuration
+    DAPR_HTTP_PORT: str = "3500"
+    DAPR_HOST: str = "localhost"
+    DAPR_PUBSUB_NAME: str = "kafka-pubsub"  # Dapr pub/sub component name
+
     @property
     def cors_origins(self) -> list[str]:
         """Parse CORS origins from comma-separated string."""

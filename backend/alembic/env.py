@@ -12,7 +12,23 @@ from src.models.task import Task
 from src.models.audit_log import AuditLog
 from src.models.conversation import Conversation
 from src.models.message import Message
+from src.models.tag import Tag
+from src.models.task_tag import TaskTag
+from src.models.reminder import Reminder
 from sqlmodel import SQLModel
+
+# Tables managed by Better Auth - exclude from Alembic autogenerate
+BETTER_AUTH_TABLES = {"user", "account", "session", "verification", "jwks"}
+
+
+def include_object(object, name, type_, reflected, compare_to):
+    """Exclude Better Auth managed tables from Alembic autogenerate."""
+    if type_ == "table" and name in BETTER_AUTH_TABLES:
+        return False
+    # Also exclude indexes on Better Auth tables
+    if type_ == "index" and object.table.name in BETTER_AUTH_TABLES:
+        return False
+    return True
 
 # Import settings for database URL
 from src.core.config import settings
@@ -39,6 +55,7 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
+        include_object=include_object,
     )
 
     with context.begin_transaction():
@@ -46,7 +63,11 @@ def run_migrations_offline() -> None:
 
 
 def do_run_migrations(connection: Connection) -> None:
-    context.configure(connection=connection, target_metadata=target_metadata)
+    context.configure(
+        connection=connection,
+        target_metadata=target_metadata,
+        include_object=include_object,
+    )
 
     with context.begin_transaction():
         context.run_migrations()

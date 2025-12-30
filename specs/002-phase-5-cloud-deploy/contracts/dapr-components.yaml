@@ -1,0 +1,392 @@
+# Dapr Components Configuration for Phase 5
+# This file contains all Dapr component definitions for local and production environments
+
+---
+# ============================================
+# PUB/SUB COMPONENT (Kafka)
+# ============================================
+
+# Local Development (Strimzi/Redpanda on Minikube)
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: kafka-pubsub
+  namespace: todo-app
+spec:
+  type: pubsub.kafka
+  version: v1
+  metadata:
+    # Broker configuration
+    - name: brokers
+      value: "redpanda.kafka.svc.cluster.local:9092"  # Local: Strimzi/Redpanda in cluster
+
+    # Consumer configuration
+    - name: consumerGroup
+      value: "{appid}-group"  # Dapr replaces {appid} with app ID
+
+    # Authentication (disabled for local)
+    - name: authRequired
+      value: "false"
+
+    # TLS (disabled for local)
+    - name: disableTls
+      value: "true"
+
+    # Initial offset
+    - name: initialOffset
+      value: "newest"
+
+    # Max message bytes
+    - name: maxMessageBytes
+      value: "1048576"  # 1MB
+
+---
+# Production (Redpanda Cloud)
+# Apply with: kubectl apply -f dapr-components-prod.yaml
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: kafka-pubsub
+  namespace: todo-app
+spec:
+  type: pubsub.kafka
+  version: v1
+  metadata:
+    # Broker configuration
+    - name: brokers
+      secretKeyRef:
+        name: redpanda-credentials
+        key: brokers
+
+    # Consumer configuration
+    - name: consumerGroup
+      value: "{appid}-group"
+
+    # Authentication
+    - name: authRequired
+      value: "true"
+    - name: saslUsername
+      secretKeyRef:
+        name: redpanda-credentials
+        key: username
+    - name: saslPassword
+      secretKeyRef:
+        name: redpanda-credentials
+        key: password
+    - name: saslMechanism
+      value: "SCRAM-SHA-256"
+
+    # TLS
+    - name: disableTls
+      value: "false"
+
+    # Initial offset
+    - name: initialOffset
+      value: "newest"
+
+---
+# ============================================
+# STATE STORE COMPONENT (PostgreSQL)
+# ============================================
+
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: statestore
+  namespace: todo-app
+spec:
+  type: state.postgresql
+  version: v1
+  metadata:
+    # Connection string from secret
+    - name: connectionString
+      secretKeyRef:
+        name: neon-credentials
+        key: connection_string
+
+    # Table name
+    - name: tableName
+      value: "dapr_state"
+
+    # Key prefix
+    - name: keyPrefix
+      value: "appid"
+
+    # Actor state settings
+    - name: actorStateStore
+      value: "true"
+
+---
+# ============================================
+# SECRETS STORE COMPONENT (Kubernetes)
+# ============================================
+
+# Local Development (Kubernetes Secrets)
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: kubernetes-secrets
+  namespace: todo-app
+spec:
+  type: secretstores.kubernetes
+  version: v1
+  metadata: []
+
+---
+# ============================================
+# RESILIENCY POLICIES
+# ============================================
+
+apiVersion: dapr.io/v1alpha1
+kind: Resiliency
+metadata:
+  name: todo-app-resiliency
+  namespace: todo-app
+spec:
+  policies:
+    # Retry policies
+    retries:
+      pubsubRetry:
+        policy: exponential
+        maxInterval: 30s
+        maxRetries: 5
+
+      serviceRetry:
+        policy: constant
+        duration: 3s
+        maxRetries: 3
+
+    # Circuit breaker policies
+    circuitBreakers:
+      pubsubCB:
+        maxRequests: 3
+        timeout: 30s
+        trip: consecutiveFailures >= 5
+
+      serviceCB:
+        maxRequests: 5
+        timeout: 60s
+        trip: consecutiveFailures >= 3
+
+    # Timeout policies
+    timeouts:
+      general: 30s
+      pubsub: 10s
+
+  # Apply policies to targets
+  targets:
+    apps:
+      # Backend API
+      backend:
+        retry: serviceRetry
+        circuitBreaker: serviceCB
+        timeout: general
+
+      # Notification Service
+      notification-service:
+        retry: serviceRetry
+        circuitBreaker: serviceCB
+        timeout: general
+
+      # Recurring Task Service
+      recurring-task-service:
+        retry: serviceRetry
+        circuitBreaker: serviceCB
+        timeout: general
+
+      # Audit Service
+      audit-service:
+        retry: serviceRetry
+        circuitBreaker: serviceCB
+        timeout: general
+
+      # WebSocket Service
+      websocket-service:
+        retry: serviceRetry
+        circuitBreaker: serviceCB
+        timeout: general
+
+    components:
+      # Kafka Pub/Sub
+      kafka-pubsub:
+        outbound:
+          retry: pubsubRetry
+          circuitBreaker: pubsubCB
+          timeout: pubsub
+
+      # PostgreSQL State Store
+      statestore:
+        outbound:
+          retry: serviceRetry
+          circuitBreaker: serviceCB
+          timeout: general
+
+---
+# ============================================
+# SUBSCRIPTIONS
+# ============================================
+
+# Recurring Task Service subscription
+apiVersion: dapr.io/v2alpha1
+kind: Subscription
+metadata:
+  name: recurring-task-subscription
+  namespace: todo-app
+spec:
+  pubsubname: kafka-pubsub
+  topic: task-events
+  routes:
+    default: /api/events/task-completed
+  scopes:
+    - recurring-task-service
+
+---
+# Audit Service subscription
+apiVersion: dapr.io/v2alpha1
+kind: Subscription
+metadata:
+  name: audit-subscription
+  namespace: todo-app
+spec:
+  pubsubname: kafka-pubsub
+  topic: task-events
+  routes:
+    default: /api/events/task
+  scopes:
+    - audit-service
+
+---
+# Notification Service subscription
+apiVersion: dapr.io/v2alpha1
+kind: Subscription
+metadata:
+  name: notification-subscription
+  namespace: todo-app
+spec:
+  pubsubname: kafka-pubsub
+  topic: reminders
+  routes:
+    default: /api/events/reminder
+  scopes:
+    - notification-service
+
+---
+# WebSocket Service subscription (task-events)
+apiVersion: dapr.io/v2alpha1
+kind: Subscription
+metadata:
+  name: websocket-task-events-subscription
+  namespace: todo-app
+spec:
+  pubsubname: kafka-pubsub
+  topic: task-events
+  routes:
+    default: /api/events/task
+  scopes:
+    - websocket-service
+
+---
+# WebSocket Service subscription (task-updates)
+apiVersion: dapr.io/v2alpha1
+kind: Subscription
+metadata:
+  name: websocket-task-updates-subscription
+  namespace: todo-app
+spec:
+  pubsubname: kafka-pubsub
+  topic: task-updates
+  routes:
+    default: /api/events/update
+  scopes:
+    - websocket-service
+
+---
+# ============================================
+# CONFIGURATION
+# ============================================
+
+apiVersion: dapr.io/v1alpha1
+kind: Configuration
+metadata:
+  name: todo-app-config
+  namespace: todo-app
+spec:
+  # Tracing configuration
+  tracing:
+    samplingRate: "1"  # 100% sampling for development
+    zipkin:
+      endpointAddress: "http://zipkin.monitoring:9411/api/v2/spans"
+
+  # Metrics configuration
+  metrics:
+    enabled: true
+
+  # mTLS configuration
+  mtls:
+    enabled: true
+    workloadCertTTL: "24h"
+    allowedClockSkew: "15m"
+
+  # API configuration
+  api:
+    allowed:
+      - "publish"
+      - "subscribe"
+      - "state"
+      - "secrets"
+      - "invoke"
+      - "actors"
+
+  # Features
+  features:
+    - name: "ServiceInvocationStreaming"
+      enabled: true
+
+---
+# ============================================
+# KAFKA TOPICS (for Strimzi)
+# ============================================
+
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: task-events
+  namespace: kafka
+  labels:
+    strimzi.io/cluster: evolution-kafka
+spec:
+  partitions: 3
+  replicas: 1
+  config:
+    retention.ms: "604800000"  # 7 days
+    cleanup.policy: "delete"
+
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: reminders
+  namespace: kafka
+  labels:
+    strimzi.io/cluster: evolution-kafka
+spec:
+  partitions: 3
+  replicas: 1
+  config:
+    retention.ms: "604800000"  # 7 days
+    cleanup.policy: "delete"
+
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: task-updates
+  namespace: kafka
+  labels:
+    strimzi.io/cluster: evolution-kafka
+spec:
+  partitions: 3
+  replicas: 1
+  config:
+    retention.ms: "86400000"  # 1 day (real-time updates don't need long retention)
+    cleanup.policy: "delete"

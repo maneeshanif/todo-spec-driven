@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Optional, List
 
 if TYPE_CHECKING:
     from src.models.category import TaskCategory
+    from src.models.tag import Tag
 
 
 def utcnow() -> datetime:
@@ -40,8 +41,11 @@ class Task(SQLModel, table=True):
     recurrence_pattern: Optional[str] = Field(default=None, max_length=50)  # daily, weekly, monthly, yearly
     recurrence_data: Optional[dict] = Field(default=None, sa_column=Column(sa.JSON))
     parent_recurring_id: Optional[int] = Field(default=None)
+    reminder_at: Optional[datetime] = Field(default=None, index=True)  # When to send reminder
+    next_occurrence: Optional[datetime] = Field(default=None)  # Next recurring date (computed)
     created_at: datetime = Field(default_factory=utcnow, nullable=False)
     updated_at: datetime = Field(default_factory=utcnow, nullable=False)
 
     # Relationships (to other SQLModel models only)
     # Note: No user relationship - Better Auth manages users externally
+    tags: List["Tag"] = Relationship(back_populates="tasks", link_model="TaskTag")

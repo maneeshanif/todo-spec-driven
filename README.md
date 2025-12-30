@@ -4,9 +4,29 @@ A modern, AI-powered todo application built using **Spec-Driven Development** wi
 
 > **TaskWhisper** - AI-powered task management through natural conversation. Just whisper your tasks and watch them happen.
 
-## Current Phase: Phase 4 - Local Kubernetes Deployment
+## Current Phase: Phase 5 - Advanced Cloud Deployment
 
-Transform the Phase 3 AI-powered Todo Chatbot into a containerized application deployable on Kubernetes (Minikube for local testing, with preparation for Phase 5 production deployment on DigitalOcean DOKS).
+Evolve the Todo application into a production-grade, cloud-native microservices platform with event-driven architecture, new microservices, and advanced features.
+
+### Phase 5 Features
+
+- **Event-Driven Architecture** - Kafka/Redpanda + Dapr pub/sub for decoupled microservices
+- **New Microservices** - Notification (8002), Recurring Task (8003), Audit (8004), WebSocket (8005) services
+- **Advanced Task Features** - Priorities, tags, due dates, reminders, recurring tasks, search/filter/sort
+- **Real-time Sync** - WebSocket service for instant task updates across clients
+- **Cloud Deployment** - GitHub Actions CI/CD + DigitalOcean DOKS production deployment
+- **AIOps** - Docker AI (Gordon), Prometheus monitoring, Grafana dashboards, automated remediation
+- **Urdu Language Support** - RTL layout, i18n with next-intl (+100 bonus points)
+- **Dapr Integration** - Pub/sub, state management, service invocation, secrets management
+- **Strimzi Kafka** - Kubernetes-native Kafka operator for event streaming
+- **Redpanda Cloud** - Managed Kafka-compatible streaming for production
+- **Self-Healing** - Automated pod restart, HPA scaling, runbook automation
+
+---
+
+## Phase 4: Local Kubernetes Deployment (COMPLETED)
+
+Transform the Phase 3 AI-powered Todo Chatbot into a containerized application deployable on Kubernetes (Minikube for local testing).
 
 ### Phase 4 Features
 
@@ -128,48 +148,41 @@ A production-ready web application with persistent storage, Better Auth authenti
 
 ## Architecture
 
-### System Overview
+### System Overview (Phase 5)
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                     MINIKUBE KUBERNETES CLUSTER                          │
-│                                                                       │
-│  ┌─────────────────────┐  ┌─────────────────────┐               │
-│  │   FRONTEND POD      │  │   BACKEND POD       │               │
-│  │  (Next.js 16+)     │  │  (FastAPI + AI)     │               │
-│  │  Replicas: 2       │  │  Replicas: 2         │               │
-│  │  Port: 3000         │  │  Port: 8000         │               │
-│  │  CPU: 100-500m     │  │  CPU: 200-1000m    │               │
-│  │  RAM: 128-256Mi     │  │  RAM: 256-512Mi     │               │
-│  └──────────┬──────────┘  └──────────┬──────────┘               │
-│             │                          │                               │
-│             │                          │                               │
-│  ┌──────────▼──────────────────────────▼───────────────────────────┐   │
-│  │                NEON POSTGRESQL (EXTERNAL)                  │   │
-│  │         Serverless - cloud.neon.tech                       │   │
-│  └───────────────────────────────────────────────────────────────────┘   │
-│             │                          │                               │
-│             ▼                          ▼                               │
-│  ┌─────────────────────┐  ┌─────────────────────┐               │
-│  │  MCP SERVER POD     │  │   INGRESS (NGINX)  │               │
-│  │  (FastMCP)         │  │  todo.local          │               │
-│  │  Replicas: 1       │  │  Routes: / → Frontend              │
-│  │  Port: 8001         │  └─────────────────────┘               │
-│  │  CPU: 100-300m     │                                         │
-│  │  RAM: 64-128Mi      │                                         │
-│  └─────────────────────┘                                         │
-│                                                                     │
-│  Service Discovery:                                                   │
-│  - Frontend → Backend: http://backend:8000                      │
-│  - Backend → MCP: http://mcp-server:8001                        │
-│  - User → App: http://todo.local (via Ingress)                 │
-│                                                                     │
+│                    DOKS KUBERNETES CLUSTER (Phase 5)                        │
+│                                                                             │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐        │
+│  │  Frontend   │  │   Backend   │  │ MCP Server  │  │  AI Agent   │        │
+│  │  (Next.js)  │  │  (FastAPI)  │  │  (FastMCP)  │  │  (Gemini)   │        │
+│  │   :3000     │  │   :8000     │  │   :8001     │  │             │        │
+│  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘  └─────────────┘        │
+│         │                │                │                                 │
+│  ┌──────▼────────────────▼────────────────▼──────────────────────────────┐ │
+│  │              EVENT BUS (Kafka/Redpanda + Dapr)                        │ │
+│  │  Topics: task-events, reminder-events, audit-events, task-updates     │ │
+│  └───────────────────────────────────────────────────────────────────────┘ │
+│         │                │                │                │               │
+│  ┌──────▼──────┐  ┌──────▼──────┐  ┌──────▼──────┐  ┌──────▼──────┐       │
+│  │Notification │  │  Recurring  │  │   Audit     │  │  WebSocket  │       │
+│  │  Service    │  │   Service   │  │  Service    │  │  Service    │       │
+│  │   :8002     │  │   :8003     │  │   :8004     │  │   :8005     │       │
+│  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘       │
+│                                                                             │
+│  ┌───────────────────────────────────────────────────────────────────────┐ │
+│  │                NEON POSTGRESQL (EXTERNAL)                             │ │
+│  │         Serverless - cloud.neon.tech                                  │ │
+│  └───────────────────────────────────────────────────────────────────────┘ │
+│                                                                             │
+│  Infrastructure: Ingress (NGINX), cert-manager, HPA, NetworkPolicies       │
 └─────────────────────────────────────────────────────────────────────────────┘
 
-AIOps Layer:
+AIOps & CI/CD Layer:
 ┌───────────────────────────────────────────────────────────────────────────┐
-│  Docker AI (Gordon) │  kubectl-ai │  Kagent              │
-│  Docker optimization │  K8s operations  │  Cluster monitoring  │
+│  Docker AI (Gordon)  │  GitHub Actions  │  Prometheus  │  Grafana        │
+│  Container optimizer │  CI/CD pipelines │  Monitoring  │  Dashboards     │
 └───────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -271,7 +284,11 @@ AIOps Layer:
 │   │   ├── chatbot-ui-builder.md    # skills: chatkit-frontend, conversation-management
 │   │   ├── docker-containerization-builder.md  (Phase 4)
 │   │   ├── devops-kubernetes-builder.md        (Phase 4)
-│   │   └── aiops-helm-builder.md               (Phase 4)
+│   │   ├── aiops-helm-builder.md               (Phase 4)
+│   │   ├── event-driven-builder.md             (Phase 5) # skills: dapr-integration, kafka-setup
+│   │   ├── microservice-builder.md             (Phase 5) # skills: advanced-features, websocket-realtime
+│   │   ├── cloud-deployer.md                   (Phase 5) # skills: cloud-k8s-deployment, github-actions-cicd
+│   │   └── aiops-operator.md                   (Phase 5) # skills: aiops-gordon, docker-setup
 │   └── skills/              # Setup & configuration skills
 │       ├── fastapi-setup/
 │       ├── nextjs-setup/
@@ -287,7 +304,14 @@ AIOps Layer:
 │       ├── kubernetes-deployment/    (Phase 4)
 │       ├── helm-charts-setup/        (Phase 4)
 │       ├── minikube-setup/           (Phase 4)
-│       └── aiops-gordon/            (Phase 4)
+│       ├── aiops-gordon/            (Phase 4)
+│       ├── dapr-integration/        (Phase 5) - Dapr pub/sub, state
+│       ├── kafka-setup/             (Phase 5) - Strimzi, Redpanda
+│       ├── github-actions-cicd/     (Phase 5) - CI/CD pipelines
+│       ├── cloud-k8s-deployment/    (Phase 5) - DOKS deployment
+│       ├── advanced-features/       (Phase 5) - Priorities, tags
+│       ├── websocket-realtime/      (Phase 5) - Real-time sync
+│       └── urdu-language-support/   (Phase 5) - i18n, RTL
 │
 ├── history/                  # PHRs and ADRs
 │   ├── prompts/             # Prompt History Records
@@ -752,7 +776,19 @@ data: {"conversation_id": 123, "message_id": 456}
 
 This project uses Claude Code with specialized agents coupled to skills for efficient development.
 
-### Active Skills (Phase 4)
+### Active Skills (Phase 5)
+
+| Skill | Purpose | Agent Coupled |
+|-------|---------|---------------|
+| `dapr-integration` | Dapr pub/sub, state, service invocation | `event-driven-builder` |
+| `kafka-setup` | Strimzi Kafka, Redpanda Cloud | `event-driven-builder` |
+| `github-actions-cicd` | CI/CD pipelines for staging/production | `cloud-deployer` |
+| `cloud-k8s-deployment` | DigitalOcean DOKS deployment | `cloud-deployer` |
+| `advanced-features` | Priorities, tags, due dates, reminders | `microservice-builder` |
+| `websocket-realtime` | WebSocket real-time sync service | `microservice-builder` |
+| `urdu-language-support` | Urdu i18n, RTL layout | `frontend-ui-builder` |
+
+### Active Skills (Phase 3-4)
 
 | Skill | Purpose | Agent Coupled |
 |-------|---------|---------------|
@@ -766,6 +802,15 @@ This project uses Claude Code with specialized agents coupled to skills for effi
 | `helm-charts-setup` | Helm chart creation and values | `aiops-helm-builder` |
 | `minikube-setup` | Minikube installation and operations | `devops-kubernetes-builder` |
 | `aiops-gordon` | Docker AI (Gordon) usage | `docker-containerization-builder` |
+
+### Phase 5 Agents
+
+| Agent | Purpose | Skills Coupled |
+|-------|---------|----------------|
+| `event-driven-builder` | Kafka, Dapr pub/sub, event streaming | `dapr-integration`, `kafka-setup` |
+| `microservice-builder` | New microservices (Notification, Recurring, Audit, WebSocket) | `advanced-features`, `websocket-realtime` |
+| `cloud-deployer` | DOKS deployment, GitHub Actions CI/CD | `cloud-k8s-deployment`, `github-actions-cicd` |
+| `aiops-operator` | Docker AI (Gordon), monitoring, automation | `aiops-gordon`, `docker-setup`, `kubernetes-deployment` |
 
 ### Deprecated Skills
 
@@ -833,6 +878,12 @@ This project follows **Spec-Driven Development**:
 
 - [CLAUDE.md](./CLAUDE.md) - Root agent orchestrator
 
+### Phase 5 (Advanced Cloud Deployment)
+
+- [Phase 5 Constitution](./constitution-prompt-phase-5.md) - Cloud-native microservices principles
+- [Phase 5 Specification](./spec-prompt-phase-5.md) - Event-driven architecture user stories
+- [Phase 5 Plan](./plan-prompt-phase-5.md) - Microservices implementation architecture
+
 ### Phase 4 (Kubernetes Deployment)
 
 - [Phase 4 Deployment Flow](./docs/phase-4-flow.md) - Complete A-to-Z deployment pipeline guide
@@ -856,6 +907,16 @@ This project follows **Spec-Driven Development**:
 - [Frontend README](./frontend/README.md)
 
 ### External Documentation
+
+**Phase 5 (Cloud-Native):**
+- [Dapr Documentation](https://docs.dapr.io/)
+- [Strimzi Documentation](https://strimzi.io/docs/)
+- [Redpanda Cloud](https://docs.redpanda.com/current/deploy/deployment-option/cloud/)
+- [GitHub Actions](https://docs.github.com/en/actions)
+- [DigitalOcean Kubernetes](https://docs.digitalocean.com/products/kubernetes/)
+- [next-intl](https://next-intl-docs.vercel.app/)
+- [Prometheus](https://prometheus.io/docs/)
+- [Grafana](https://grafana.com/docs/)
 
 **Phase 4 (Kubernetes):**
 - [Kubernetes Documentation](https://kubernetes.io/docs/)

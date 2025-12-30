@@ -1,20 +1,28 @@
 <!--
 Sync Impact Report:
-- Version Change: 1.0.0 → 2.0.0 (MAJOR: Phase 3 AI chatbot additions)
+- Version Change: 2.0.0 → 3.0.0 (MAJOR: Phase 5 advanced cloud deployment additions)
 - Modified Principles:
-  - Principle X → "Stateless Architecture" (NEW for Phase 3)
-  - Principle XI → "MCP-First Tool Design" (NEW for Phase 3)
-  - Principle XII → "Agent-Centric Design" (NEW for Phase 3)
-  - Principle XIII → "Real-Time Streaming (SSE)" (NEW for Phase 3)
-  - Principle XIV → "ChatKit UI Integration" (NEW for Phase 3)
-  - Principle XV → "Conversation Persistence" (NEW for Phase 3)
+  - Principle XVII → "Event-Driven Architecture" (NEW for Phase 5 - NON-NEGOTIABLE)
+  - Principle XVIII → "Dapr Abstraction Layer" (NEW for Phase 5 - NON-NEGOTIABLE)
+  - Principle XIX → "Stateless Services" (NEW for Phase 5 - NON-NEGOTIABLE)
+  - Principle XX → "GitOps Deployment" (NEW for Phase 5 - NON-NEGOTIABLE)
+  - Principle XXI → "Multi-Environment Parity" (NEW for Phase 5 - NON-NEGOTIABLE)
+  - Principle XXII → "Observability First" (Enhanced for Phase 5)
+  - Principle XXIII → "Resilience Patterns" (NEW for Phase 5 - NON-NEGOTIABLE)
+  - Principle XXIV → "Security by Default" (Enhanced for Phase 5)
 - Added Sections:
-  - Phase 3 Technology Stack (AI/Agent Framework)
-  - Phase 3 Specialized Agents (AI Agent Builder, MCP Server Builder, Chatbot UI Builder)
-  - Phase 3 Skills Reference (6 new skills)
-  - Natural Language Commands reference
-  - Phase 3 Security Checklist additions
-- Removed Sections: None (Phase 2 content preserved)
+  - Phase 5 Technology Stack (Event Streaming, Dapr Building Blocks, Cloud K8s, CI/CD)
+  - Phase 5 Specialized Agents (Event-Driven Builder, Microservice Builder, Cloud Deployer, AIOps Operator)
+  - Phase 5 Skills Reference (7 new skills: dapr-integration, kafka-setup, github-actions-cicd, cloud-k8s-deployment, advanced-features, websocket-realtime, urdu-language-support)
+  - Kafka Event Schemas (Task Event, Reminder Event, Task Update Event)
+  - Dapr Component Configurations
+  - New Services (WebSocket, Notification, Recurring Task, Audit)
+  - New Database Models (Priority enum, Tag model, Reminder model)
+  - GitHub Actions Workflow reference
+  - Environment Configuration (Local/Staging/Production)
+  - Security Checklist (Phase 5 additions)
+  - Bonus Features section
+- Removed Sections: None (Phase 2/3/4 content preserved)
 - Templates Status:
   ✅ plan-template.md - Constitution Check reference remains valid
   ✅ spec-template.md - Aligned with spec-driven development principles
@@ -22,15 +30,15 @@ Sync Impact Report:
 - Follow-up TODOs: None
 -->
 
-# Todo App - Phase 3 Constitution
+# Todo App - Phase 5 Constitution
 
-**Project**: Todo AI Chatbot Application
-**Phase**: Phase 3 - AI-Powered Todo Chatbot
-**Version**: 2.0.0
+**Project**: Evolution of Todo - Advanced Cloud Deployment
+**Phase**: Phase 5 - Advanced Cloud Deployment
+**Version**: 3.0.0
 **Ratified**: 2025-12-11
 **Status**: Active
-**Last Amended**: 2025-12-17
-**Builds Upon**: Phase 2 Constitution (Full-Stack Web Application)
+**Last Amended**: 2025-12-30
+**Builds Upon**: Phase 4 Constitution (Kubernetes Local Deployment)
 
 ---
 
@@ -45,20 +53,21 @@ Sync Impact Report:
 
 2. **Use Context7 MCP BEFORE implementation:**
    - Always fetch latest library documentation via Context7
-   - Required lookups: `openai-agents-sdk`, `fastmcp`, `openai-chatkit`, `framer-motion`
+   - Required lookups: `dapr`, `kafka`, `strimzi`, `github-actions`, `helm`, `kubernetes`
    - Never assume API patterns - verify first
 
 3. **Delegate to Specialized Agents:**
-   - `@ai-agent-builder` for OpenAI Agents SDK + MCP integration
-   - `@mcp-server-builder` for FastMCP server development
-   - `@chatbot-ui-builder` for ChatKit UI implementation
-   - `@backend-api-builder` for FastAPI chat endpoints
+   - `@event-driven-builder` for Kafka and Dapr pub/sub integration
+   - `@microservice-builder` for new microservices (Notification, Recurring, Audit, WebSocket)
+   - `@cloud-deployer` for DOKS deployment and GitHub Actions CI/CD
+   - `@aiops-operator` for Docker AI (Gordon), monitoring, automation
+   - `@backend-api-builder` for FastAPI services with Dapr integration
    - `@frontend-ui-builder` for Next.js UI components
-   - `@database-designer` for database schema changes
+   - `@database-designer` for database schema changes (Priority, Tags, Reminders)
 
 4. **Reference Skills for Setup Tasks:**
    - Check `.claude/skills/` before any initialization
-   - Phase 3 skills: `openai-agents-setup`, `fastmcp-server-setup`, `chat-api-integration`, `openai-chatkit-setup`, `streaming-sse-setup`, `conversation-management`
+   - Phase 5 skills: `dapr-integration`, `kafka-setup`, `github-actions-cicd`, `cloud-k8s-deployment`, `advanced-features`, `websocket-realtime`, `urdu-language-support`
 
 **Coupling:** All CLAUDE.md files reference this constitution. This constitution references all CLAUDE.md files. They work together as a unified system.
 
@@ -66,16 +75,18 @@ Sync Impact Report:
 
 ## Project Overview
 
-This is the constitution for the Todo App Hackathon Phase 3, where we transform the Phase 2 web application into an AI-powered chatbot interface for managing todos through natural language. This document defines the principles, standards, and practices that govern the development.
+This is the constitution for the Todo App Hackathon Phase 5, where we transform the Phase 4 locally deployed application into a production-grade, event-driven, distributed system deployable on cloud Kubernetes.
 
-**Goal**: Build a conversational AI interface using OpenAI Agents SDK, FastMCP server, and OpenAI ChatKit that allows users to manage their tasks through natural language commands.
+**Goal**: Build an enterprise-grade, event-driven microservices platform with real-time synchronization, advanced task features, and cloud-native deployment.
 
-**Phase 3 Adds**:
-- AI Agent with OpenAI Agents SDK (using Gemini model)
-- MCP Server with task management tools
-- ChatKit frontend for conversational interface
-- Server-Sent Events (SSE) for real-time streaming
-- Conversation history with database persistence
+**Phase 5 Adds**:
+- **Advanced Features**: Recurring Tasks, Due Dates, Reminders, Priorities, Tags, Search, Filter, Sort
+- **Event-Driven Architecture**: Kafka for decoupled microservices communication
+- **Dapr Integration**: Full building blocks (Pub/Sub, State, Secrets, Service Invocation, Jobs API)
+- **Real-time Sync**: Dedicated WebSocket service for multi-client synchronization
+- **CI/CD Pipeline**: GitHub Actions for automated deployment
+- **Cloud Deployment**: Production Kubernetes on Azure/GKE/OKE/DOKS
+- **Multi-language Support**: Urdu language support in chatbot (Bonus +100 points)
 
 ---
 
@@ -106,6 +117,9 @@ This is the constitution for the Todo App Hackathon Phase 3, where we transform 
 /backend     - Python FastAPI application
 /specs       - All specifications organized by type
 /history     - All PHRs and ADRs
+/helm        - Helm charts for Kubernetes deployment
+/k8s         - Raw Kubernetes manifests
+/.github     - GitHub Actions workflows
 ```
 
 **Rules**:
@@ -288,7 +302,7 @@ This is the constitution for the Todo App Hackathon Phase 3, where we transform 
 
 ## Core Principles (Phase 3 AI Chatbot)
 
-### X. Stateless Architecture (CRITICAL FOR PHASE 3)
+### X. Stateless Architecture (CRITICAL FOR PHASE 3+)
 
 **Description**: The chatbot server MUST be completely stateless - all conversation state persists in the database.
 
@@ -300,18 +314,6 @@ This is the constitution for the Todo App Hackathon Phase 3, where we transform 
 - MCP tools are stateless - they operate on database state
 
 **Rationale**: Stateless architecture enables horizontal scaling, fault tolerance, and seamless server restarts.
-
-**Implementation Pattern**:
-```
-1. Receive user message with conversation_id
-2. Fetch conversation history from database
-3. Build message array (history + new message)
-4. Store user message in database
-5. Run AI agent with MCP tools
-6. Store assistant response in database
-7. Return response (stream or complete)
-8. Server ready for next request (no state held)
-```
 
 ---
 
@@ -328,19 +330,10 @@ This is the constitution for the Todo App Hackathon Phase 3, where we transform 
 
 **MCP Server Architecture**:
 - **Phase 3**: MCP Server runs as separate Python process on **port 8001**
-- **Phase 4**: MCP Server becomes separate Docker container for Kubernetes deployment
-- Agent connects via HTTP: `http://localhost:8001` (Phase 3) or `http://mcp-server:8001` (Phase 4)
+- **Phase 4+**: MCP Server runs as separate Kubernetes pod
+- Agent connects via HTTP: `http://localhost:8001` (local) or `http://mcp-server:8001` (K8s)
 
-**MCP Tools Required**:
-| Tool | Purpose | Parameters |
-|------|---------|------------|
-| `add_task` | Create new task | user_id, title, description? |
-| `list_tasks` | Get user's tasks | user_id, status? |
-| `complete_task` | Mark task complete | user_id, task_id |
-| `delete_task` | Remove task | user_id, task_id |
-| `update_task` | Modify task | user_id, task_id, title?, description? |
-
-**Rationale**: MCP standardizes AI-to-application communication and enables tool reuse across different AI frameworks. Separate process architecture is Kubernetes-ready for Phase 4.
+**Rationale**: MCP standardizes AI-to-application communication and enables tool reuse across different AI frameworks.
 
 ---
 
@@ -354,13 +347,6 @@ This is the constitution for the Todo App Hackathon Phase 3, where we transform 
 - Agent uses @function_tool decorators for MCP tool integration
 - Implement AgentHooks and RunHooks for observability
 - Use Runner.run() for synchronous execution or Runner.run_streamed() for SSE
-
-**Agent Behavior**:
-- Interpret natural language commands
-- Call appropriate MCP tools
-- Provide friendly, helpful responses
-- Confirm actions with users
-- Handle errors gracefully
 
 **Rationale**: Centralizing AI logic in the agent ensures consistent behavior and maintainable code.
 
@@ -377,18 +363,6 @@ This is the constitution for the Todo App Hackathon Phase 3, where we transform 
 - Handle connection drops gracefully
 - Support both streaming and non-streaming modes
 
-**SSE Event Format**:
-```
-event: token
-data: {"content": "partial response text"}
-
-event: tool_call
-data: {"tool": "add_task", "args": {"title": "..."}}
-
-event: done
-data: {"conversation_id": 123, "message_id": 456}
-```
-
 **Rationale**: Streaming provides better UX by showing responses as they're generated.
 
 ---
@@ -403,23 +377,6 @@ data: {"conversation_id": 123, "message_id": 456}
 - Implement themed components for dark mode support
 - Add conversation sidebar for thread management
 - Use Zustand for conversation state management
-- Implement message pagination (50 messages per page, lazy load on scroll)
-
-**UI Strategy**: 90% ChatKit, 10% Custom Fallback
-- Primary: Use OpenAI ChatKit components
-- Fallback: If ChatKit doesn't work, implement custom chat UI with Shadcn/ui
-
-**Domain Allowlist Configuration (Required for Hosted ChatKit)**:
-- **Local Development**: `localhost` works without domain allowlist configuration
-- **Production Deployment**:
-  1. Deploy frontend to get production URL (Vercel: `https://your-app.vercel.app`)
-  2. Add domain to OpenAI allowlist: https://platform.openai.com/settings/organization/security/domain-allowlist
-  3. Get ChatKit domain key and add to environment variables
-
-**Environment Variable**:
-```
-NEXT_PUBLIC_OPENAI_DOMAIN_KEY=your-domain-key-here
-```
 
 **Rationale**: ChatKit provides production-ready chat UI components that match OpenAI's design language.
 
@@ -428,23 +385,6 @@ NEXT_PUBLIC_OPENAI_DOMAIN_KEY=your-domain-key-here
 ### XV. Conversation Persistence
 
 **Description**: Store all conversations and messages in PostgreSQL database.
-
-**Database Models**:
-
-**Conversation**:
-- id (int, primary key)
-- user_id (string, foreign key -> users.id)
-- title (string, optional - auto-generated from first message)
-- created_at (timestamp)
-- updated_at (timestamp)
-
-**Message**:
-- id (int, primary key)
-- conversation_id (int, foreign key -> conversations.id)
-- role (enum: 'user' | 'assistant' | 'system')
-- content (text)
-- tool_calls (jsonb, optional)
-- created_at (timestamp)
 
 **Rules**:
 - Create new conversation if conversation_id not provided
@@ -463,23 +403,196 @@ NEXT_PUBLIC_OPENAI_DOMAIN_KEY=your-domain-key-here
 
 **Rules**:
 - Preserve all Phase 2 REST API endpoints
-- Add chat endpoint alongside existing APIs
+- Add new endpoints alongside existing APIs
 - Share database models and services
 - Reuse authentication middleware
 - Maintain existing frontend routes
-
-**Phase 3 Additions**:
-- `/api/{user_id}/chat` - New chat endpoint
-- `/app/chat` - New chat page route
-- `Conversation` and `Message` models
-- MCP server as separate service
-- ChatKit components in frontend
 
 **Rationale**: Progressive enhancement delivers value incrementally without regression.
 
 ---
 
+## Core Principles (Phase 5 Advanced Cloud Deployment)
+
+### XVII. Event-Driven Architecture (NON-NEGOTIABLE)
+
+**Description**: Services must communicate through events, not direct API calls for async operations.
+
+**Rules**:
+- All task CRUD operations MUST publish to `task-events` Kafka topic
+- Reminder scheduling MUST use `reminders` topic
+- Real-time sync across clients MUST use `task-updates` topic
+- Services consume events asynchronously - no blocking waits
+- Events are immutable facts - never modify published events
+
+**Event Topics**:
+| Topic | Purpose | Publishers | Consumers |
+|-------|---------|------------|-----------|
+| `task-events` | Task CRUD operations | Backend | Recurring, Audit, WebSocket |
+| `reminders` | Scheduled reminders | Backend | Notification |
+| `task-updates` | Real-time sync | All services | WebSocket |
+
+**Rationale**:
+- Decouples services for independent scaling
+- Enables audit trail and event replay
+- Supports eventual consistency patterns
+- Allows new consumers without modifying producers
+
+---
+
+### XVIII. Dapr Abstraction Layer (NON-NEGOTIABLE)
+
+**Description**: All infrastructure dependencies must be abstracted through Dapr building blocks.
+
+**Rules**:
+- Use Dapr Pub/Sub for Kafka - no direct Kafka client libraries
+- Use Dapr State for conversation state - no direct database calls for state
+- Use Dapr Service Invocation for inter-service calls - built-in retries/mTLS
+- Use Dapr Secrets for API keys - no hardcoded credentials
+- **Use Dapr Jobs API for scheduled reminders (PRIMARY)** - exact-time scheduling
+
+**Dapr Building Blocks**:
+| Building Block | Purpose | Local | Production |
+|----------------|---------|-------|------------|
+| Pub/Sub | Event streaming | pubsub.kafka | pubsub.kafka (cloud) |
+| State | Conversation state | state.postgresql | state.postgresql |
+| Service Invocation | Service calls | Built-in | Built-in |
+| Secrets | API keys | secretstores.kubernetes | Azure KeyVault / GCP Secret Manager |
+| Jobs API | Scheduled reminders | Built-in scheduler | Built-in scheduler |
+
+**Rationale**:
+- Enables infrastructure swapping without code changes (Kafka → RabbitMQ)
+- Provides consistent APIs across all building blocks
+- Includes built-in observability and resilience
+- Simplifies multi-cloud deployment
+- Jobs API provides exact-time scheduling required for reminder accuracy
+
+---
+
+### XIX. Stateless Services (NON-NEGOTIABLE)
+
+**Description**: All services must be stateless - state managed externally via Dapr or database.
+
+**Rules**:
+- No in-memory session state - use Dapr State Management
+- No local file storage - use external object storage
+- Configuration via environment variables or Dapr Secrets
+- Conversation context stored in PostgreSQL, not memory
+- Any pod can handle any request - no sticky sessions
+
+**Rationale**:
+- Enables horizontal scaling without session affinity
+- Supports rolling deployments without state loss
+- Facilitates disaster recovery
+- Simplifies debugging and testing
+
+---
+
+### XX. GitOps Deployment (NON-NEGOTIABLE)
+
+**Description**: All deployments must be triggered through Git - no manual kubectl or helm commands in production.
+
+**Rules**:
+- Production deployments only via GitHub Actions
+- All Helm values versioned in Git
+- Infrastructure changes through Pull Requests
+- Rollback by reverting Git commits
+- No `kubectl edit` or `kubectl apply` in production - only via CI/CD
+
+**Rationale**:
+- Complete audit trail of all deployments
+- Reproducible infrastructure from Git history
+- Enables automated testing before deployment
+- Supports approval workflows
+
+---
+
+### XXI. Multi-Environment Parity (NON-NEGOTIABLE)
+
+**Description**: Development, staging, and production environments must be as similar as possible.
+
+**Rules**:
+- Same Dapr components in all environments (different backends)
+- Same Helm chart with environment-specific values
+- Minikube topology mirrors cloud topology
+- Local Kafka/Redpanda for development
+- Cloud Kafka (Redpanda Cloud/Confluent) for production
+
+**Rationale**:
+- Reduces "works on my machine" issues
+- Enables realistic local testing
+- Simplifies debugging production issues
+- Faster onboarding for new developers
+
+---
+
+### XXII. Observability First (ENHANCED for Phase 5)
+
+**Description**: All services must be observable - logs, metrics, and traces.
+
+**Rules**:
+- Structured JSON logging in all services
+- Prometheus metrics endpoint on all services
+- Distributed tracing via Dapr (OpenTelemetry)
+- Centralized log aggregation (Loki or cloud equivalent)
+- Dashboard for key metrics (Grafana)
+
+**Rationale**:
+- Enables rapid incident diagnosis
+- Supports proactive alerting
+- Provides visibility into system behavior
+- Facilitates capacity planning
+
+---
+
+### XXIII. Resilience Patterns (NON-NEGOTIABLE)
+
+**Description**: All services must implement resilience patterns for fault tolerance.
+
+**Rules**:
+- Circuit breakers via Dapr resiliency policies
+- Retry with exponential backoff for external calls
+- Timeout configuration on all HTTP calls
+- Graceful degradation when dependencies fail
+- Health checks for liveness and readiness
+
+**Rationale**:
+- Prevents cascade failures
+- Improves user experience during partial outages
+- Enables self-healing systems
+- Reduces on-call burden
+
+---
+
+### XXIV. Security by Default (ENHANCED for Phase 5)
+
+**Description**: Security is built-in, not bolted on.
+
+**Rules**:
+- mTLS between all services via Dapr
+- RBAC for Kubernetes resources
+- Network policies to restrict pod communication
+- Secrets never in Git - use Sealed Secrets or external vault
+- Image scanning in CI/CD pipeline
+- Pod Security Standards enforced
+
+**Rationale**:
+- Reduces attack surface
+- Meets compliance requirements
+- Protects against internal threats
+- Enables audit trails
+
+---
+
 ## Technology Stack
+
+### Event Streaming (Phase 5)
+
+| Component | Local (Minikube) | Production (Cloud) |
+|-----------|------------------|-------------------|
+| Kafka | Redpanda (Docker) or Strimzi | Redpanda Cloud / Confluent Cloud |
+| Topics | task-events, reminders, task-updates | Same topics, managed service |
+| Schema | JSON events | JSON with optional Avro/Protobuf |
 
 ### AI & Agent Framework (Phase 3)
 - **OpenAI Agents SDK**: 0.1.0+ - Agent orchestration
@@ -487,7 +600,7 @@ NEXT_PUBLIC_OPENAI_DOMAIN_KEY=your-domain-key-here
 - **FastMCP**: Latest - MCP server implementation
 - **SSE**: Server-Sent Events - Real-time streaming
 
-### Backend (Phase 2 + Phase 3)
+### Backend (Phase 2 + Phase 3 + Phase 5)
 - **Framework**: FastAPI 0.115+
 - **Language**: Python 3.13+
 - **ORM**: SQLModel 0.0.24+ (SQLAlchemy 2.0 + Pydantic 2.0)
@@ -509,12 +622,36 @@ NEXT_PUBLIC_OPENAI_DOMAIN_KEY=your-domain-key-here
 - **State**: Zustand 5.0+ (MANDATORY - NO React Context for state)
 - **Chat UI**: @openai/chatkit-react (Phase 3)
 
-### Infrastructure
-- **Frontend Hosting**: Vercel
-- **Backend Hosting**: Vercel (Python runtime) or Railway
-- **Database**: Neon Serverless PostgreSQL (free tier)
-- **Version Control**: Git + GitHub
-- **CI/CD**: GitHub Actions (later phases)
+### Cloud Kubernetes (Phase 5)
+
+| Provider | Service | Free Tier | Recommendation |
+|----------|---------|-----------|----------------|
+| Oracle Cloud | OKE | Always free (4 OCPU, 24GB) | Best for learning |
+| Google Cloud | GKE | $300 credit / 90 days | Good documentation |
+| Azure | AKS | $200 credit / 30 days | Enterprise features |
+| DigitalOcean | DOKS | $200 credit / 60 days | Simple setup |
+
+### CI/CD (Phase 5)
+
+| Tool | Purpose |
+|------|---------|
+| GitHub Actions | CI/CD pipeline |
+| Helm | Package deployment |
+| Container Registry | GHCR / Docker Hub / Cloud Registry |
+| ArgoCD (optional) | GitOps deployment |
+
+### Advanced Features Stack (Phase 5)
+
+| Feature | Implementation |
+|---------|----------------|
+| Recurring Tasks | Dapr Jobs API + Kafka events |
+| Due Dates | Task model field + reminder scheduling |
+| Reminders | In-app notifications via Kafka → WebSocket (NOT browser push) |
+| Priorities | Task model field (high/medium/low) |
+| Tags/Categories | Many-to-many relationship with Tag model |
+| Search | Simple SQL LIKE/ILIKE queries |
+| Filter/Sort | API query parameters + database queries |
+| Real-time Sync | Dedicated WebSocket service consuming `task-updates` topic |
 
 ---
 
@@ -536,13 +673,22 @@ NEXT_PUBLIC_OPENAI_DOMAIN_KEY=your-domain-key-here
 | **MCP Server Builder** | `@mcp-server-builder` | FastMCP server, tool definitions |
 | **Chatbot UI Builder** | `@chatbot-ui-builder` | ChatKit integration, conversation UI |
 
-**Agent Files**: `.claude/agents/`
-- `backend-api-builder.md` - FastAPI patterns, SQLModel, JWT middleware
-- `frontend-ui-builder.md` - React components, Shadcn/ui, Framer Motion
-- `database-designer.md` - Schema design, migrations, query optimization
-- `ai-agent-builder.md` - OpenAI Agents + MCP patterns
-- `mcp-server-builder.md` - FastMCP server development
-- `chatbot-ui-builder.md` - ChatKit UI integration
+### Phase 4 Specialized Agents
+
+| Agent | Trigger | Purpose |
+|-------|---------|---------|
+| **Docker Containerization Builder** | `@docker-containerization-builder` | Dockerfiles, Docker Compose, multi-stage builds |
+| **DevOps Kubernetes Builder** | `@devops-kubernetes-builder` | K8s manifests, deployments, services |
+| **AIOps Helm Builder** | `@aiops-helm-builder` | Helm charts, values files, templates |
+
+### Phase 5 Specialized Agents
+
+| Agent | Trigger | Purpose |
+|-------|---------|---------|
+| **Event-Driven Builder** | `@event-driven-builder` | Kafka, Dapr pub/sub, event streaming |
+| **Microservice Builder** | `@microservice-builder` | New microservices (Notification, Recurring, Audit, WebSocket) |
+| **Cloud Deployer** | `@cloud-deployer` | DOKS deployment, GitHub Actions CI/CD |
+| **AIOps Operator** | `@aiops-operator` | Docker AI (Gordon), monitoring, automation |
 
 ### Phase 2 Skills Reference
 
@@ -560,34 +706,199 @@ NEXT_PUBLIC_OPENAI_DOMAIN_KEY=your-domain-key-here
 |-------|----------|---------|
 | **OpenAI Agents Setup** | `.claude/skills/openai-agents-setup/SKILL.md` | Initialize agent with Gemini |
 | **FastMCP Server Setup** | `.claude/skills/fastmcp-server-setup/SKILL.md` | Create MCP server |
-| **Chat API Integration** | `.claude/skills/chat-api-integration/SKILL.md` | Chat endpoint + agent |
-| **OpenAI ChatKit Setup** | `.claude/skills/openai-chatkit-setup/SKILL.md` | ChatKit React components |
-| **Streaming SSE Setup** | `.claude/skills/streaming-sse-setup/SKILL.md` | SSE implementation |
+| **ChatKit Frontend** | `.claude/skills/chatkit-frontend/SKILL.md` | ChatKit React UI + useChatKit hook |
+| **ChatKit Backend** | `.claude/skills/chatkit-backend/SKILL.md` | ChatKit SSE endpoint + conversation persistence |
 | **Conversation Management** | `.claude/skills/conversation-management/SKILL.md` | History UI |
 
-### CLAUDE.md Hierarchy
+### Phase 4 Skills Reference
 
-The project uses a layered CLAUDE.md structure:
+| Skill | Location | Purpose |
+|-------|----------|---------|
+| **Docker Setup** | `.claude/skills/docker-setup/SKILL.md` | Dockerfile & Docker Compose setup |
+| **Kubernetes Deployment** | `.claude/skills/kubernetes-deployment/SKILL.md` | K8s manifests with Kustomize |
+| **Helm Charts Setup** | `.claude/skills/helm-charts-setup/SKILL.md` | Helm chart creation |
+| **Minikube Setup** | `.claude/skills/minikube-setup/SKILL.md` | Local Kubernetes cluster |
+| **AIOps Gordon** | `.claude/skills/aiops-gordon/SKILL.md` | Docker AI (Gordon) operations |
 
-1. **Root CLAUDE.md** (`./CLAUDE.md`)
-   - Project overview and phase information
-   - Quick commands and spec locations
-   - Links to all agents and skills
-   - Updated for Phase 3 agents and skills
+### Phase 5 Skills Reference
 
-2. **Frontend CLAUDE.md** (`./frontend/CLAUDE.md`)
-   - Next.js specific patterns and conventions
-   - Component structure and styling rules
-   - API client and auth integration
-   - ChatKit integration patterns (Phase 3)
+| Skill | Location | Purpose | Bonus Target |
+|-------|----------|---------|--------------|
+| **Dapr Integration** | `.claude/skills/dapr-integration/SKILL.md` | Dapr building blocks (Pub/Sub, State, Jobs API, Secrets) | +200 |
+| **Kafka Setup** | `.claude/skills/kafka-setup/SKILL.md` | Kafka/Redpanda configuration (local + cloud) | +200 |
+| **GitHub Actions CI/CD** | `.claude/skills/github-actions-cicd/SKILL.md` | CI/CD pipeline for K8s deployment | +200 |
+| **Cloud K8s Deployment** | `.claude/skills/cloud-k8s-deployment/SKILL.md` | AKS/GKE/OKE/DOKS deployment patterns | +200 |
+| **Advanced Features** | `.claude/skills/advanced-features/SKILL.md` | Recurring tasks, reminders, priorities, tags | +200 |
+| **WebSocket Realtime** | `.claude/skills/websocket-realtime/SKILL.md` | WebSocket service for multi-client sync | +200 |
+| **Urdu Language Support** | `.claude/skills/urdu-language-support/SKILL.md` | Urdu chatbot responses | +100 |
 
-3. **Backend CLAUDE.md** (`./backend/CLAUDE.md`)
-   - FastAPI specific patterns and conventions
-   - SQLModel usage and database access
-   - JWT middleware and security rules
-   - Agent and MCP patterns (Phase 3)
+---
 
-**Rule**: Always read root CLAUDE.md first, then subfolder CLAUDE.md for context.
+## Kafka Event Schemas (Phase 5)
+
+### Task Event
+
+```json
+{
+  "event_type": "created | updated | completed | deleted",
+  "task_id": 123,
+  "user_id": "user-uuid",
+  "task_data": {
+    "title": "Task title",
+    "description": "Task description",
+    "completed": false,
+    "priority": "high | medium | low",
+    "due_date": "2026-01-15T10:00:00Z",
+    "tags": ["work", "urgent"],
+    "recurring": {
+      "enabled": true,
+      "pattern": "weekly",
+      "next_occurrence": "2026-01-22T10:00:00Z"
+    }
+  },
+  "timestamp": "2026-01-10T14:30:00Z",
+  "correlation_id": "uuid-for-tracing"
+}
+```
+
+### Reminder Event
+
+```json
+{
+  "task_id": 123,
+  "user_id": "user-uuid",
+  "title": "Task title",
+  "due_at": "2026-01-15T10:00:00Z",
+  "remind_at": "2026-01-15T09:00:00Z",
+  "notification_type": "push | email | both",
+  "correlation_id": "uuid-for-tracing"
+}
+```
+
+### Task Update Event (Real-time Sync)
+
+```json
+{
+  "event_type": "sync",
+  "task_id": 123,
+  "user_id": "user-uuid",
+  "changes": {
+    "completed": true
+  },
+  "source_client": "web | mobile | api",
+  "timestamp": "2026-01-10T14:30:00Z"
+}
+```
+
+---
+
+## New Database Models (Phase 5)
+
+### Task Model (Updated)
+
+```python
+class Priority(str, Enum):
+    HIGH = "high"
+    MEDIUM = "medium"
+    LOW = "low"
+
+class Task(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    user_id: str = Field(index=True)
+    title: str = Field(max_length=200)
+    description: str | None = Field(default=None, max_length=1000)
+    completed: bool = Field(default=False)
+    priority: Priority = Field(default=Priority.MEDIUM)
+    due_date: datetime | None = Field(default=None)
+    reminder_at: datetime | None = Field(default=None)
+    recurring_pattern: str | None = Field(default=None)  # "daily", "weekly", "monthly"
+    next_occurrence: datetime | None = Field(default=None)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+    # Relationships
+    tags: list["Tag"] = Relationship(back_populates="tasks", link_model=TaskTag)
+```
+
+### Tag Model (New)
+
+```python
+class Tag(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    user_id: str = Field(index=True)
+    name: str = Field(max_length=50)
+    color: str = Field(default="#808080")  # Hex color
+
+    # Relationships
+    tasks: list["Task"] = Relationship(back_populates="tags", link_model=TaskTag)
+
+class TaskTag(SQLModel, table=True):
+    task_id: int = Field(foreign_key="task.id", primary_key=True)
+    tag_id: int = Field(foreign_key="tag.id", primary_key=True)
+```
+
+### Reminder Model (New)
+
+```python
+class ReminderStatus(str, Enum):
+    PENDING = "pending"
+    SENT = "sent"
+    FAILED = "failed"
+
+class Reminder(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    task_id: int = Field(foreign_key="task.id")
+    user_id: str = Field(index=True)
+    remind_at: datetime
+    status: ReminderStatus = Field(default=ReminderStatus.PENDING)
+    sent_at: datetime | None = Field(default=None)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+```
+
+---
+
+## New Services (Phase 5)
+
+### WebSocket Service (NEW)
+
+| Aspect | Details |
+|--------|---------|
+| **Port** | 8005 |
+| **Purpose** | Real-time multi-client sync via WebSocket fan-out |
+| **Consumes** | `task-updates` topic (via Dapr Pub/Sub) |
+| **Publishes** | None (broadcasts to connected WebSocket clients) |
+| **Dapr App ID** | `websocket-service` |
+| **Technology** | FastAPI + WebSockets + Dapr Pub/Sub subscription |
+
+### Notification Service (NEW)
+
+| Aspect | Details |
+|--------|---------|
+| **Port** | 8002 |
+| **Purpose** | In-app notifications for reminders (NOT browser push) |
+| **Consumes** | `reminders` topic |
+| **Publishes** | `task-updates` topic (to trigger WebSocket broadcast) |
+| **Dapr App ID** | `notification-service` |
+
+### Recurring Task Service (NEW)
+
+| Aspect | Details |
+|--------|---------|
+| **Port** | 8003 |
+| **Purpose** | Auto-create next occurrence of recurring tasks |
+| **Consumes** | `task-events` (completed events for recurring tasks) |
+| **Publishes** | `task-events` (created events for new occurrence) |
+| **Dapr App ID** | `recurring-task-service` |
+
+### Audit Service (NEW)
+
+| Aspect | Details |
+|--------|---------|
+| **Port** | 8004 |
+| **Purpose** | Log all task operations for audit trail |
+| **Consumes** | `task-events` (all events) |
+| **Publishes** | None |
+| **Dapr App ID** | `audit-service` |
 
 ---
 
@@ -626,204 +937,42 @@ The project uses a layered CLAUDE.md structure:
 - Verify spec compliance
 - Create PHR for the session
 
-### 6. Deployment Phase
-- Deploy to staging first
+### 6. Deployment Phase (Phase 5)
+- Push to feature branch
+- GitHub Actions runs CI pipeline
+- Deploy to staging via Helm
 - Run smoke tests
-- Deploy to production
+- PR approval triggers production deploy
 - Monitor for errors
 
 ---
 
-## Natural Language Commands (Phase 3)
+## Environment Configuration (Phase 5)
 
-The chatbot should understand and respond to:
+### Local (Minikube with Dapr)
 
-| User Says | Agent Should Do |
-|-----------|-----------------|
-| "Add a task to buy groceries" | Call add_task with title "Buy groceries" |
-| "Show me all my tasks" | Call list_tasks with status "all" |
-| "What's pending?" | Call list_tasks with status "pending" |
-| "Mark task 3 as complete" | Call complete_task with task_id 3 |
-| "Delete the meeting task" | Call list_tasks first, then delete_task |
-| "Change task 1 to 'Call mom tonight'" | Call update_task with new title |
-| "I need to remember to pay bills" | Call add_task with title "Pay bills" |
-| "What have I completed?" | Call list_tasks with status "completed" |
+| Variable | Value | Source |
+|----------|-------|--------|
+| DAPR_HTTP_PORT | 3500 | Dapr sidecar |
+| KAFKA_BROKERS | redpanda:9092 | Redpanda in cluster |
+| DATABASE_URL | Neon connection | Secret |
 
----
+### Staging (Cloud K8s)
 
-## Code Quality Standards
+| Variable | Value | Source |
+|----------|-------|--------|
+| DAPR_HTTP_PORT | 3500 | Dapr sidecar |
+| KAFKA_BROKERS | staging.redpanda.cloud:9092 | Redpanda Cloud |
+| DATABASE_URL | Neon staging branch | Secret |
 
-### Agent Code (Python - Phase 3)
-```python
-# GOOD: Clear agent definition with typed tools
-from agents import Agent, Runner, function_tool
-from agents.extensions.models.litellm import LitellmModel
+### Production (Cloud K8s)
 
-model = LitellmModel(model="gemini/gemini-2.5-flash", api_key=GEMINI_API_KEY)
-
-@function_tool
-async def add_task(user_id: str, title: str, description: str = "") -> dict:
-    """Add a new task for the user."""
-    result = await mcp_client.call_tool("add_task", {
-        "user_id": user_id,
-        "title": title,
-        "description": description
-    })
-    return result
-
-agent = Agent(
-    name="TodoBot",
-    instructions="You are a helpful todo assistant...",
-    model=model,
-    tools=[add_task, list_tasks, complete_task, delete_task, update_task]
-)
-```
-
-### MCP Server Code (Python - Phase 3)
-```python
-# GOOD: Clean MCP tool definition
-from fastmcp import FastMCP
-from sqlmodel import Session, select
-
-mcp = FastMCP("Todo MCP Server")
-
-@mcp.tool()
-async def add_task(user_id: str, title: str, description: str = "") -> dict:
-    """Create a new task for the user."""
-    async with get_session() as session:
-        task = Task(user_id=user_id, title=title, description=description)
-        session.add(task)
-        await session.commit()
-        await session.refresh(task)
-        return {"task_id": task.id, "status": "created", "title": task.title}
-```
-
-### ChatKit Frontend (TypeScript - Phase 3)
-```typescript
-// GOOD: Chat interface with Zustand state management
-// Note: Verify exact ChatKit package import from OpenAI documentation
-'use client';
-
-import { useConversationStore } from '@/stores/conversation-store';
-
-export function ChatInterface() {
-  const { currentConversation, messages, sendMessage, isStreaming } = useConversationStore();
-
-  const handleSendMessage = async (content: string) => {
-    await sendMessage({
-      conversationId: currentConversation?.id,
-      message: content,
-    });
-  };
-
-  return (
-    <div className="flex flex-col h-full">
-      {/* Message list */}
-      <div className="flex-1 overflow-y-auto">
-        {messages.map((msg) => (
-          <MessageBubble key={msg.id} message={msg} />
-        ))}
-      </div>
-
-      {/* Input area - integrate with ChatKit components */}
-      <ChatInput onSend={handleSendMessage} disabled={isStreaming} />
-    </div>
-  );
-}
-```
-
-### Frontend (TypeScript - Phase 2)
-```typescript
-// GOOD: Clear, typed, readable
-interface Task {
-  id: number;
-  title: string;
-  completed: boolean;
-  userId: string;
-}
-
-export async function getTasks(userId: string): Promise<Task[]> {
-  const response = await api.get(`/api/${userId}/tasks`);
-  return response.data;
-}
-```
-
-### Backend (Python - Phase 2)
-```python
-# GOOD: Clear, typed, validated
-from sqlmodel import SQLModel, Field
-from datetime import datetime
-
-class Task(SQLModel, table=True):
-    __tablename__ = "tasks"
-
-    id: int | None = Field(default=None, primary_key=True)
-    user_id: str = Field(foreign_key="users.id", index=True)
-    title: str = Field(max_length=200)
-    completed: bool = Field(default=False)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
-```
-
----
-
-## Error Handling
-
-### Frontend
-- Use Error Boundaries for React component errors
-- Show user-friendly error messages
-- Log errors to console in development
-- Send error telemetry in production (optional)
-
-### Backend
-- Use FastAPI HTTPException for API errors
-- Return consistent error format
-- Log all errors with context
-- Never expose internal errors to clients
-
-### AI/Agent Layer (Phase 3)
-- Catch and handle agent errors
-- Return error messages, not exceptions from tools
-- Provide actionable error messages to users
-- Log all tool calls for audit trail
-
-**Error Response Format**:
-```json
-{
-  "success": false,
-  "error": {
-    "code": "AGENT_ERROR",
-    "message": "I'm sorry, I couldn't complete that action. Please try again.",
-    "details": {}
-  }
-}
-```
-
----
-
-## Performance Guidelines
-
-### Frontend
-- Use Next.js App Router for automatic code splitting
-- Lazy load non-critical components
-- Optimize images with next/image
-- Minimize bundle size
-- Use React Server Components where possible
-- Implement virtual scrolling for long lists
-
-### Backend
-- Use connection pooling for database
-- Implement database query optimization
-- Add indexes to frequently queried columns
-- Use pagination for list endpoints
-- Cache static data (optional for Phase 2)
-- Set appropriate timeout limits
-
-### AI/Chat (Phase 3)
-- Implement SSE for streaming responses
-- Use message pagination (50 per page)
-- Cache conversation history lookup
-- Implement rate limiting: 30 messages/minute per user
+| Variable | Value | Source |
+|----------|-------|--------|
+| DAPR_HTTP_PORT | 3500 | Dapr sidecar |
+| KAFKA_BROKERS | prod.redpanda.cloud:9092 | Redpanda Cloud |
+| DATABASE_URL | Neon production branch | Secret |
+| ENABLE_MONITORING | true | ConfigMap |
 
 ---
 
@@ -854,23 +1003,65 @@ class Task(SQLModel, table=True):
 - [ ] SSE connections properly authenticated
 - [ ] Input sanitization to prevent prompt injection
 
+### Phase 5 Security (Cloud-Specific)
+- [ ] All services communicate via Dapr mTLS
+- [ ] RBAC configured for Kubernetes resources
+- [ ] Network policies restrict pod communication
+- [ ] Secrets stored in cloud secret manager (not K8s secrets)
+- [ ] GitHub Actions secrets for CI/CD credentials
+- [ ] Image scanning in CI pipeline
+- [ ] Pod Security Standards enforced
+- [ ] Dapr API tokens configured
+- [ ] Kafka SASL authentication enabled
+- [ ] TLS for Ingress (cert-manager + Let's Encrypt)
+
+---
+
+## Bonus Features (Phase 5)
+
+### Hackathon Bonus Points Targets
+
+| Bonus Feature | Points | Status | Implementation |
+|--------------|--------|--------|----------------|
+| **Reusable Intelligence** (Agent Skills) | +200 | Target | Create Phase 5 skills for Dapr, Kafka, CI/CD, Cloud K8s |
+| **Cloud-Native Blueprints** (Agent Skills) | +200 | Target | Skills for deployment patterns |
+| **Multi-language Support (Urdu)** | +100 | Target | Urdu chatbot responses via language-aware prompts |
+| **Voice Commands** | +200 | Done | Already implemented in Phase 3 |
+
+**Total Potential Bonus**: +600 points (Voice already done = +200 secured)
+
+### Urdu Language Support Implementation
+
+**Scope**:
+- Chatbot understands and responds in Urdu
+- Language toggle in chat UI (optional)
+- System prompt language switching
+- UI translation is out of scope (Urdu responses only)
+
+**Acceptance Criteria**:
+- [ ] Agent responds in Urdu when user writes in Urdu
+- [ ] Agent responds in English when user writes in English
+- [ ] Task titles/descriptions can be in Urdu
+- [ ] Language preference stored per user (optional)
+
 ---
 
 ## Git & Version Control
 
 ### Branch Strategy
 - `main` - production-ready code
-- `phase3/[task-name]` - Phase 3 feature branches
+- `phase5/[task-name]` - Phase 5 feature branches
 - Create PR for all changes
 - Squash commits on merge
 
 ### Commit Messages
 ```
-feat: add AI chatbot with MCP integration
-fix: resolve SSE streaming bug
-docs: update API endpoint documentation
-refactor: simplify agent tool logic
-test: add integration tests for chat API
+feat: add Kafka event publishing for task operations
+fix: resolve WebSocket connection drop issue
+docs: update Dapr component documentation
+refactor: simplify event consumer logic
+test: add integration tests for Dapr pub/sub
+chore: update GitHub Actions workflow
 ```
 
 Format: `type: description`
@@ -878,58 +1069,11 @@ Types: feat, fix, docs, refactor, test, chore
 
 ---
 
-## Deployment Strategy
-
-### Phase 3 Deployment
-1. **Frontend**: Deploy to Vercel
-   - Connect GitHub repository
-   - Auto-deploy on push to main
-   - Environment variables via Vercel dashboard
-   - Add ChatKit domain key for production
-
-2. **Backend**: Deploy to Vercel (Python runtime) or Railway
-   - Set up Python runtime
-   - Configure DATABASE_URL
-   - Set BETTER_AUTH_SECRET
-   - Set GEMINI_API_KEY
-
-3. **MCP Server**: Run as separate process
-   - Port 8001 for Phase 3
-   - Future: Docker container for Phase 4
-
-4. **Database**: Neon Serverless PostgreSQL
-   - Run migrations for Conversation/Message tables
-   - Verify indexes on conversation_id, user_id
-
----
-
-## Environment Variables (Phase 3 Additions)
-
-```env
-# AI/Agent Configuration
-GEMINI_API_KEY=your_gemini_api_key
-GEMINI_MODEL=gemini-2.5-flash
-
-# MCP Server
-MCP_SERVER_URL=http://localhost:8001/mcp
-MCP_SERVER_PORT=8001
-
-# ChatKit (Frontend - for production deployment)
-NEXT_PUBLIC_OPENAI_DOMAIN_KEY=your-domain-key-here
-
-# Existing Phase 2 variables remain unchanged
-DATABASE_URL=postgresql+asyncpg://...
-BETTER_AUTH_SECRET=...
-CORS_ORIGINS=http://localhost:3000
-```
-
----
-
 ## Governance
 
 ### Constitution Authority
 - This constitution supersedes all other practices
-- Phase 2 constitution remains valid for non-chat features
+- Previous phase constitutions remain valid for their respective features
 - All code reviews MUST verify compliance
 - Violations MUST be justified and documented
 - Amendments require user approval and documentation
@@ -940,28 +1084,46 @@ CORS_ORIGINS=http://localhost:3000
 - Update CLAUDE.md to reflect changes
 - Communicate changes to all stakeholders
 
-### Complexity Budget
-- Justify any complexity beyond MVP requirements
-- Simpler alternatives MUST be considered first
-- Document why complexity is necessary
-- Review complexity in retrospectives
+### Versioning Policy
+- **MAJOR**: Backward incompatible governance/principle removals or redefinitions
+- **MINOR**: New principle/section added or materially expanded guidance
+- **PATCH**: Clarifications, wording, typo fixes, non-semantic refinements
+
+### Amendment Procedure
+1. Propose change via PR to constitution file
+2. Document rationale in PR description
+3. Get user approval
+4. Update version number based on change type
+5. Update Sync Impact Report at top of file
+6. Update all dependent templates if needed
+
+### Compliance Review
+- All agents MUST verify constitution compliance before code generation
+- Constitution Check gates MUST pass before implementation
+- Violations require explicit justification
 
 ---
 
 ## References
 
-- [Phase 3 Constitution Source](./constitution-prompt-phase-3.md)
+- [Phase 5 Constitution Source](./constitution-prompt-phase-5.md)
+- [Phase 4 Constitution](./constitution-prompt-phase-4.md)
+- [Phase 3 Constitution](./constitution-prompt-phase-3.md)
 - [Phase 2 Constitution](./prompts/constitution-prompt-phase-2.md)
+- [Dapr Documentation](https://docs.dapr.io/)
+- [Dapr Pub/Sub](https://docs.dapr.io/developing-applications/building-blocks/pubsub/)
+- [Dapr Jobs API](https://docs.dapr.io/developing-applications/building-blocks/jobs/)
+- [Kafka Documentation](https://kafka.apache.org/documentation/)
+- [Redpanda Documentation](https://docs.redpanda.com/)
+- [Strimzi Operator](https://strimzi.io/documentation/)
+- [GitHub Actions](https://docs.github.com/en/actions)
 - [OpenAI Agents SDK Documentation](https://openai.github.io/openai-agents-python/)
 - [FastMCP Documentation](https://github.com/jlowin/fastmcp)
-- [OpenAI ChatKit Documentation](https://platform.openai.com/docs/guides/chatkit)
-- [Server-Sent Events MDN](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events)
 - [Next.js Documentation](https://nextjs.org/docs)
 - [FastAPI Documentation](https://fastapi.tiangolo.com/)
 - [SQLModel Documentation](https://sqlmodel.tiangolo.com/)
 - [Better Auth Documentation](https://www.better-auth.com/)
-- [Shadcn/ui Components](https://ui.shadcn.com/)
 
 ---
 
-**Version**: 2.0.0 | **Ratified**: 2025-12-11 | **Last Amended**: 2025-12-17
+**Version**: 3.0.0 | **Ratified**: 2025-12-11 | **Last Amended**: 2025-12-30

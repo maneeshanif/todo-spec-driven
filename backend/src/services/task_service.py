@@ -5,6 +5,7 @@ from sqlmodel import select, desc, asc, or_, and_, col
 from sqlmodel.ext.asyncio.session import AsyncSession
 from src.models.task import Task
 from src.models.category import TaskCategoryMapping
+from src.models.task_tag import TaskTag
 from src.core.logging import get_logger
 
 logger = get_logger(__name__)
@@ -20,6 +21,7 @@ class TaskService:
         completed: Optional[bool] = None,
         priority: Optional[str] = None,
         category_id: Optional[int] = None,
+        tag_ids: Optional[List[int]] = None,
         search: Optional[str] = None,
         due_date_start: Optional[datetime] = None,
         due_date_end: Optional[datetime] = None,
@@ -37,6 +39,7 @@ class TaskService:
             completed: Optional filter by completion status
             priority: Optional filter by priority (low, medium, high)
             category_id: Optional filter by category ID
+            tag_ids: Optional filter by tag IDs (tasks with ANY of these tags)
             search: Optional search term for title/description
             due_date_start: Optional filter by due date range start
             due_date_end: Optional filter by due date range end
@@ -63,6 +66,12 @@ class TaskService:
         if category_id:
             statement = statement.join(TaskCategoryMapping).where(
                 TaskCategoryMapping.category_id == category_id
+            )
+
+        # Apply tag filter (join with TaskTag)
+        if tag_ids:
+            statement = statement.join(TaskTag).where(
+                TaskTag.tag_id.in_(tag_ids)
             )
 
         # Apply search filter (search in title and description)
@@ -112,6 +121,7 @@ class TaskService:
                     "completed": completed,
                     "priority": priority,
                     "category_id": category_id,
+                    "tag_ids": tag_ids,
                     "search": search,
                     "sort_by": sort_by,
                     "sort_order": sort_order
@@ -162,8 +172,10 @@ class TaskService:
         priority: str = "medium",
         due_date: Optional[datetime] = None,
         category_ids: Optional[List[int]] = None,
+        tag_ids: Optional[List[int]] = None,
         is_recurring: bool = False,
-        recurrence_pattern: Optional[str] = None
+        recurrence_pattern: Optional[str] = None,
+        recurrence_data: Optional[dict] = None
     ) -> Task:
         """
         Create a new task.
@@ -176,8 +188,10 @@ class TaskService:
             priority: Task priority (low, medium, high)
             due_date: Optional due date
             category_ids: Optional list of category IDs to associate
+            tag_ids: Optional list of tag IDs to associate
             is_recurring: Whether task is recurring
             recurrence_pattern: Optional recurrence pattern (daily, weekly, monthly, yearly)
+            recurrence_data: Optional additional recurrence configuration
 
         Returns:
             Created Task object
@@ -187,7 +201,22 @@ class TaskService:
             if due_date.tzinfo is not None:
                 # Convert to UTC and remove timezone
                 due_date = due_date.astimezone(timezone.utc).replace(tzinfo=None)
-        
+
+        # Calculate next_occurrence for recurring tasks
+        next_occurrence = None
+        if is_recurring and recurrence_pattern:
+            from src.services.recurring_service import RecurringService
+
+            # Use due_date as base, fallback to current time
+            base_date = due_date if due_date else datetime.now(timezone.utc).replace(tzinfo=None)
+
+            try:
+                next_occurrence = RecurringService.calculate_next_occurrence(
+                    base_date, recurrence_pattern, recurrence_data
+                )
+            except ValueError as e:
+                logger.warning(f"Failed to calculate next_occurrence: {e}")
+
         task = Task(
             user_id=user_id,
             title=title,
@@ -196,7 +225,9 @@ class TaskService:
             priority=priority,
             due_date=due_date,
             is_recurring=is_recurring,
-            recurrence_pattern=recurrence_pattern
+            recurrence_pattern=recurrence_pattern,
+            recurrence_data=recurrence_data,
+            next_occurrence=next_occurrence
         )
 
         session.add(task)
@@ -215,6 +246,17 @@ class TaskService:
             await session.commit()
             await session.refresh(task)
 
+        # Associate tags if provided
+        if tag_ids:
+            for tag_id in tag_ids:
+                mapping = TaskTag(
+                    task_id=task.id,
+                    tag_id=tag_id
+                )
+                session.add(mapping)
+            await session.commit()
+            await session.refresh(task)
+
         logger.info(
             f"Task created",
             extra={
@@ -222,7 +264,8 @@ class TaskService:
                 "user_id": user_id,
                 "title": title,
                 "priority": priority,
-                "categories": category_ids or []
+                "categories": category_ids or [],
+                "tags": tag_ids or []
             }
         )
 
@@ -238,8 +281,10 @@ class TaskService:
         priority: Optional[str] = None,
         due_date: Optional[datetime] = None,
         category_ids: Optional[List[int]] = None,
+        tag_ids: Optional[List[int]] = None,
         is_recurring: Optional[bool] = None,
-        recurrence_pattern: Optional[str] = None
+        recurrence_pattern: Optional[str] = None,
+        recurrence_data: Optional[dict] = None
     ) -> Task:
         """
         Update an existing task.
@@ -253,12 +298,17 @@ class TaskService:
             priority: Optional new priority
             due_date: Optional new due date
             category_ids: Optional new list of category IDs
+            tag_ids: Optional new list of tag IDs
             is_recurring: Optional new recurring status
             recurrence_pattern: Optional new recurrence pattern
+            recurrence_data: Optional new recurrence configuration
 
         Returns:
             Updated Task object
         """
+        # Track if recurrence fields changed
+        recurrence_changed = False
+
         if title is not None:
             task.title = title
         if description is not None:
@@ -273,10 +323,30 @@ class TaskService:
                 # Convert to UTC and remove timezone
                 due_date = due_date.astimezone(timezone.utc).replace(tzinfo=None)
             task.due_date = due_date
+            recurrence_changed = True
         if is_recurring is not None:
             task.is_recurring = is_recurring
+            recurrence_changed = True
         if recurrence_pattern is not None:
             task.recurrence_pattern = recurrence_pattern
+            recurrence_changed = True
+        if recurrence_data is not None:
+            task.recurrence_data = recurrence_data
+            recurrence_changed = True
+
+        # Recalculate next_occurrence if recurrence changed
+        if recurrence_changed and task.is_recurring and task.recurrence_pattern:
+            from src.services.recurring_service import RecurringService
+
+            # Use current due_date or fallback to current time
+            base_date = task.due_date if task.due_date else datetime.now(timezone.utc).replace(tzinfo=None)
+
+            try:
+                task.next_occurrence = RecurringService.calculate_next_occurrence(
+                    base_date, task.recurrence_pattern, task.recurrence_data
+                )
+            except ValueError as e:
+                logger.warning(f"Failed to recalculate next_occurrence: {e}")
 
         # Update categories if provided
         if category_ids is not None:
@@ -295,6 +365,24 @@ class TaskService:
                 mapping = TaskCategoryMapping(
                     task_id=task.id,
                     category_id=category_id
+                )
+                session.add(mapping)
+
+        # Update tags if provided
+        if tag_ids is not None:
+            # Delete existing tag mappings
+            delete_stmt = select(TaskTag).where(
+                TaskTag.task_id == task.id
+            )
+            existing_tag_mappings = await session.exec(delete_stmt)
+            for mapping in existing_tag_mappings:
+                await session.delete(mapping)
+
+            # Create new tag mappings
+            for tag_id in tag_ids:
+                mapping = TaskTag(
+                    task_id=task.id,
+                    tag_id=tag_id
                 )
                 session.add(mapping)
 

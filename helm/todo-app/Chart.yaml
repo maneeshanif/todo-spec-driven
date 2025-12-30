@@ -1,9 +1,9 @@
 apiVersion: v2
 name: todo-app
-description: A Helm chart for Evolution of Todo - AI-Powered Task Manager
+description: A Helm chart for Evolution of Todo - AI-Powered Task Manager with Event-Driven Architecture
 type: application
-version: 1.0.0
-appVersion: "1.0.0"
+version: 2.0.0
+appVersion: "2.0.0"
 keywords:
   - todo
   - chatbot

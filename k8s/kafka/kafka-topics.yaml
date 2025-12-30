@@ -1,0 +1,53 @@
+# Kafka Topics for Evolution of Todo Phase 5
+# These topics are created by Strimzi Topic Operator
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: task-events
+  namespace: kafka
+  labels:
+    strimzi.io/cluster: evolution-kafka
+    app.kubernetes.io/name: task-events
+    app.kubernetes.io/part-of: evolution-todo
+spec:
+  partitions: 3
+  replicas: 1
+  config:
+    retention.ms: 86400000  # 24 hours
+    cleanup.policy: delete
+    segment.bytes: 1073741824
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: reminders
+  namespace: kafka
+  labels:
+    strimzi.io/cluster: evolution-kafka
+    app.kubernetes.io/name: reminders
+    app.kubernetes.io/part-of: evolution-todo
+spec:
+  partitions: 3
+  replicas: 1
+  config:
+    retention.ms: 86400000  # 24 hours
+    cleanup.policy: delete
+    segment.bytes: 1073741824
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: task-updates
+  namespace: kafka
+  labels:
+    strimzi.io/cluster: evolution-kafka
+    app.kubernetes.io/name: task-updates
+    app.kubernetes.io/part-of: evolution-todo
+spec:
+  partitions: 3
+  replicas: 1
+  config:
+    retention.ms: 3600000  # 1 hour (real-time updates don't need long retention)
+    cleanup.policy: delete
+    segment.bytes: 536870912

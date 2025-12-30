@@ -1,0 +1,24 @@
+apiVersion: dapr.io/v1alpha1
+kind: Resiliency
+metadata:
+  name: todo-resiliency
+  namespace: todo-app
+spec:
+  policies:
+    retries:
+      pubsubRetry:
+        policy: exponential
+        maxRetries: 5
+        duration: 1s
+        maxDuration: 30s
+    circuitBreakers:
+      pubsubCircuitBreaker:
+        maxRequests: 3
+        timeout: 30s
+        trip: consecutiveFailures >= 5
+  targets:
+    components:
+      kafka-pubsub:
+        outbound:
+          retry: pubsubRetry
+          circuitBreaker: pubsubCircuitBreaker

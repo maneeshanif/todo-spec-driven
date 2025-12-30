@@ -1,0 +1,23 @@
+# Strimzi Kafka Operator Installation
+# This file provides instructions to install the Strimzi operator
+# The actual operator is installed via kubectl apply from Strimzi releases
+
+# Step 1: Create kafka namespace
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kafka
+  labels:
+    app.kubernetes.io/name: kafka
+    app.kubernetes.io/part-of: evolution-todo
+
+# Step 2: Install Strimzi Operator (run this command manually)
+# kubectl apply -f 'https://strimzi.io/install/latest?namespace=kafka' -n kafka
+
+# Step 3: Wait for operator to be ready
+# kubectl wait --for=condition=ready pod -l name=strimzi-cluster-operator -n kafka --timeout=300s
+
+# Alternative: Install via Helm
+# helm repo add strimzi https://strimzi.io/charts/
+# helm install strimzi-kafka-operator strimzi/strimzi-kafka-operator -n kafka --create-namespace

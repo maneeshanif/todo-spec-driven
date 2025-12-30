@@ -2,9 +2,12 @@
 from fastapi import APIRouter
 from src.api.routes.tasks import router as tasks_router
 from src.api.routes.categories import router as categories_router
+from src.api.routes.tags import router as tags_router
 from src.api.routes.stats import router as stats_router
 from src.api.routes.chat import router as chat_router
 from src.api.routes.chatkit import router as chatkit_router
+from src.api.routes.reminders import router as reminders_router
+from src.api.routes.dapr_callbacks import router as dapr_callbacks_router
 from src.api.health import router as health_router
 
 # Create main API router
@@ -15,8 +18,11 @@ api_router = APIRouter(prefix="/api")
 api_router.include_router(health_router)  # Health checks (no auth required)
 api_router.include_router(tasks_router)
 api_router.include_router(categories_router)
+api_router.include_router(tags_router)  # Phase 5: Tag management
 api_router.include_router(stats_router)
 api_router.include_router(chat_router)  # Phase 3: AI Chat (custom SSE)
 api_router.include_router(chatkit_router)  # Phase 3: ChatKit SDK endpoint
+api_router.include_router(reminders_router)  # Phase 5: Reminder management
+api_router.include_router(dapr_callbacks_router)  # Phase 5: Dapr callbacks (no auth)
 
 __all__ = ["api_router"]

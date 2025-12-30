@@ -8,6 +8,7 @@ from src.core.auth_deps import get_current_user
 from src.core.errors import NotFoundError
 from src.schemas.task import TaskPublic, TaskListResponse, TaskCreate, TaskUpdate
 from src.services.task_service import TaskService
+from src.services.recurring_service import RecurringService
 from src.core.logging import get_logger
 from src.utils.caching import generate_etag, check_etag_match, set_cache_headers, no_cache
 
@@ -28,6 +29,7 @@ async def get_tasks(
     completed: Optional[bool] = Query(None, description="Filter by completion status"),
     priority: Optional[str] = Query(None, description="Filter by priority (low, medium, high)"),
     category_id: Optional[int] = Query(None, description="Filter by category ID"),
+    tag_ids: Optional[str] = Query(None, description="Filter by tag IDs (comma-separated)"),
     search: Optional[str] = Query(None, description="Search in title and description"),
     due_date_start: Optional[datetime] = Query(None, description="Filter by due date range start"),
     due_date_end: Optional[datetime] = Query(None, description="Filter by due date range end"),
@@ -45,6 +47,7 @@ async def get_tasks(
     - **completed**: Filter by completion status (true/false)
     - **priority**: Filter by priority level (low, medium, high)
     - **category_id**: Filter by category ID
+    - **tag_ids**: Filter by tag IDs (comma-separated, e.g., "1,2,3")
     - **search**: Search term for title and description
     - **due_date_start**: Filter tasks due after this date
     - **due_date_end**: Filter tasks due before this date
@@ -59,12 +62,21 @@ async def get_tasks(
 
     **Caching**: Results are cached for 60 seconds with ETag support.
     """
+    # Parse tag_ids from comma-separated string
+    tag_id_list = None
+    if tag_ids:
+        try:
+            tag_id_list = [int(tid.strip()) for tid in tag_ids.split(",")]
+        except ValueError:
+            pass  # Ignore invalid tag_ids
+
     tasks = await TaskService.get_tasks(
         session=session,
         user_id=current_user['id'],
         completed=completed,
         priority=priority,
         category_id=category_id,
+        tag_ids=tag_id_list,
         search=search,
         due_date_start=due_date_start,
         due_date_end=due_date_end,
@@ -117,6 +129,7 @@ async def create_task(
     - **priority**: Task priority (low, medium, high) - default: medium
     - **due_date**: Due date (optional)
     - **category_ids**: List of category IDs to associate (optional)
+    - **tag_ids**: List of tag IDs to associate (optional)
     - **is_recurring**: Whether task is recurring (default: false)
     - **recurrence_pattern**: Recurrence pattern if recurring (daily, weekly, monthly, yearly)
 
@@ -130,8 +143,10 @@ async def create_task(
         priority=task_data.priority,
         due_date=task_data.due_date,
         category_ids=task_data.category_ids,
+        tag_ids=task_data.tag_ids,
         is_recurring=task_data.is_recurring,
-        recurrence_pattern=task_data.recurrence_pattern
+        recurrence_pattern=task_data.recurrence_pattern,
+        recurrence_data=task_data.recurrence_data
     )
 
     # Disable caching for mutations
@@ -206,6 +221,7 @@ async def update_task(
     - **priority**: New priority (low, medium, high) (optional)
     - **due_date**: New due date (optional)
     - **category_ids**: New list of category IDs (optional)
+    - **tag_ids**: New list of tag IDs (optional)
     - **is_recurring**: New recurring status (optional)
     - **recurrence_pattern**: New recurrence pattern (optional)
 
@@ -229,8 +245,10 @@ async def update_task(
         priority=task_data.priority,
         due_date=task_data.due_date,
         category_ids=task_data.category_ids,
+        tag_ids=task_data.tag_ids,
         is_recurring=task_data.is_recurring,
-        recurrence_pattern=task_data.recurrence_pattern
+        recurrence_pattern=task_data.recurrence_pattern,
+        recurrence_data=task_data.recurrence_data
     )
 
     # Disable caching for mutations
@@ -272,3 +290,59 @@ async def delete_task(
     no_cache(response)
 
     return None
+
+
+@router.get(
+    "/recurring",
+    response_model=TaskListResponse,
+    summary="Get recurring tasks",
+    description="Get all recurring tasks for the authenticated user, optionally filtered by pattern."
+)
+async def get_recurring_tasks(
+    request: Request,
+    response: Response,
+    pattern: Optional[str] = Query(None, description="Filter by recurrence pattern (daily, weekly, monthly, yearly)"),
+    current_user: dict = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session)
+):
+    """
+    Get all recurring tasks for the current user.
+
+    **Filters:**
+    - **pattern**: Filter by recurrence pattern (daily, weekly, monthly, yearly)
+
+    Returns tasks ordered by next_occurrence date.
+
+    **Caching**: Results are cached for 60 seconds with ETag support.
+    """
+    try:
+        tasks = await RecurringService.get_recurring_tasks(
+            session=session,
+            user_id=current_user['id'],
+            pattern=pattern
+        )
+    except ValueError as e:
+        # Invalid pattern
+        from fastapi import HTTPException
+        raise HTTPException(status_code=400, detail=str(e))
+
+    # Convert to response format
+    task_list = [TaskPublic.model_validate(task) for task in tasks]
+    result = TaskListResponse(
+        tasks=task_list,
+        total=len(task_list),
+        page=1,
+        page_size=len(task_list)
+    )
+
+    # Generate ETag from result
+    etag = generate_etag(result.model_dump())
+
+    # Check if client has current version
+    if check_etag_match(request, etag):
+        return Response(status_code=304)
+
+    # Set cache headers (60 second private cache)
+    set_cache_headers(response, max_age=60, private=True, etag=etag)
+
+    return result

@@ -65,6 +65,13 @@ Skill(skill: "skill-name")
 | Helm charts, K8s packaging | `helm-charts-setup` | `aiops-helm-builder` |
 | Minikube, local K8s cluster | `minikube-setup` | `devops-kubernetes-builder` |
 | Docker AI, Gordon, container optimization | `aiops-gordon` | `docker-containerization-builder` |
+| Dapr integration, pub/sub, state | `dapr-integration` | `event-driven-builder` |
+| Kafka, Strimzi, event streaming | `kafka-setup` | `event-driven-builder` |
+| GitHub Actions, CI/CD pipelines | `github-actions-cicd` | `cloud-deployer` |
+| Cloud K8s, DOKS, production deploy | `cloud-k8s-deployment` | `cloud-deployer` |
+| Advanced features, priorities, tags, due dates | `advanced-features` | `microservice-builder` |
+| WebSocket, real-time sync | `websocket-realtime` | `microservice-builder` |
+| Urdu language, i18n, RTL | `urdu-language-support` | `frontend-ui-builder` |
 
 ### Skill Directory Reference
 
@@ -85,6 +92,13 @@ Skill(skill: "skill-name")
 | `helm-charts-setup` | `.claude/skills/helm-charts-setup/SKILL.md` | Helm chart creation |
 | `minikube-setup` | `.claude/skills/minikube-setup/SKILL.md` | Local K8s cluster setup |
 | `aiops-gordon` | `.claude/skills/aiops-gordon/SKILL.md` | Docker AI (Gordon) operations |
+| `dapr-integration` | `.claude/skills/dapr-integration/SKILL.md` | Dapr pub/sub, state, service invocation |
+| `kafka-setup` | `.claude/skills/kafka-setup/SKILL.md` | Strimzi Kafka, Redpanda Cloud |
+| `github-actions-cicd` | `.claude/skills/github-actions-cicd/SKILL.md` | GitHub Actions CI/CD pipelines |
+| `cloud-k8s-deployment` | `.claude/skills/cloud-k8s-deployment/SKILL.md` | DigitalOcean DOKS deployment |
+| `advanced-features` | `.claude/skills/advanced-features/SKILL.md` | Priorities, tags, due dates, reminders |
+| `websocket-realtime` | `.claude/skills/websocket-realtime/SKILL.md` | WebSocket real-time sync |
+| `urdu-language-support` | `.claude/skills/urdu-language-support/SKILL.md` | Urdu i18n, RTL support |
 
 ### Deprecated Skills (Use Alternatives)
 
@@ -129,6 +143,10 @@ Task(
 | Dockerfile, Docker Compose | Docker Containerization Builder | `docker-containerization-builder` |
 | Kubernetes manifests, deployments | DevOps Kubernetes Builder | `devops-kubernetes-builder` |
 | Helm charts, K8s packaging | AIOps Helm Builder | `aiops-helm-builder` |
+| Dapr, Kafka, event-driven patterns | Event-Driven Builder | `event-driven-builder` |
+| Microservices, new services | Microservice Builder | `microservice-builder` |
+| Cloud deployment, CI/CD | Cloud Deployer | `cloud-deployer` |
+| AIOps, monitoring, automation | AIOps Operator | `aiops-operator` |
 
 ### Agent Definitions
 
@@ -144,6 +162,10 @@ Task(
 | `docker-containerization-builder` | `.claude/agents/docker-containerization-builder.md` | `docker-setup`, `aiops-gordon` | Dockerfile, Docker Compose, container optimization |
 | `devops-kubernetes-builder` | `.claude/agents/devops-kubernetes-builder.md` | `kubernetes-deployment`, `minikube-setup` | K8s manifests, deployments, services |
 | `aiops-helm-builder` | `.claude/agents/aiops-helm-builder.md` | `helm-charts-setup` | Helm charts, K8s packaging |
+| `event-driven-builder` | `.claude/agents/event-driven-builder.md` | `dapr-integration`, `kafka-setup` | Kafka, Dapr pub/sub, event streaming |
+| `microservice-builder` | `.claude/agents/microservice-builder.md` | `advanced-features`, `websocket-realtime` | New microservices, service patterns |
+| `cloud-deployer` | `.claude/agents/cloud-deployer.md` | `cloud-k8s-deployment`, `github-actions-cicd` | DOKS, CI/CD, Helm deployments |
+| `aiops-operator` | `.claude/agents/aiops-operator.md` | `aiops-gordon`, `docker-setup`, `kubernetes-deployment` | AIOps, monitoring, automation |
 
 ---
 
@@ -184,6 +206,16 @@ Step 2: mcp__context7__get-library-docs(context7CompatibleLibraryID: "/org/proje
 - `helm` - Helm chart development
 - `minikube` - Local Kubernetes development
 
+**Phase 5 (Advanced Cloud Deployment):**
+- `dapr` - Dapr building blocks and SDK
+- `strimzi` - Strimzi Kafka operator
+- `kafka` - Apache Kafka patterns
+- `github-actions` - GitHub Actions workflows
+- `digitalocean` - DigitalOcean DOKS
+- `next-intl` - Next.js internationalization
+- `prometheus` - Monitoring and alerting
+- `grafana` - Dashboard visualization
+
 **NEVER ASSUME API PATTERNS - ALWAYS VERIFY WITH CONTEXT7!**
 
 ---
@@ -192,7 +224,15 @@ Step 2: mcp__context7__get-library-docs(context7CompatibleLibraryID: "/org/proje
 
 ### Required Reading Order
 
-**For Phase 4 (Current):**
+**For Phase 5 (Current):**
+
+| Order | Document | Purpose | Path |
+|-------|----------|---------|------|
+| 1 | Constitution | Project laws & principles | `constitution-prompt-phase-5.md` |
+| 2 | Specification | User stories & acceptance | `spec-prompt-phase-5.md` |
+| 3 | Plan | Architecture & approach | `plan-prompt-phase-5.md` |
+
+**For Phase 4 (Reference):**
 
 | Order | Document | Purpose | Path |
 |-------|----------|---------|------|
@@ -322,11 +362,22 @@ main (production)
 ├── phase3/chat-ui           → ChatKit frontend (COMPLETED)
 ├── phase3/streaming         → SSE streaming responses (COMPLETED)
 │
-├── phase4/setup             → Docker & K8s setup (CURRENT)
-├── phase4/docker            → Dockerfiles & Compose
-├── phase4/kubernetes        → K8s manifests & deployments
-├── phase4/helm              → Helm chart creation
-└── phase4/minikube          → Local K8s cluster
+├── phase4/setup             → Docker & K8s setup (COMPLETED)
+├── phase4/docker            → Dockerfiles & Compose (COMPLETED)
+├── phase4/kubernetes        → K8s manifests & deployments (COMPLETED)
+├── phase4/helm              → Helm chart creation (COMPLETED)
+├── phase4/minikube          → Local K8s cluster (COMPLETED)
+│
+├── phase5/setup             → Phase 5 project setup (CURRENT)
+├── phase5/dapr              → Dapr pub/sub integration
+├── phase5/kafka             → Strimzi Kafka deployment
+├── phase5/advanced-features → Priorities, tags, due dates
+├── phase5/microservices     → New microservices
+├── phase5/websocket         → WebSocket real-time service
+├── phase5/cicd              → GitHub Actions pipelines
+├── phase5/cloud-deploy      → DOKS production deployment
+├── phase5/aiops             → Monitoring & automation
+└── phase5/urdu              → Urdu language support
 ```
 
 **Naming Convention**: `phase{N}/{task-type}`
@@ -385,10 +436,115 @@ Run in Claude Code CLI:
 
 ---
 
-## 🚀 Phase 4: Local Kubernetes Deployment (CURRENT)
+## 🚀 Phase 5: Advanced Cloud Deployment (CURRENT)
 
-**Current Phase**: Phase 4 - Local Kubernetes Deployment
-**Due Date**: January 4, 2026
+**Current Phase**: Phase 5 - Advanced Cloud Deployment
+**Due Date**: January 18, 2026
+**Main Branch**: `main` | **Feature Branches**: `phase5/*`
+
+### Phase 5 Overview
+
+Evolve the Todo application into a production-grade, cloud-native microservices platform:
+- **Event-Driven Architecture**: Kafka/Redpanda + Dapr pub/sub for decoupled services
+- **New Microservices**: Notification (8002), Recurring Task (8003), Audit (8004), WebSocket (8005)
+- **Advanced Features**: Priorities, tags, due dates, reminders, recurring tasks, search/filter/sort
+- **Real-time Sync**: WebSocket service for instant updates across clients
+- **Cloud Deployment**: GitHub Actions CI/CD + DigitalOcean DOKS
+- **AIOps**: Docker AI (Gordon) + monitoring + automated remediation
+- **Urdu Language Support**: RTL layout, i18n with next-intl (+100 bonus points)
+
+### Key Documents
+
+| Document | Purpose |
+|----------|---------|
+| `constitution-prompt-phase-5.md` | Project principles and cloud-native standards |
+| `spec-prompt-phase-5.md` | User stories and acceptance criteria |
+| `plan-prompt-phase-5.md` | Implementation plan and architecture |
+
+### Phase 5 Specialized Agents
+
+| Agent | When to Use |
+|-------|-------------|
+| `@event-driven-builder` | Kafka, Dapr pub/sub, event streaming |
+| `@microservice-builder` | New microservices (Notification, Recurring, Audit, WebSocket) |
+| `@cloud-deployer` | DOKS deployment, GitHub Actions CI/CD |
+| `@aiops-operator` | Docker AI (Gordon), monitoring, automation |
+
+### Phase 5 Skills
+
+| Skill | Purpose |
+|-------|---------|
+| `dapr-integration` | Dapr pub/sub, state, service invocation |
+| `kafka-setup` | Strimzi Kafka, Redpanda Cloud |
+| `github-actions-cicd` | CI/CD pipelines for staging and production |
+| `cloud-k8s-deployment` | DigitalOcean DOKS deployment |
+| `advanced-features` | Priorities, tags, due dates, reminders |
+| `websocket-realtime` | WebSocket real-time sync service |
+| `urdu-language-support` | Urdu i18n, RTL layout support |
+
+### Phase 5 Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    DOKS KUBERNETES CLUSTER                                  │
+│                                                                             │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐        │
+│  │  Frontend   │  │   Backend   │  │ MCP Server  │  │  AI Agent   │        │
+│  │  (Next.js)  │  │  (FastAPI)  │  │  (FastMCP)  │  │  (Gemini)   │        │
+│  │   :3000     │  │   :8000     │  │   :8001     │  │             │        │
+│  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘  └─────────────┘        │
+│         │                │                │                                 │
+│  ┌──────▼────────────────▼────────────────▼──────────────────────────────┐ │
+│  │              EVENT BUS (Kafka/Redpanda + Dapr)                        │ │
+│  │  Topics: task-events, reminder-events, audit-events, task-updates     │ │
+│  └───────────────────────────────────────────────────────────────────────┘ │
+│         │                │                │                │               │
+│  ┌──────▼──────┐  ┌──────▼──────┐  ┌──────▼──────┐  ┌──────▼──────┐       │
+│  │Notification │  │  Recurring  │  │   Audit     │  │  WebSocket  │       │
+│  │  Service    │  │   Service   │  │  Service    │  │  Service    │       │
+│  │   :8002     │  │   :8003     │  │   :8004     │  │   :8005     │       │
+│  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘       │
+│                                                                             │
+│  Infrastructure: Ingress (NGINX), cert-manager, HPA, NetworkPolicies       │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Phase 5 Implementation Steps
+
+1. **Dapr Integration**: Configure pub/sub, state, service invocation
+2. **Kafka Setup**: Deploy Strimzi Kafka or configure Redpanda Cloud
+3. **Advanced Features**: Add priorities, tags, due dates, reminders
+4. **New Microservices**: Build Notification, Recurring, Audit, WebSocket services
+5. **Event-Driven Backend**: Publish/subscribe to task events
+6. **WebSocket Service**: Real-time sync across clients
+7. **GitHub Actions CI/CD**: Automated testing and deployment
+8. **Cloud Deployment**: Deploy to DigitalOcean DOKS
+9. **AIOps**: Configure monitoring, alerting, automation
+10. **Urdu Support**: Add i18n with RTL layout
+
+### Quick Commands
+
+```bash
+# Start Dapr sidecar with Kafka
+dapr run --app-id backend --app-port 8000 --dapr-http-port 3500 -- uvicorn src.main:app
+
+# Deploy Strimzi Kafka
+kubectl apply -f k8s/kafka/strimzi-cluster.yaml
+
+# Run GitHub Actions locally
+act -j build
+
+# Deploy to DOKS
+doctl kubernetes cluster kubeconfig save todo-production
+helm upgrade --install evolution-todo ./helm/evolution-todo -f values-production.yaml
+```
+
+---
+
+## ☸️ Phase 4: Local Kubernetes Deployment (COMPLETED)
+
+**Status**: ✅ COMPLETED
+**Completed Date**: December 30, 2025
 **Main Branch**: `main` | **Feature Branches**: `phase4/*`
 
 ### Phase 4 Overview
@@ -818,7 +974,11 @@ Wait for consent; never auto-create ADRs. Group related decisions (stacks, authe
     │   ├── chatbot-ui-builder.md   # Phase 3
     │   ├── docker-containerization-builder.md  # Phase 4
     │   ├── devops-kubernetes-builder.md        # Phase 4
-    │   └── aiops-helm-builder.md               # Phase 4
+    │   ├── aiops-helm-builder.md               # Phase 4
+    │   ├── event-driven-builder.md             # Phase 5 (Kafka, Dapr)
+    │   ├── microservice-builder.md             # Phase 5 (New services)
+    │   ├── cloud-deployer.md                   # Phase 5 (DOKS, CI/CD)
+    │   └── aiops-operator.md                   # Phase 5 (AIOps)
     ├── skills/                     # Reusable skills
     │   ├── fastapi-setup/          # Phase 2
     │   ├── nextjs-setup/           # Phase 2
@@ -827,15 +987,21 @@ Wait for consent; never auto-create ADRs. Group related decisions (stacks, authe
     │   ├── better-auth-integration/ # Phase 2
     │   ├── openai-agents-setup/    # Phase 3
     │   ├── fastmcp-server-setup/   # Phase 3
-    │   ├── chat-api-integration/   # Phase 3
-    │   ├── openai-chatkit-setup/   # Phase 3
-    │   ├── streaming-sse-setup/    # Phase 3
+    │   ├── chatkit-frontend/       # Phase 3 (consolidated)
+    │   ├── chatkit-backend/        # Phase 3 (consolidated)
     │   ├── conversation-management/ # Phase 3
     │   ├── docker-setup/           # Phase 4
     │   ├── kubernetes-deployment/  # Phase 4
     │   ├── helm-charts-setup/      # Phase 4
     │   ├── minikube-setup/         # Phase 4
-    │   └── aiops-gordon/           # Phase 4
+    │   ├── aiops-gordon/           # Phase 4
+    │   ├── dapr-integration/       # Phase 5 (pub/sub, state)
+    │   ├── kafka-setup/            # Phase 5 (Strimzi, Redpanda)
+    │   ├── github-actions-cicd/    # Phase 5 (CI/CD pipelines)
+    │   ├── cloud-k8s-deployment/   # Phase 5 (DOKS)
+    │   ├── advanced-features/      # Phase 5 (priorities, tags)
+    │   ├── websocket-realtime/     # Phase 5 (real-time sync)
+    │   └── urdu-language-support/  # Phase 5 (i18n, RTL)
     └── commands/                   # Slash commands
 ```
 
@@ -852,6 +1018,7 @@ Wait for consent; never auto-create ADRs. Group related decisions (stacks, authe
 ## Code Standards
 See `.specify/memory/constitution.md` for code quality, testing, performance, security, and architecture principles.
 
-See `constitution-prompt-phase-4.md` for Phase 4 specific standards (Kubernetes deployment).
+See `constitution-prompt-phase-5.md` for Phase 5 specific standards (cloud-native microservices).
+See `constitution-prompt-phase-4.md` for Phase 4 reference (Kubernetes deployment).
 See `constitution-prompt-phase-3.md` for Phase 3 reference (AI chatbot).
 See `prompts/constitution-prompt-phase-2.md` for Phase 2 reference (full-stack web app).

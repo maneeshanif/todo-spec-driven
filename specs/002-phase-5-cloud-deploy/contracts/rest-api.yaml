@@ -1,0 +1,856 @@
+openapi: 3.1.0
+info:
+  title: Evolution of Todo - Phase 5 API
+  description: |
+    Advanced Cloud Deployment API additions for Phase 5.
+    Extends the existing Phase 2/3/4 API with advanced task features,
+    tag management, reminders, and event-driven endpoints.
+  version: 5.0.0
+  contact:
+    name: Evolution of Todo
+    url: https://github.com/evolution-of-todo
+
+servers:
+  - url: http://localhost:8000/api/v1
+    description: Local development
+  - url: https://api.evolution-todo.cloud/api/v1
+    description: Production (DOKS)
+
+tags:
+  - name: Tasks
+    description: Task management with advanced features
+  - name: Tags
+    description: Tag/category management
+  - name: Reminders
+    description: Reminder scheduling
+
+paths:
+  # ============================================
+  # TASK ENDPOINTS (Updated)
+  # ============================================
+
+  /tasks:
+    get:
+      tags:
+        - Tasks
+      summary: List tasks with filtering, sorting, and search
+      description: |
+        Returns paginated list of tasks for authenticated user.
+        Supports filtering by priority, tags, due date, and completion status.
+        Supports sorting by various fields.
+        Supports full-text search across title and description.
+      operationId: listTasks
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: completed
+          in: query
+          schema:
+            type: boolean
+          description: Filter by completion status
+        - name: priority
+          in: query
+          schema:
+            $ref: '#/components/schemas/Priority'
+          description: Filter by priority level
+        - name: tags
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+          style: form
+          explode: true
+          description: Filter by tag names (OR logic)
+        - name: due_before
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Filter tasks due before this date
+        - name: due_after
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Filter tasks due after this date
+        - name: search
+          in: query
+          schema:
+            type: string
+            maxLength: 100
+          description: Full-text search in title and description
+        - name: sort_by
+          in: query
+          schema:
+            type: string
+            enum: [created_at, due_date, priority, title, updated_at]
+            default: created_at
+          description: Field to sort by
+        - name: sort_order
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+          description: Sort direction
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+          description: Page number
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          description: Items per page
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      tasks:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/TaskResponse'
+                      total:
+                        type: integer
+                      page:
+                        type: integer
+                      per_page:
+                        type: integer
+                      total_pages:
+                        type: integer
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      tags:
+        - Tasks
+      summary: Create a new task
+      description: |
+        Creates a new task with optional advanced features:
+        priority, due date, tags, and recurring pattern.
+        Publishes task.created event to Kafka.
+      operationId: createTask
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskCreate'
+      responses:
+        '201':
+          description: Task created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/TaskResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /tasks/{task_id}:
+    get:
+      tags:
+        - Tasks
+      summary: Get a single task
+      operationId: getTask
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: task_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/TaskResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags:
+        - Tasks
+      summary: Update a task
+      description: |
+        Updates task fields. Publishes task.updated event.
+        If completed changes to true, publishes task.completed event.
+      operationId: updateTask
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: task_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskUpdate'
+      responses:
+        '200':
+          description: Task updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/TaskResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags:
+        - Tasks
+      summary: Delete a task
+      description: Deletes task and its reminders. Publishes task.deleted event.
+      operationId: deleteTask
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: task_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Task deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /tasks/{task_id}/complete:
+    post:
+      tags:
+        - Tasks
+      summary: Mark task as complete
+      description: |
+        Marks task as complete. Publishes task.completed event.
+        If task is recurring, Recurring Task Service creates next occurrence.
+      operationId: completeTask
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: task_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Task completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/TaskResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /tasks/{task_id}/tags:
+    post:
+      tags:
+        - Tasks
+      summary: Add tags to a task
+      operationId: addTaskTags
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: task_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - tag_ids
+              properties:
+                tag_ids:
+                  type: array
+                  items:
+                    type: integer
+      responses:
+        '200':
+          description: Tags added
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/TaskResponse'
+
+    delete:
+      tags:
+        - Tasks
+      summary: Remove tags from a task
+      operationId: removeTaskTags
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: task_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - tag_ids
+              properties:
+                tag_ids:
+                  type: array
+                  items:
+                    type: integer
+      responses:
+        '200':
+          description: Tags removed
+
+  # ============================================
+  # TAG ENDPOINTS (New)
+  # ============================================
+
+  /tags:
+    get:
+      tags:
+        - Tags
+      summary: List all tags for user
+      operationId: listTags
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TagResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      tags:
+        - Tags
+      summary: Create a new tag
+      operationId: createTag
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TagCreate'
+      responses:
+        '201':
+          description: Tag created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/TagResponse'
+        '400':
+          description: Tag already exists or limit reached
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /tags/{tag_id}:
+    put:
+      tags:
+        - Tags
+      summary: Update a tag
+      operationId: updateTag
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: tag_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TagUpdate'
+      responses:
+        '200':
+          description: Tag updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/TagResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags:
+        - Tags
+      summary: Delete a tag
+      description: Removes tag from all tasks and deletes it
+      operationId: deleteTag
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: tag_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Tag deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ============================================
+  # REMINDER ENDPOINTS (New)
+  # ============================================
+
+  /tasks/{task_id}/reminder:
+    post:
+      tags:
+        - Reminders
+      summary: Schedule a reminder for a task
+      description: |
+        Schedules a reminder using Dapr Jobs API.
+        If remind_at is in the past, fires immediately.
+      operationId: scheduleReminder
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: task_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReminderCreate'
+      responses:
+        '201':
+          description: Reminder scheduled
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/ReminderResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    get:
+      tags:
+        - Reminders
+      summary: Get reminder for a task
+      operationId: getTaskReminder
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: task_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Reminder details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/ReminderResponse'
+        '404':
+          description: No reminder found
+
+    delete:
+      tags:
+        - Reminders
+      summary: Cancel a reminder
+      description: Cancels the Dapr Job and deletes the reminder
+      operationId: cancelReminder
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: task_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Reminder cancelled
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /reminders:
+    get:
+      tags:
+        - Reminders
+      summary: List all pending reminders for user
+      operationId: listReminders
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, sent, failed]
+          description: Filter by reminder status
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ReminderResponse'
+
+  # ============================================
+  # INTERNAL ENDPOINTS (Dapr Callbacks)
+  # ============================================
+
+  /internal/dapr/reminder-callback:
+    post:
+      tags:
+        - Internal
+      summary: Dapr Jobs callback for reminder
+      description: |
+        Called by Dapr Jobs API when reminder is due.
+        Publishes reminder.due event to reminders topic.
+        Internal endpoint - not exposed via Ingress.
+      operationId: reminderCallback
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reminder_id:
+                  type: integer
+                task_id:
+                  type: integer
+                user_id:
+                  type: string
+      responses:
+        '200':
+          description: Callback processed
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Priority:
+      type: string
+      enum: [high, medium, low]
+      default: medium
+
+    RecurringPattern:
+      type: string
+      enum: [daily, weekly, monthly]
+      nullable: true
+
+    TaskCreate:
+      type: object
+      required:
+        - title
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        description:
+          type: string
+          maxLength: 1000
+        priority:
+          $ref: '#/components/schemas/Priority'
+        due_date:
+          type: string
+          format: date-time
+          nullable: true
+        recurring_pattern:
+          $ref: '#/components/schemas/RecurringPattern'
+        tag_ids:
+          type: array
+          items:
+            type: integer
+          description: Tag IDs to attach
+
+    TaskUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        description:
+          type: string
+          maxLength: 1000
+        completed:
+          type: boolean
+        priority:
+          $ref: '#/components/schemas/Priority'
+        due_date:
+          type: string
+          format: date-time
+          nullable: true
+        recurring_pattern:
+          $ref: '#/components/schemas/RecurringPattern'
+
+    TaskResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        completed:
+          type: boolean
+        priority:
+          $ref: '#/components/schemas/Priority'
+        due_date:
+          type: string
+          format: date-time
+          nullable: true
+        reminder_at:
+          type: string
+          format: date-time
+          nullable: true
+        recurring_pattern:
+          $ref: '#/components/schemas/RecurringPattern'
+        next_occurrence:
+          type: string
+          format: date-time
+          nullable: true
+        is_overdue:
+          type: boolean
+          description: Computed field - true if due_date is in past
+        tags:
+          type: array
+          items:
+            $ref: '#/components/schemas/TagResponse'
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    TagCreate:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 50
+        color:
+          type: string
+          pattern: '^#[0-9A-Fa-f]{6}$'
+          default: '#808080'
+
+    TagUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 50
+        color:
+          type: string
+          pattern: '^#[0-9A-Fa-f]{6}$'
+
+    TagResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        color:
+          type: string
+        task_count:
+          type: integer
+          description: Number of tasks with this tag
+        created_at:
+          type: string
+          format: date-time
+
+    ReminderCreate:
+      type: object
+      required:
+        - remind_at
+      properties:
+        remind_at:
+          type: string
+          format: date-time
+          description: When to send the reminder
+
+    ReminderResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        task_id:
+          type: integer
+        remind_at:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [pending, sent, failed]
+        sent_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+
+  responses:
+    Unauthorized:
+      description: Missing or invalid authentication token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error:
+              code: UNAUTHORIZED
+              message: Invalid or missing authentication token
+
+    BadRequest:
+      description: Invalid request parameters
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error:
+              code: NOT_FOUND
+              message: Resource not found
