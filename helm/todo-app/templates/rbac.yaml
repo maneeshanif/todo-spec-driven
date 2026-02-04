@@ -1,0 +1,119 @@
+{{- if .Values.rbac.create }}
+---
+# Role for basic pod and service access within namespace
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "todo-app.fullname" . }}-role
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "todo-app.labels" . | nindent 4 }}
+rules:
+  # Allow reading pods and services for health checks and service discovery
+  - apiGroups: [""]
+    resources: ["pods", "services", "endpoints"]
+    verbs: ["get", "list", "watch"]
+  # Allow reading configmaps and secrets for configuration
+  - apiGroups: [""]
+    resources: ["configmaps", "secrets"]
+    verbs: ["get", "list"]
+  # Allow creating and reading events
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["create", "list"]
+{{- end }}
+---
+{{- if .Values.rbac.create }}
+# RoleBinding to bind role to service account
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "todo-app.fullname" . }}-rolebinding
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "todo-app.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ include "todo-app.fullname" . }}-role
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "todo-app.serviceAccountName" . }}
+    namespace: {{ .Values.global.namespace }}
+{{- end }}
+---
+{{- if and .Values.rbac.create .Values.rbac.daprRoles }}
+---
+# Dapr-specific Role for Pub/Sub and State access
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "todo-app.fullname" . }}-dapr-role
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app.kubernetes.io/component: dapr
+    {{- include "todo-app.labels" . | nindent 4 }}
+rules:
+  # Allow Dapr sidecar to access secrets
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get"]
+  # Allow Dapr to read and update state
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "list", "watch"]
+{{- end }}
+---
+{{- if and .Values.rbac.create .Values.rbac.daprRoles }}
+# RoleBinding for Dapr components
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "todo-app.fullname" . }}-dapr-rolebinding
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app.kubernetes.io/component: dapr
+    {{- include "todo-app.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ include "todo-app.fullname" . }}-dapr-role
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "todo-app.fullname" . }}-dapr
+    namespace: {{ .Values.global.namespace }}
+{{- end }}
+---
+{{- if and .Values.rbac.create .Values.rbac.clusterAdmin }}
+---
+# ClusterRole for cross-namespace access (optional - use with caution)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "todo-app.fullname" . }}-clusterrole
+  labels:
+    {{- include "todo-app.labels" . | nindent 4 }}
+rules:
+  # Allow reading nodes for node affinity decisions
+  - apiGroups: [""]
+    resources: ["nodes"]
+    verbs: ["get", "list", "watch"]
+{{- end }}
+---
+{{- if and .Values.rbac.create .Values.rbac.clusterAdmin }}
+# ClusterRoleBinding for cluster-wide access
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "todo-app.fullname" . }}-clusterrolebinding
+  labels:
+    {{- include "todo-app.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "todo-app.fullname" . }}-clusterrole
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "todo-app.fullname" . }}-backend
+    namespace: {{ .Values.global.namespace }}
+{{- end }}

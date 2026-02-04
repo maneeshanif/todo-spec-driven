@@ -1,0 +1,223 @@
+{{- if .Values.frontend.autoscaling.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "todo-app.fullname" . }}-frontend
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "todo-app.frontendLabels" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "todo-app.fullname" . }}-frontend
+  minReplicas: {{ .Values.frontend.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.frontend.autoscaling.maxReplicas }}
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: {{ .Values.frontend.autoscaling.targetCPUUtilizationPercentage }}
+  {{- if .Values.frontend.autoscaling.targetMemoryUtilizationPercentage }}
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: {{ .Values.frontend.autoscaling.targetMemoryUtilizationPercentage }}
+  {{- end }}
+{{- end }}
+---
+{{- if .Values.backend.autoscaling.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "todo-app.fullname" . }}-backend
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "todo-app.backendLabels" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "todo-app.fullname" . }}-backend
+  minReplicas: {{ .Values.backend.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.backend.autoscaling.maxReplicas }}
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: {{ .Values.backend.autoscaling.targetCPUUtilizationPercentage }}
+  {{- if .Values.backend.autoscaling.targetMemoryUtilizationPercentage }}
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: {{ .Values.backend.autoscaling.targetMemoryUtilizationPercentage }}
+  {{- end }}
+{{- end }}
+---
+{{- if .Values.notificationService.autoscaling.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "todo-app.fullname" . }}-notification
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "todo-app.notificationLabels" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "todo-app.fullname" . }}-notification
+  minReplicas: {{ .Values.notificationService.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.notificationService.autoscaling.maxReplicas }}
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: {{ .Values.notificationService.autoscaling.targetCPUUtilizationPercentage }}
+  {{- if .Values.notificationService.autoscaling.targetMemoryUtilizationPercentage }}
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: {{ .Values.notificationService.autoscaling.targetMemoryUtilizationPercentage }}
+  {{- end }}
+{{- end }}
+---
+{{- if .Values.recurringTaskService.autoscaling.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "todo-app.fullname" . }}-recurring-task
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "todo-app.recurringTaskLabels" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "todo-app.fullname" . }}-recurring-task
+  minReplicas: {{ .Values.recurringTaskService.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.recurringTaskService.autoscaling.maxReplicas }}
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: {{ .Values.recurringTaskService.autoscaling.targetCPUUtilizationPercentage }}
+  {{- if .Values.recurringTaskService.autoscaling.targetMemoryUtilizationPercentage }}
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: {{ .Values.recurringTaskService.autoscaling.targetMemoryUtilizationPercentage }}
+  {{- end }}
+{{- end }}
+---
+{{- if .Values.auditService.autoscaling.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "todo-app.fullname" . }}-audit
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "todo-app.auditLabels" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "todo-app.fullname" . }}-audit
+  minReplicas: {{ .Values.auditService.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.auditService.autoscaling.maxReplicas }}
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: {{ .Values.auditService.autoscaling.targetCPUUtilizationPercentage }}
+  {{- if .Values.auditService.autoscaling.targetMemoryUtilizationPercentage }}
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: {{ .Values.auditService.autoscaling.targetMemoryUtilizationPercentage }}
+  {{- end }}
+{{- end }}
+---
+{{- if .Values.websocketService.autoscaling.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "todo-app.fullname" . }}-websocket
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "todo-app.websocketLabels" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "todo-app.fullname" . }}-websocket
+  minReplicas: {{ .Values.websocketService.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.websocketService.autoscaling.maxReplicas }}
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: {{ .Values.websocketService.autoscaling.targetCPUUtilizationPercentage }}
+  {{- if .Values.websocketService.autoscaling.targetMemoryUtilizationPercentage }}
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: {{ .Values.websocketService.autoscaling.targetMemoryUtilizationPercentage }}
+  {{- end }}
+{{- end }}
+---
+{{- if .Values.mcpServer.autoscaling.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "todo-app.fullname" . }}-mcp-server
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "todo-app.mcpLabels" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "todo-app.fullname" . }}-mcp-server
+  minReplicas: {{ .Values.mcpServer.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.mcpServer.autoscaling.maxReplicas }}
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: {{ .Values.mcpServer.autoscaling.targetCPUUtilizationPercentage }}
+  {{- if .Values.mcpServer.autoscaling.targetMemoryUtilizationPercentage }}
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: {{ .Values.mcpServer.autoscaling.targetMemoryUtilizationPercentage }}
+  {{- end }}
+{{- end }}

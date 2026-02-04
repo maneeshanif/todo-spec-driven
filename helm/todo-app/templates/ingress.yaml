@@ -39,6 +39,15 @@ spec:
     - host: {{ .host | quote }}
       http:
         paths:
+          # Backend API routes
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "todo-app.fullname" $ }}-backend
+                port:
+                  number: {{ $.Values.backend.service.port }}
+          # Frontend routes (must be last to catch all other paths)
           {{- range .paths }}
           - path: {{ .path }}
             pathType: {{ .pathType }}

@@ -7,12 +7,134 @@ from src.core.database import get_session
 from src.core.auth_deps import get_current_user
 from src.core.errors import NotFoundError
 from src.schemas.task import TaskPublic, TaskListResponse, TaskCreate, TaskUpdate
+from src.schemas.events import (
+    TaskEvent, TaskEventType, TaskEventData,
+    TaskUpdateEvent, TaskUpdateAction
+)
 from src.services.task_service import TaskService
 from src.services.recurring_service import RecurringService
+from src.services.dapr_client import DaprClient
 from src.core.logging import get_logger
 from src.utils.caching import generate_etag, check_etag_match, set_cache_headers, no_cache
 
 logger = get_logger(__name__)
+
+# Dapr pub/sub component name
+PUBSUB_NAME = "pubsub-kafka"
+
+
+async def _extract_task_data(task) -> TaskEventData:
+    """Extract task data from Task model for event payload.
+
+    Args:
+        task: Task model instance
+
+    Returns:
+        TaskEventData with task state
+    """
+    # Extract tags from relationships
+    tags = []
+    if hasattr(task, 'tags') and task.tags:
+        tags = [tag.name for tag in task.tags]
+
+    return TaskEventData(
+        title=task.title,
+        description=task.description,
+        completed=task.completed,
+        priority=task.priority,
+        due_date=task.due_date,
+        tags=tags,
+        recurring_pattern=task.recurrence_pattern,
+        next_occurrence=task.next_occurrence
+    )
+
+
+async def _publish_task_event(
+    event_type: TaskEventType,
+    task_id: int,
+    user_id: str,
+    task
+) -> None:
+    """Publish task lifecycle event to task-events topic.
+
+    Args:
+        event_type: Type of event (CREATED, UPDATED, COMPLETED, DELETED)
+        task_id: Task database ID
+        user_id: User who owns the task
+        task: Task model instance (or None for deleted)
+    """
+    try:
+        task_data = await _extract_task_data(task) if task else TaskEventData(
+            title="", completed=False, priority="medium"
+        )
+
+        event = TaskEvent(
+            event_type=event_type,
+            task_id=task_id,
+            user_id=user_id,
+            task_data=task_data
+        )
+
+        await DaprClient.publish_event(
+            pubsub_name=PUBSUB_NAME,
+            topic="task-events",
+            data=event.model_dump(mode='json')
+        )
+        logger.debug(
+            f"Published {event_type} event for task {task_id}",
+            extra={"task_id": task_id, "user_id": user_id, "event_type": event_type}
+        )
+    except Exception as e:
+        # Log error but don't fail the request
+        logger.error(
+            f"Failed to publish task event: {e}",
+            extra={"task_id": task_id, "user_id": user_id, "event_type": event_type},
+            exc_info=True
+        )
+
+
+async def _publish_task_update(
+    task_id: int,
+    user_id: str,
+    action: TaskUpdateAction,
+    changes: dict,
+    source_client: str = "api"
+) -> None:
+    """Publish task update event to task-updates topic for real-time sync.
+
+    Args:
+        task_id: Task database ID
+        user_id: User who owns the task
+        action: Action that triggered the update
+        changes: Changed fields for optimistic UI updates
+        source_client: Client ID that initiated the change
+    """
+    try:
+        event = TaskUpdateEvent(
+            event_type="task.sync",
+            task_id=task_id,
+            user_id=user_id,
+            action=action,
+            changes=changes,
+            source_client=source_client
+        )
+
+        await DaprClient.publish_event(
+            pubsub_name=PUBSUB_NAME,
+            topic="task-updates",
+            data=event.model_dump(mode='json')
+        )
+        logger.debug(
+            f"Published task.sync event for task {task_id}",
+            extra={"task_id": task_id, "user_id": user_id, "action": action}
+        )
+    except Exception as e:
+        # Log error but don't fail the request
+        logger.error(
+            f"Failed to publish task update: {e}",
+            extra={"task_id": task_id, "user_id": user_id},
+            exc_info=True
+        )
 
 router = APIRouter(prefix="/tasks", tags=["Tasks"])
 
@@ -149,6 +271,26 @@ async def create_task(
         recurrence_data=task_data.recurrence_data
     )
 
+    # Publish events asynchronously
+    await _publish_task_event(
+        event_type=TaskEventType.CREATED,
+        task_id=task.id,
+        user_id=current_user['id'],
+        task=task
+    )
+    await _publish_task_update(
+        task_id=task.id,
+        user_id=current_user['id'],
+        action=TaskUpdateAction.CREATED,
+        changes={
+            "title": task.title,
+            "description": task.description,
+            "priority": task.priority,
+            "due_date": task.due_date.isoformat() if task.due_date else None,
+            "completed": task.completed
+        }
+    )
+
     # Disable caching for mutations
     no_cache(response)
 
@@ -236,6 +378,19 @@ async def update_task(
     if not task:
         raise NotFoundError("Task", f"Task with ID {task_id} not found")
 
+    # Track changes for event payload
+    changes = {}
+    if task_data.title is not None:
+        changes["title"] = task_data.title
+    if task_data.description is not None:
+        changes["description"] = task_data.description
+    if task_data.completed is not None:
+        changes["completed"] = task_data.completed
+    if task_data.priority is not None:
+        changes["priority"] = task_data.priority
+    if task_data.due_date is not None:
+        changes["due_date"] = task_data.due_date.isoformat() if task_data.due_date else None
+
     updated_task = await TaskService.update_task(
         session=session,
         task=task,
@@ -249,6 +404,20 @@ async def update_task(
         is_recurring=task_data.is_recurring,
         recurrence_pattern=task_data.recurrence_pattern,
         recurrence_data=task_data.recurrence_data
+    )
+
+    # Publish events asynchronously
+    await _publish_task_event(
+        event_type=TaskEventType.UPDATED,
+        task_id=task_id,
+        user_id=current_user['id'],
+        task=updated_task
+    )
+    await _publish_task_update(
+        task_id=task_id,
+        user_id=current_user['id'],
+        action=TaskUpdateAction.UPDATED,
+        changes=changes
     )
 
     # Disable caching for mutations
@@ -284,12 +453,88 @@ async def delete_task(
     if not task:
         raise NotFoundError("Task", f"Task with ID {task_id} not found")
 
+    # Publish events before deletion
+    await _publish_task_event(
+        event_type=TaskEventType.DELETED,
+        task_id=task_id,
+        user_id=current_user['id'],
+        task=task
+    )
+    await _publish_task_update(
+        task_id=task_id,
+        user_id=current_user['id'],
+        action=TaskUpdateAction.DELETED,
+        changes={}
+    )
+
     await TaskService.delete_task(session=session, task=task)
 
     # Disable caching for mutations
     no_cache(response)
 
     return None
+
+
+@router.patch(
+    "/{task_id}/complete",
+    response_model=TaskPublic,
+    summary="Mark a task as complete",
+    description="Mark a task as completed. Publishes task.completed event."
+)
+async def complete_task(
+    task_id: int,
+    response: Response,
+    current_user: dict = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session)
+):
+    """
+    Mark a task as completed.
+
+    Returns the updated task. Returns 404 if task not found or not owned by current user.
+
+    Events published:
+    - task-events: task.completed (for audit, recurring, WebSocket consumption)
+    - task-updates: task.sync with action=completed (for real-time sync)
+    """
+    task = await TaskService.get_task_by_id(
+        session=session,
+        task_id=task_id,
+        user_id=current_user['id']
+    )
+
+    if not task:
+        raise NotFoundError("Task", f"Task with ID {task_id} not found")
+
+    # Check if already completed
+    if task.completed:
+        # Already completed, just return the task
+        return TaskPublic.model_validate(task)
+
+    # Mark as completed
+    updated_task = await TaskService.update_task(
+        session=session,
+        task=task,
+        completed=True
+    )
+
+    # Publish events
+    await _publish_task_event(
+        event_type=TaskEventType.COMPLETED,
+        task_id=task_id,
+        user_id=current_user['id'],
+        task=updated_task
+    )
+    await _publish_task_update(
+        task_id=task_id,
+        user_id=current_user['id'],
+        action=TaskUpdateAction.COMPLETED,
+        changes={"completed": True}
+    )
+
+    # Disable caching for mutations
+    no_cache(response)
+
+    return TaskPublic.model_validate(updated_task)
 
 
 @router.get(

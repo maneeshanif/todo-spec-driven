@@ -1,0 +1,5 @@
+# GitHub Actions workflows directory for Phase 5 CI/CD
+# This directory will contain:
+# - ci.yaml: Test and lint workflows
+# - build.yaml: Docker image build workflows
+# - deploy.yaml: Cloud deployment workflows

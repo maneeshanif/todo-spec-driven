@@ -1,0 +1,27 @@
+# Active Port Forwards - Local Kubernetes Cluster
+# Date: January 2, 2026
+
+The following port forwards are currently active:
+
+PID     Service                 Local Port  Target Port  Namespace
+----    --------------------    ----------  -----------  ---------
+22892   K8s Dashboard           8443        80           kubernetes-dashboard
+24350   Frontend (Next.js)      3000        80           todo-app
+24351   Backend (FastAPI)       8000        8000         todo-app
+24352   Adminer (DB UI)         8080        8080         todo-app
+24354   Grafana                 3001        80           monitoring
+24355   Prometheus              9090        9090         monitoring
+
+To view running port forwards:
+  ps aux | grep "kubectl port-forward" | grep -v grep
+
+To kill all port forwards:
+  pkill -f "kubectl port-forward"
+
+To restart all port forwards:
+  kubectl port-forward -n todo-app service/evolution-todo-todo-app-frontend 3000:80 &
+  kubectl port-forward -n todo-app service/evolution-todo-todo-app-backend 8000:8000 &
+  kubectl port-forward -n todo-app service/adminer 8080:8080 &
+  kubectl port-forward -n kubernetes-dashboard service/kubernetes-dashboard 8443:80 &
+  kubectl port-forward -n monitoring service/monitoring-grafana 3001:80 &
+  kubectl port-forward -n monitoring service/monitoring-kube-prometheus-prometheus 9090:9090 &

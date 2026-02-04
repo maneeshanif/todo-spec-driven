@@ -116,21 +116,21 @@ mcpServer:
   resources:
     requests:
       cpu: 100m
-      memory: 64Mi
+      memory: 256Mi
     limits:
-      cpu: 300m
-      memory: 128Mi
+      cpu: 500m
+      memory: 512Mi
 
   livenessProbe:
     path: /health
-    initialDelaySeconds: 30
+    initialDelaySeconds: 60
     periodSeconds: 10
     timeoutSeconds: 5
     failureThreshold: 3
 
   readinessProbe:
     path: /health
-    initialDelaySeconds: 5
+    initialDelaySeconds: 15
     periodSeconds: 5
     timeoutSeconds: 3
     failureThreshold: 3
@@ -139,8 +139,7 @@ mcpServer:
 ingress:
   enabled: true
   className: nginx
-  annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
+  annotations: {}
   hosts:
     - host: todo.local
       paths:
@@ -189,3 +188,484 @@ secrets:
   # Generate htpasswd: htpasswd -nb username password | base64
   basicAuthUsername: ""
   basicAuthPassword: ""
+
+# ============================================================================
+# PHASE 5: Advanced Cloud Deployment - Microservices Configuration
+# ============================================================================
+
+# Notification Service configuration (port 8002)
+notificationService:
+  enabled: true
+  replicaCount: 2
+
+  image:
+    repository: todo-notification-service
+    tag: "latest"
+    pullPolicy: IfNotPresent
+
+  service:
+    type: ClusterIP
+    port: 8002
+    targetPort: 8002
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+
+  autoscaling:
+    enabled: false
+    minReplicas: 2
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+
+  livenessProbe:
+    path: /health
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+  readinessProbe:
+    path: /health
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 3
+
+# Recurring Task Service configuration (port 8003)
+recurringTaskService:
+  enabled: true
+  replicaCount: 1
+
+  image:
+    repository: todo-recurring-task-service
+    tag: "latest"
+    pullPolicy: IfNotPresent
+
+  service:
+    type: ClusterIP
+    port: 8003
+    targetPort: 8003
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+
+  livenessProbe:
+    path: /health
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+  readinessProbe:
+    path: /health
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 3
+
+# Audit Service configuration (port 8004)
+auditService:
+  enabled: true
+  replicaCount: 1
+
+  image:
+    repository: todo-audit-service
+    tag: "latest"
+    pullPolicy: IfNotPresent
+
+  service:
+    type: ClusterIP
+    port: 8004
+    targetPort: 8004
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+
+  livenessProbe:
+    path: /health
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+  readinessProbe:
+    path: /health
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 3
+
+  # Audit log retention in days
+  auditRetentionDays: 90
+
+# WebSocket Service configuration (port 8005)
+websocketService:
+  enabled: true
+  replicaCount: 2
+
+  image:
+    repository: todo-websocket-service
+    tag: "latest"
+    pullPolicy: IfNotPresent
+
+  service:
+    type: ClusterIP
+    port: 8005
+    targetPort: 8005
+
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 512Mi
+
+  autoscaling:
+    enabled: false
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+
+  livenessProbe:
+    path: /health
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+  readinessProbe:
+    path: /health
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 3
+
+  # WebSocket ping interval in seconds
+  pingInterval: 30
+
+  # Maximum concurrent WebSocket connections per pod
+  maxConnections: 1000
+
+# ============================================================================
+# Dapr Configuration (Phase 5 - Event-Driven Architecture)
+# ============================================================================
+
+dapr:
+  enabled: false  # Enable for Phase 5 deployment
+
+  # Dapr sidecar ports
+  httpPort: 3500
+  grpcPort: 50001
+
+  # Dapr configuration name
+  config: "todo-app-config"
+
+  # State Management (PostgreSQL)
+  stateStore:
+    enabled: true
+    tableName: "dapr_state"
+    maxConnections: "10"
+    idleTimeout: "5m"
+    timeout: "5s"
+
+  # Secret Store Configuration
+  # Options: kubernetes, azure, gcp
+  secretStore:
+    type: "kubernetes"
+    azure:
+      vaultName: ""  # Set for Azure KeyVault
+    gcp:
+      projectId: ""  # Set for GCP Secret Manager
+
+  # Distributed Tracing
+  tracing:
+    enabled: true
+    samplingRate: "0.1"  # 10% of requests
+    zipkinEndpoint: "http://zipkin.istio-system.svc:9411/api/v2/spans"
+
+  # Metrics Collection
+  metrics:
+    enabled: true
+
+  # Resiliency Policies
+  resiliency:
+    enabled: true
+    policies:
+      timeout:
+        timeout: "5s"
+      retry:
+        policy: "constant"
+        duration: "500ms"
+        maxRetries: 3
+      circuitBreaker:
+        threshold: 5
+        timeout: "10s"
+        maxRetries: 3
+
+  # Pub/Sub Scopes (which services can publish/subscribe to which topics)
+  scopes:
+    backend-service:
+      - "publish:task-events"
+      - "publish:reminders"
+      - "subscribe:task-updates"
+    notification-service:
+      - "subscribe:reminders"
+      - "publish:task-updates"
+    recurring-task-service:
+      - "subscribe:task-events"
+      - "publish:task-events"
+      - "publish:task-updates"
+    audit-service:
+      - "subscribe:task-events"
+    websocket-service:
+      - "subscribe:task-updates"
+
+  # Declarative Subscriptions
+  subscriptions:
+    backend-service:
+      - topic: task-updates
+        route: /events/task-updates
+    notification-service:
+      - topic: reminders
+        route: /events/reminders
+    recurring-task-service:
+      - topic: task-events
+        route: /events/task-events
+    audit-service:
+      - topic: task-events
+        route: /events/task-events
+    websocket-service:
+      - topic: task-updates
+        route: /events/task-updates
+
+  # Feature Flags
+  features:
+    - name: "Actor.Reentrancy"
+      enabled: true
+      components:
+        - name: "actor"
+          enabled: true
+
+# ============================================================================
+# Kafka Configuration (Phase 5 - Event Streaming)
+# ============================================================================
+
+kafka:
+  enabled: false  # Enable for Phase 5 deployment
+
+  # Kafka broker addresses
+  # Local: "kafka:9092"
+  # Redpanda Cloud: "your-cluster.redpanda.cloud:9092"
+  # Confluent Cloud: "your-cluster.confluent.cloud:9092"
+  brokers: "kafka:9092"
+  port: 9092
+
+  # Authentication
+  auth:
+    enabled: false
+    type: "sasl"  # Options: sasl, none
+    saslMechanism: "PLAIN"  # Options: PLAIN, SCRAM-SHA-256, SCRAM-SHA-512
+    username: ""
+    password: ""
+
+  # TLS Configuration
+  tls:
+    enabled: false
+    caCert: ""  # Base64 encoded CA certificate
+    clientCert: ""  # Base64 encoded client certificate (for mTLS)
+    clientKey: ""  # Base64 encoded client key (for mTLS)
+
+  # Kafka Topics
+  topics:
+    taskEvents: "task-events"
+    reminders: "reminders"
+    taskUpdates: "task-updates"
+    auditEvents: "audit-events"
+
+  # Topic Configuration
+  topicConfig:
+    # Number of partitions for each topic
+    partitions:
+      taskEvents: 3
+      reminders: 3
+      taskUpdates: 3
+      auditEvents: 1
+    # Replication factor
+    replicationFactor: 1  # For local dev, use 3 for production
+    # Retention period
+    retentionMs: "604800000"  # 7 days in milliseconds
+
+# ============================================================================
+# Network Policy Configuration
+# ============================================================================
+
+networkPolicy:
+  enabled: false  # Enable for production security
+
+  # Pod CIDR for cluster
+  podCIDR: "10.0.0.0/8"
+
+  # Ingress namespace labels (adjust for your ingress controller)
+  ingressNamespaceLabels:
+    name: ingress-nginx
+
+# ============================================================================
+# RBAC Configuration
+# ============================================================================
+
+rbac:
+  create: true
+  daprRoles: true  # Enable Dapr-specific roles
+  clusterAdmin: false  # Enable only if cross-namespace access is required
+
+# Service Account Configuration
+serviceAccount:
+  create: true
+  name: ""
+  annotations: {}
+
+# ============================================================================
+# Advanced Features Configuration (Phase 5)
+# ============================================================================
+
+advancedFeatures:
+  # Task Priorities
+  priorities:
+    enabled: true
+    default: "medium"
+    options:
+      - "high"
+      - "medium"
+      - "low"
+
+  # Tags/Categories
+  tags:
+    enabled: true
+    maxPerTask: 10
+    maxPerUser: 100
+
+  # Due Dates and Reminders
+  dueDates:
+    enabled: true
+    reminderDefaults:
+      enabled: true
+      offsetHours: 1  # Remind X hours before due date
+
+  # Recurring Tasks
+  recurring:
+    enabled: true
+    patterns:
+      - "daily"
+      - "weekly"
+      - "biweekly"
+      - "monthly"
+
+  # Search, Filter, Sort
+  search:
+    enabled: true
+    type: "simple"  # Options: simple, fulltext
+
+  filter:
+    enabled: true
+    fields:
+      - "completed"
+      - "priority"
+      - "due_date"
+      - "tags"
+
+  sort:
+    enabled: true
+    fields:
+      - "created_at"
+      - "updated_at"
+      - "due_date"
+      - "priority"
+    default: "created_at"
+    direction: "desc"  # Options: asc, desc
+
+# ============================================================================
+# Observability Configuration (Phase 5)
+# ============================================================================
+
+observability:
+  # Logging
+  logging:
+    level: "info"  # Options: debug, info, warn, error
+    format: "json"  # Options: json, text
+
+  # Metrics (Prometheus)
+  metrics:
+    enabled: true
+    port: 9090
+    path: "/metrics"
+
+  # Tracing (OpenTelemetry)
+  tracing:
+    enabled: true
+    sampling: 0.1  # 10% sampling rate
+    exporter: "zipkin"  # Options: zipkin, jaeger, otel
+
+# ============================================================================
+# PostgreSQL Configuration (for local testing)
+# ============================================================================
+
+postgresql:
+  enabled: false  # Enable for local testing without external database
+  auth:
+    username: postgres
+    password: postgres
+    database: todo
+
+# ============================================================================
+# Ingress Configuration Updates for Phase 5
+# ============================================================================
+
+# Update ingress to include WebSocket service
+ingressWebSocket:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    nginx.ingress.kubernetes.io/websocket-services: "{{ include \"todo-app.fullname\" . }}-websocket"
+  hosts:
+    - host: ws.todo.example.com
+      paths:
+        - path: /ws
+          pathType: Prefix
+  tls:
+    - secretName: todo-ws-tls
+      hosts:
+        - ws.todo.example.com

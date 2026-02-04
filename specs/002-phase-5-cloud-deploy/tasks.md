@@ -28,13 +28,13 @@
 
 **Purpose**: Phase 5 project initialization and configuration
 
-- [ ] T001 Create Phase 5 branch structure and update CLAUDE.md
-- [ ] T002 [P] Create services/ directory structure for new microservices
-- [ ] T003 [P] Create dapr-components/ directory with placeholder files
-- [ ] T004 [P] Create .github/workflows/ directory structure
-- [ ] T005 [P] Update helm/todo-app/Chart.yaml for Phase 5 version
-- [ ] T006 Install Dapr SDK dependencies in backend/pyproject.toml
-- [ ] T007 [P] Install WebSocket dependencies (websockets, starlette) in backend/pyproject.toml
+- [X] T001 Create Phase 5 branch structure and update CLAUDE.md
+- [X] T002 [P] Create services/ directory structure for new microservices
+- [X] T003 [P] Create dapr-components/ directory with placeholder files
+- [X] T004 [P] Create .github/workflows/ directory structure
+- [X] T005 [P] Update helm/todo-app/Chart.yaml for Phase 5 version
+- [X] T006 Install Dapr SDK dependencies in backend/pyproject.toml
+- [X] T007 [P] Install WebSocket dependencies (websockets, starlette) in backend/pyproject.toml
 
 ---
 
@@ -46,34 +46,34 @@
 
 ### Database Schema (Required for Part A)
 
-- [ ] T008 Create Priority enum and update Task model with priority field in backend/src/models/task.py
-- [ ] T009 [P] Add due_date, reminder_at, recurring_pattern, next_occurrence fields to Task model in backend/src/models/task.py
-- [ ] T010 [P] Create Tag model in backend/src/models/tag.py
-- [ ] T011 [P] Create TaskTag junction model in backend/src/models/task_tag.py
-- [ ] T012 [P] Create Reminder model in backend/src/models/reminder.py
-- [ ] T013 [P] Create AuditLog model in backend/src/models/audit_log.py
-- [ ] T014 Create Alembic migration for Phase 5 schema in backend/alembic/versions/20251230_add_phase5_models.py (or use `alembic revision --autogenerate`)
-- [ ] T015 Run Alembic migration and verify schema changes
+- [X] T008 Create Priority enum and update Task model with priority field in backend/src/models/task.py
+- [X] T009 [P] Add due_date, reminder_at, recurring_pattern, next_occurrence fields to Task model in backend/src/models/task.py
+- [X] T010 [P] Create Tag model in backend/src/models/tag.py
+- [X] T011 [P] Create TaskTag junction model in backend/src/models/task_tag.py
+- [X] T012 [P] Create Reminder model in backend/src/models/reminder.py
+- [X] T013 [P] Create AuditLog model in backend/src/models/audit_log.py
+- [X] T014 Create Alembic migration for Phase 5 schema in backend/alembic/versions/20251230_add_phase5_models.py (or use `alembic revision --autogenerate`)
+- [X] T015 Run Alembic migration and verify schema changes
 
 ### Event Schemas (Required for Part B)
 
-- [ ] T016 [P] Create TaskEvent Pydantic schema in backend/src/schemas/events.py
-- [ ] T017 [P] Create ReminderEvent Pydantic schema in backend/src/schemas/events.py
-- [ ] T018 [P] Create TaskUpdateEvent Pydantic schema in backend/src/schemas/events.py
+- [X] T016 [P] Create TaskEvent Pydantic schema in backend/src/schemas/events.py
+- [X] T017 [P] Create ReminderEvent Pydantic schema in backend/src/schemas/events.py
+- [X] T018 [P] Create TaskUpdateEvent Pydantic schema in backend/src/schemas/events.py
 
 ### Dapr Infrastructure (Required for Part B)
 
-- [ ] T019 [P] Create Dapr Pub/Sub Kafka component in dapr-components/pubsub-kafka.yaml
-- [ ] T020 [P] Create Dapr State Store PostgreSQL component in dapr-components/statestore-postgres.yaml
-- [ ] T021 [P] Create Dapr Secrets Kubernetes component in dapr-components/secretstore-kubernetes.yaml
-- [ ] T022 [P] Create Dapr Resiliency policies in dapr-components/resiliency.yaml
-- [ ] T023 Create Dapr client wrapper service in backend/src/services/dapr_client.py
+- [X] T019 [P] Create Dapr Pub/Sub Kafka component in dapr-components/pubsub-kafka.yaml
+- [X] T020 [P] Create Dapr State Store PostgreSQL component in dapr-components/statestore-postgres.yaml
+- [X] T021 [P] Create Dapr Secrets Kubernetes component in dapr-components/secretstore-kubernetes.yaml
+- [X] T022 [P] Create Dapr Resiliency policies in dapr-components/resiliency.yaml
+- [X] T023 Create Dapr client wrapper service in backend/src/services/dapr_client.py
 
 ### Local Kafka Setup (Required for Part B)
 
-- [ ] T024 Create Strimzi Kafka namespace (`kafka`) and operator manifest in k8s/kafka/strimzi-operator.yaml
-- [ ] T025 Create Strimzi Kafka cluster manifest in k8s/kafka/kafka-cluster.yaml
-- [ ] T026 Create Kafka topics manifest (task-events, reminders, task-updates) in k8s/kafka/kafka-topics.yaml
+- [X] T024 Create Strimzi Kafka namespace (`kafka`) and operator manifest in k8s/kafka/strimzi-operator.yaml
+- [X] T025 Create Strimzi Kafka cluster manifest in k8s/kafka/kafka-cluster.yaml
+- [X] T026 Create Kafka topics manifest (task-events, reminders, task-updates) in k8s/kafka/kafka-topics.yaml
 
 **Checkpoint**: Foundation ready - user story implementation can now begin
 
@@ -87,16 +87,16 @@
 
 ### Implementation for User Story 1
 
-- [ ] T027 [US1] Create TaskCreate/TaskUpdate schemas with priority field in backend/src/schemas/task.py
-- [ ] T028 [US1] Update tasks router to handle priority in create/update in backend/src/routers/tasks.py
-- [ ] T029 [US1] Add priority filter parameter to GET /tasks endpoint in backend/src/routers/tasks.py
-- [ ] T030 [US1] Update MCP add_task tool to accept priority parameter in backend/src/mcp_server/tools/task_tools.py
-- [ ] T031 [US1] Update MCP list_tasks tool to filter by priority in backend/src/mcp_server/tools/task_tools.py
-- [ ] T032 [P] [US1] Create PrioritySelector component in frontend/components/tasks/priority-selector.tsx
-- [ ] T033 [P] [US1] Create priority indicator styles (colors/icons) in frontend/components/tasks/priority-badge.tsx
-- [ ] T034 [US1] Integrate PrioritySelector into task creation form in frontend/components/tasks/task-form.tsx
-- [ ] T035 [US1] Display priority badges in task list in frontend/components/tasks/task-item.tsx
-- [ ] T036 [US1] Add priority filter chip to task list page in frontend/app/tasks/page.tsx
+- [X] T027 [US1] Create TaskCreate/TaskUpdate schemas with priority field in backend/src/schemas/task.py
+- [X] T028 [US1] Update tasks router to handle priority in create/update in backend/src/api/routes/tasks.py
+- [X] T029 [US1] Add priority filter parameter to GET /tasks endpoint in backend/src/api/routes/tasks.py
+- [X] T030 [US1] Update MCP add_task tool to accept priority parameter in backend/src/mcp_server/tools/task_tools.py
+- [X] T031 [US1] Update MCP list_tasks tool to filter by priority in backend/src/mcp_server/tools/task_tools.py
+- [X] T032 [P] [US1] Create PrioritySelector component in frontend/components/tasks/priority-selector.tsx
+- [X] T033 [P] [US1] Create priority indicator styles (colors/icons) in frontend/components/tasks/priority-badge.tsx
+- [X] T034 [US1] Integrate PrioritySelector into task creation form in frontend/components/tasks/task-form.tsx
+- [X] T035 [US1] Display priority badges in task list in frontend/components/tasks/task-item.tsx
+- [X] T036 [US1] Add priority filter chip to task list page in frontend/app/tasks/page.tsx
 
 **Checkpoint**: User Story 1 complete - priority management works independently
 
@@ -110,18 +110,18 @@
 
 ### Implementation for User Story 2
 
-- [ ] T037 [US2] Create TagCreate/TagUpdate schemas in backend/src/schemas/tag.py
-- [ ] T038 [US2] Create tags router with CRUD endpoints in backend/src/routers/tags.py
-- [ ] T039 [US2] Add tag relationship handling to task create/update in backend/src/routers/tasks.py
-- [ ] T040 [US2] Add tags filter parameter to GET /tasks endpoint in backend/src/routers/tasks.py
-- [ ] T041 [US2] Create MCP add_tag, list_tags, remove_tag tools in backend/src/mcp_server/tools/tag_tools.py
-- [ ] T042 [US2] Update MCP add_task to accept tags parameter in backend/src/mcp_server/tools/task_tools.py
-- [ ] T043 [P] [US2] Create TagManager component with color picker in frontend/components/tasks/tag-manager.tsx
-- [ ] T044 [P] [US2] Create TagBadge display component in frontend/components/tasks/tag-badge.tsx
-- [ ] T045 [US2] Integrate TagManager into task creation form in frontend/components/tasks/task-form.tsx
-- [ ] T046 [US2] Display tags in task list items in frontend/components/tasks/task-item.tsx
-- [ ] T047 [US2] Add tag filter chips to task list page in frontend/app/tasks/page.tsx
-- [ ] T048 [US2] Create tags API module in frontend/lib/api/tags.ts
+- [X] T037 [US2] Create TagCreate/TagUpdate schemas in backend/src/schemas/tag.py
+- [X] T038 [US2] Create tags router with CRUD endpoints in backend/src/api/routes/tags.py
+- [X] T039 [US2] Add tag relationship handling to task create/update in backend/src/api/routes/tasks.py
+- [X] T040 [US2] Add tags filter parameter to GET /tasks endpoint in backend/src/api/routes/tasks.py
+- [X] T041 [US2] Create MCP add_tag, list_tags, remove_tag tools in backend/src/mcp_server/tools/tag_tools.py
+- [X] T042 [US2] Update MCP add_task to accept tags parameter in backend/src/mcp_server/tools/task_tools.py
+- [X] T043 [P] [US2] Create TagManager component with color picker in frontend/components/tasks/tag-manager.tsx
+- [X] T044 [P] [US2] Create TagBadge display component in frontend/components/tasks/tag-badge.tsx
+- [X] T045 [US2] Integrate TagManager into task creation form in frontend/components/tasks/task-form.tsx
+- [X] T046 [US2] Display tags in task list items in frontend/components/tasks/task-item.tsx
+- [X] T047 [US2] Add tag filter chips to task list page in frontend/app/tasks/page.tsx
+- [X] T048 [US2] Create tags API module in frontend/lib/api/tags.ts
 
 **Checkpoint**: User Story 2 complete - tag management works independently
 
@@ -135,17 +135,17 @@
 
 ### Implementation for User Story 3
 
-- [ ] T049 [US3] Add due_date handling to task create/update in backend/src/routers/tasks.py
-- [ ] T050 [US3] Create reminders router in backend/src/routers/reminders.py
-- [ ] T051 [US3] Create reminder service for scheduling Dapr Jobs in backend/src/services/reminder_service.py
-- [ ] T052 [US3] Add Dapr Jobs API callback endpoint for reminders in backend/src/routers/dapr_callbacks.py
-- [ ] T053 [US3] Create MCP schedule_reminder tool in backend/src/mcp_server/tools/reminder_tools.py
-- [ ] T054 [US3] Add due_before/due_after filter to GET /tasks in backend/src/routers/tasks.py
-- [ ] T055 [P] [US3] Create DueDatePicker component in frontend/components/tasks/due-date-picker.tsx
-- [ ] T056 [P] [US3] Create ReminderScheduler component in frontend/components/tasks/reminder-scheduler.tsx
-- [ ] T057 [US3] Integrate due date and reminder into task form in frontend/components/tasks/task-form.tsx
-- [ ] T058 [US3] Display due date and overdue indicator in task list in frontend/components/tasks/task-item.tsx
-- [ ] T059 [US3] Add "due this week" and "due today" quick filters in frontend/app/tasks/page.tsx
+- [X] T049 [US3] Add due_date handling to task create/update in backend/src/api/routes/tasks.py
+- [X] T050 [US3] Create reminders router in backend/src/api/routes/reminders.py
+- [X] T051 [US3] Create reminder service for scheduling Dapr Jobs in backend/src/services/reminder_service.py
+- [X] T052 [US3] Add Dapr Jobs API callback endpoint for reminders in backend/src/api/routes/dapr_callbacks.py
+- [X] T053 [US3] Create MCP schedule_reminder tool in backend/src/mcp_server/tools/reminder_tools.py
+- [X] T054 [US3] Add due_before/due_after filter to GET /tasks in backend/src/api/routes/tasks.py
+- [X] T055 [P] [US3] Create DueDatePicker component in frontend/components/tasks/due-date-picker.tsx
+- [X] T056 [P] [US3] Create ReminderScheduler component in frontend/components/tasks/reminder-scheduler.tsx
+- [X] T057 [US3] Integrate due date and reminder into task form in frontend/components/tasks/task-form.tsx
+- [X] T058 [US3] Display due date and overdue indicator in task list in frontend/components/tasks/task-item.tsx
+- [X] T059 [US3] Add "due this week" and "due today" quick filters in frontend/app/tasks/page.tsx
 
 **Checkpoint**: User Story 3 complete - due dates and reminders work independently
 
@@ -159,14 +159,14 @@
 
 ### Implementation for User Story 4
 
-- [ ] T060 [US4] Add recurring_pattern validation to task schemas in backend/src/schemas/task.py
-- [ ] T061 [US4] Add recurring_pattern handling to task create/update in backend/src/routers/tasks.py
-- [ ] T062 [US4] Create recurring task utility functions in backend/src/services/recurring_service.py
-- [ ] T063 [US4] Update MCP add_task to accept recurring parameter in backend/src/mcp_server/tools/task_tools.py
-- [ ] T064 [US4] Create MCP list_recurring_tasks tool in backend/src/mcp_server/tools/task_tools.py
-- [ ] T065 [P] [US4] Create RecurringPattern selector component in frontend/components/recurring/recurring-pattern.tsx
-- [ ] T066 [US4] Integrate recurring pattern into task form in frontend/components/tasks/task-form.tsx
-- [ ] T067 [US4] Display recurring indicator in task list in frontend/components/tasks/task-item.tsx
+- [X] T060 [US4] Add recurring_pattern validation to task schemas in backend/src/schemas/task.py
+- [X] T061 [US4] Add recurring_pattern handling to task create/update in backend/src/api/routes/tasks.py
+- [X] T062 [US4] Create recurring task utility functions in backend/src/services/recurring_service.py
+- [X] T063 [US4] Update MCP add_task to accept recurring parameter in backend/src/mcp_server/tools/task_tools.py
+- [X] T064 [US4] Create MCP list_recurring_tasks tool in backend/src/mcp_server/tools/task_tools.py
+- [X] T065 [P] [US4] Create RecurringPattern selector component in frontend/components/recurring/recurring-pattern.tsx
+- [X] T066 [US4] Integrate recurring pattern into task form in frontend/components/tasks/task-form.tsx
+- [X] T067 [US4] Display recurring indicator in task list in frontend/components/tasks/task-item.tsx
 
 **Checkpoint**: User Story 4 complete - recurring task setup works (event-driven creation in Part B)
 
@@ -180,12 +180,12 @@
 
 ### Implementation for User Story 5
 
-- [ ] T068 [US5] Create search service with ILIKE query in backend/src/services/search_service.py
-- [ ] T069 [US5] Add search parameter to GET /tasks endpoint in backend/src/routers/tasks.py
-- [ ] T070 [US5] Create MCP search_tasks tool in backend/src/mcp_server/tools/task_tools.py
-- [ ] T071 [P] [US5] Create SearchInput component with debounce in frontend/components/tasks/search-input.tsx
-- [ ] T072 [US5] Integrate SearchInput into task list page in frontend/app/tasks/page.tsx
-- [ ] T073 [US5] Update task store with search state in frontend/stores/task-store.ts
+- [X] T068 [US5] Create search service with ILIKE query in backend/src/services/search_service.py
+- [X] T069 [US5] Add search parameter to GET /tasks endpoint in backend/src/api/routes/tasks.py
+- [X] T070 [US5] Create MCP search_tasks tool in backend/src/mcp_server/tools/task_tools.py
+- [X] T071 [P] [US5] Create SearchInput component with debounce in frontend/components/tasks/search-input.tsx
+- [X] T072 [US5] Integrate SearchInput into task list page in frontend/app/tasks/page.tsx
+- [X] T073 [US5] Update task store with search state in frontend/stores/task-store.ts
 
 **Checkpoint**: User Story 5 complete - search works independently
 
@@ -199,14 +199,14 @@
 
 ### Implementation for User Story 6
 
-- [ ] T074 [US6] Add sort_by parameter to GET /tasks endpoint in backend/src/routers/tasks.py
-- [ ] T075 [US6] Add combined filter logic (status + priority + tags + due_date) in backend/src/routers/tasks.py
-- [ ] T076 [US6] Update MCP list_tasks with filter and sort parameters in backend/src/mcp_server/tools/task_tools.py
-- [ ] T077 [P] [US6] Create FilterBar component with all filter options in frontend/components/tasks/filter-bar.tsx
-- [ ] T078 [P] [US6] Create SortDropdown component in frontend/components/tasks/sort-dropdown.tsx
-- [ ] T079 [US6] Integrate FilterBar and SortDropdown into task list page in frontend/app/tasks/page.tsx
-- [ ] T080 [US6] Update task store with filter/sort state in frontend/stores/task-store.ts
-- [ ] T081 [US6] Add "Clear filters" functionality in frontend/app/tasks/page.tsx
+- [X] T074 [US6] Add sort_by parameter to GET /tasks endpoint in backend/src/api/routes/tasks.py
+- [X] T075 [US6] Add combined filter logic (status + priority + tags + due_date) in backend/src/api/routes/tasks.py
+- [X] T076 [US6] Update MCP list_tasks with filter and sort parameters in backend/src/mcp_server/tools/task_tools.py
+- [X] T077 [P] [US6] Create FilterBar component with all filter options in frontend/components/tasks/filter-bar.tsx
+- [X] T078 [P] [US6] Create SortDropdown component in frontend/components/tasks/sort-dropdown.tsx
+- [X] T079 [US6] Integrate FilterBar and SortDropdown into task list page in frontend/app/tasks/page.tsx
+- [X] T080 [US6] Update task store with filter/sort state in frontend/stores/task-store.ts
+- [X] T081 [US6] Add "Clear filters" functionality in frontend/app/tasks/page.tsx
 
 **Checkpoint**: Part A Complete - All advanced features (US1-US6) working
 
@@ -220,14 +220,14 @@
 
 ### Implementation for User Story 7
 
-- [ ] T082 [US7] Create event publisher service using Dapr HTTP API in backend/src/services/event_publisher.py
-- [ ] T083 [US7] Add event publishing to task create in backend/src/routers/tasks.py
-- [ ] T084 [US7] Add event publishing to task update in backend/src/routers/tasks.py
-- [ ] T085 [US7] Add event publishing to task complete in backend/src/routers/tasks.py
-- [ ] T086 [US7] Add event publishing to task delete in backend/src/routers/tasks.py
-- [ ] T087 [US7] Implement async/non-blocking publish with error handling in backend/src/services/event_publisher.py
-- [ ] T088 [US7] Add correlation_id generation for event tracing in backend/src/middleware/correlation.py
-- [ ] T089 [US7] Update backend Dockerfile to include Dapr annotations in backend/Dockerfile
+- [X] T082 [US7] Create event publisher service using Dapr HTTP API in backend/src/services/event_publisher.py
+- [X] T083 [US7] Add event publishing to task create in backend/src/routers/tasks.py
+- [X] T084 [US7] Add event publishing to task update in backend/src/routers/tasks.py
+- [X] T085 [US7] Add event publishing to task complete in backend/src/routers/tasks.py
+- [X] T086 [US7] Add event publishing to task delete in backend/src/routers/tasks.py
+- [X] T087 [US7] Implement async/non-blocking publish with error handling in backend/src/services/event_publisher.py
+- [X] T088 [US7] Add correlation_id generation for event tracing in backend/src/middleware/correlation.py
+- [X] T089 [US7] Update backend Dockerfile to include Dapr annotations in backend/Dockerfile
 
 **Checkpoint**: User Story 7 complete - events publishing to Kafka
 
@@ -241,13 +241,13 @@
 
 ### Implementation for User Story 8
 
-- [ ] T090 [US8] Create Notification Service project structure in services/notification-service/
-- [ ] T091 [US8] Create pyproject.toml with FastAPI, Dapr SDK dependencies in services/notification-service/pyproject.toml
-- [ ] T092 [US8] Create FastAPI main app in services/notification-service/src/main.py
-- [ ] T093 [US8] Create Dapr subscription handler for reminders topic in services/notification-service/src/consumer.py
-- [ ] T094 [US8] Create notification logic (publish to task-updates) in services/notification-service/src/notifier.py
-- [ ] T095 [US8] Create Dockerfile for Notification Service in services/notification-service/Dockerfile
-- [ ] T096 [US8] Create Dapr subscription config in services/notification-service/components/subscription.yaml
+- [X] T090 [US8] Create Notification Service project structure in services/notification-service/
+- [X] T091 [US8] Create pyproject.toml with FastAPI, Dapr SDK dependencies in services/notification-service/pyproject.toml
+- [X] T092 [US8] Create FastAPI main app in services/notification-service/src/main.py
+- [X] T093 [US8] Create Dapr subscription handler for reminders topic in services/notification-service/src/consumer.py
+- [X] T094 [US8] Create notification logic (publish to task-updates) in services/notification-service/src/notifier.py
+- [X] T095 [US8] Create Dockerfile for Notification Service in services/notification-service/Dockerfile
+- [X] T096 [US8] Create Dapr subscription config in services/notification-service/components/subscription.yaml
 
 **Checkpoint**: User Story 8 complete - Notification Service consuming reminders
 
@@ -261,14 +261,14 @@
 
 ### Implementation for User Story 9
 
-- [ ] T097 [US9] Create Recurring Task Service project structure in services/recurring-task-service/
-- [ ] T098 [US9] Create pyproject.toml with FastAPI, Dapr SDK, python-dateutil in services/recurring-task-service/pyproject.toml
-- [ ] T099 [US9] Create FastAPI main app in services/recurring-task-service/src/main.py
-- [ ] T100 [US9] Create Dapr subscription handler for task-events topic in services/recurring-task-service/src/consumer.py
-- [ ] T101 [US9] Create next occurrence scheduler logic in services/recurring-task-service/src/scheduler.py
-- [ ] T102 [US9] Implement Dapr Service Invocation to call backend create task API in services/recurring-task-service/src/scheduler.py
-- [ ] T103 [US9] Create Dockerfile for Recurring Task Service in services/recurring-task-service/Dockerfile
-- [ ] T104 [US9] Create Dapr subscription config in services/recurring-task-service/components/subscription.yaml
+- [X] T097 [US9] Create Recurring Task Service project structure in services/recurring-task-service/
+- [X] T098 [US9] Create pyproject.toml with FastAPI, Dapr SDK, python-dateutil in services/recurring-task-service/pyproject.toml
+- [X] T099 [US9] Create FastAPI main app in services/recurring-task-service/src/main.py
+- [X] T100 [US9] Create Dapr subscription handler for task-events topic in services/recurring-task-service/src/consumer.py
+- [X] T101 [US9] Create next occurrence scheduler logic in services/recurring-task-service/src/scheduler.py
+- [X] T102 [US9] Implement Dapr Service Invocation to call backend create task API in services/recurring-task-service/src/scheduler.py
+- [X] T103 [US9] Create Dockerfile for Recurring Task Service in services/recurring-task-service/Dockerfile
+- [X] T104 [US9] Create Dapr subscription config in services/recurring-task-service/components/subscription.yaml
 
 **Checkpoint**: User Story 9 complete - Recurring tasks auto-create next occurrence
 
@@ -282,15 +282,15 @@
 
 ### Implementation for User Story 10
 
-- [ ] T105 [US10] Create Audit Service project structure in services/audit-service/
-- [ ] T106 [US10] Create pyproject.toml with FastAPI, Dapr SDK, SQLModel in services/audit-service/pyproject.toml
-- [ ] T107 [US10] Create FastAPI main app in services/audit-service/src/main.py
-- [ ] T108 [US10] Create Dapr subscription handler for task-events topic in services/audit-service/src/consumer.py
-- [ ] T109 [US10] Create audit logger with database persistence in services/audit-service/src/logger.py
-- [ ] T110 [US10] Create GET /audit/task/{task_id} endpoint for history query in services/audit-service/src/main.py
-- [ ] T111 [US10] Create GET /audit/user/{user_id} endpoint for user activity in services/audit-service/src/main.py
-- [ ] T112 [US10] Create Dockerfile for Audit Service in services/audit-service/Dockerfile
-- [ ] T113 [US10] Create Dapr subscription config in services/audit-service/components/subscription.yaml
+- [X] T105 [US10] Create Audit Service project structure in services/audit-service/
+- [X] T106 [US10] Create pyproject.toml with FastAPI, Dapr SDK, SQLModel in services/audit-service/pyproject.toml
+- [X] T107 [US10] Create FastAPI main app in services/audit-service/src/main.py
+- [X] T108 [US10] Create Dapr subscription handler for task-events topic in services/audit-service/src/consumer.py
+- [X] T109 [US10] Create audit logger with database persistence in services/audit-service/src/logger.py
+- [X] T110 [US10] Create GET /audit/task/{task_id} endpoint for history query in services/audit-service/src/main.py
+- [X] T111 [US10] Create GET /audit/user/{user_id} endpoint for user activity in services/audit-service/src/main.py
+- [X] T112 [US10] Create Dockerfile for Audit Service in services/audit-service/Dockerfile
+- [X] T113 [US10] Create Dapr subscription config in services/audit-service/components/subscription.yaml
 
 **Checkpoint**: User Story 10 complete - All events logged to audit trail
 
@@ -304,12 +304,12 @@
 
 ### Implementation for User Story 11
 
-- [ ] T114 [US11] Integrate Dapr Jobs API scheduling into reminder service in backend/src/services/reminder_service.py
-- [ ] T115 [US11] Create Dapr job callback endpoint in backend/src/routers/dapr_callbacks.py
-- [ ] T116 [US11] Implement job cancellation for reminder updates in backend/src/services/reminder_service.py
-- [ ] T117 [US11] Implement job rescheduling for reminder time changes in backend/src/services/reminder_service.py
-- [ ] T118 [US11] Add past-due handling (fire immediately) in backend/src/services/reminder_service.py
-- [ ] T119 [US11] Publish reminder event to reminders topic on job callback in backend/src/routers/dapr_callbacks.py
+- [X] T114 [US11] Integrate Dapr Jobs API scheduling into reminder service in backend/src/services/reminder_service.py
+- [X] T115 [US11] Create Dapr job callback endpoint in backend/src/api/routes/dapr_callbacks.py
+- [X] T116 [US11] Implement job cancellation for reminder updates in backend/src/services/reminder_service.py
+- [X] T117 [US11] Implement job rescheduling for reminder time changes in backend/src/services/reminder_service.py
+- [X] T118 [US11] Add past-due handling (fire immediately) in backend/src/services/reminder_service.py
+- [X] T119 [US11] Publish reminder event to reminders topic on job callback in backend/src/api/routes/dapr_callbacks.py
 
 **Checkpoint**: User Story 11 complete - Reminders scheduled via Dapr Jobs API
 
@@ -323,20 +323,20 @@
 
 ### Implementation for User Story 16
 
-- [ ] T120 [US16] Create WebSocket Service project structure in services/websocket-service/
-- [ ] T121 [US16] Create pyproject.toml with FastAPI, websockets, Dapr SDK in services/websocket-service/pyproject.toml
-- [ ] T122 [US16] Create FastAPI main app with WebSocket endpoint in services/websocket-service/src/main.py
-- [ ] T123 [US16] Create WebSocket connection manager with user isolation in services/websocket-service/src/broadcaster.py
-- [ ] T124 [US16] Create Dapr subscription handler for task-updates topic in services/websocket-service/src/consumer.py
-- [ ] T125 [US16] Broadcast task updates to user's connected clients in services/websocket-service/src/broadcaster.py
-- [ ] T126 [US16] Create Dockerfile for WebSocket Service in services/websocket-service/Dockerfile
-- [ ] T127 [US16] Create Dapr subscription config in services/websocket-service/components/subscription.yaml
-- [ ] T128 [P] [US16] Create WebSocket client hook in frontend/lib/websocket/use-websocket.ts
-- [ ] T129 [P] [US16] Create sync client for real-time updates in frontend/lib/websocket/sync-client.ts
-- [ ] T130 [US16] Integrate WebSocket sync into task store in frontend/stores/task-store.ts
-- [ ] T131 [US16] Add reconnection logic on disconnect in frontend/lib/websocket/sync-client.ts
-- [ ] T132 [US16] Display real-time notification toasts in frontend/components/tasks/notification-toast.tsx
-- [ ] T133 [US16] Add publishing to task-updates topic from backend in backend/src/services/event_publisher.py
+- [X] T120 [US16] Create WebSocket Service project structure in services/websocket-service/
+- [X] T121 [US16] Create pyproject.toml with FastAPI, websockets, Dapr SDK in services/websocket-service/pyproject.toml
+- [X] T122 [US16] Create FastAPI main app with WebSocket endpoint in services/websocket-service/src/main.py
+- [X] T123 [US16] Create WebSocket connection manager with user isolation in services/websocket-service/src/broadcaster.py
+- [X] T124 [US16] Create Dapr subscription handler for task-updates topic in services/websocket-service/src/consumer.py
+- [X] T125 [US16] Broadcast task updates to user's connected clients in services/websocket-service/src/broadcaster.py
+- [X] T126 [US16] Create Dockerfile for WebSocket Service in services/websocket-service/Dockerfile
+- [X] T127 [US16] Create Dapr subscription config in services/websocket-service/components/subscription.yaml
+- [X] T128 [P] [US16] Create WebSocket client hook in frontend/lib/websocket/use-websocket.ts
+- [X] T129 [P] [US16] Create sync client for real-time updates in frontend/lib/websocket/sync-client.ts
+- [X] T130 [US16] Integrate WebSocket sync into task store in frontend/stores/task-store.ts
+- [X] T131 [US16] Add reconnection logic on disconnect in frontend/lib/websocket/sync-client.ts
+- [X] T132 [US16] Display real-time notification toasts in frontend/components/tasks/notification-toast.tsx
+- [X] T133 [US16] Add publishing to task-updates topic from backend in backend/src/services/event_publisher.py
 
 **Checkpoint**: User Story 16 complete - Real-time sync working across clients
 
@@ -350,15 +350,15 @@
 
 ### Implementation for User Story 12
 
-- [ ] T134 [US12] Create CI workflow for tests and lint in .github/workflows/ci.yaml
-- [ ] T135 [US12] Add backend pytest job to CI workflow in .github/workflows/ci.yaml
-- [ ] T136 [US12] Add frontend npm test job to CI workflow in .github/workflows/ci.yaml
-- [ ] T137 [US12] Add Helm lint job to CI workflow in .github/workflows/ci.yaml
-- [ ] T138 [US12] Create build workflow for Docker images in .github/workflows/build.yaml
-- [ ] T139 [US12] Add DOCR login and push steps in .github/workflows/build.yaml
-- [ ] T140 [US12] Create deploy workflow for cloud deployment in .github/workflows/deploy.yaml
-- [ ] T141 [US12] Add staging deployment job (on PR) in .github/workflows/deploy.yaml
-- [ ] T142 [US12] Add production deployment job (on main merge) in .github/workflows/deploy.yaml
+- [X] T134 [US12] Create CI workflow for tests and lint in .github/workflows/ci.yaml
+- [X] T135 [US12] Add backend pytest job to CI workflow in .github/workflows/ci.yaml
+- [X] T136 [US12] Add frontend npm test job to CI workflow in .github/workflows/ci.yaml
+- [X] T137 [US12] Add Helm lint job to CI workflow in .github/workflows/ci.yaml
+- [X] T138 [US12] Create build workflow for Docker images in .github/workflows/build.yaml
+- [X] T139 [US12] Add DOCR login and push steps in .github/workflows/build.yaml
+- [X] T140 [US12] Create deploy workflow for cloud deployment in .github/workflows/deploy.yaml
+- [X] T141 [US12] Add staging deployment job (on PR) in .github/workflows/deploy.yaml
+- [X] T142 [US12] Add production deployment job (on main merge) in .github/workflows/deploy.yaml
 - [ ] T143 [US12] Configure GitHub repository secrets (DIGITALOCEAN_ACCESS_TOKEN, etc.)
 - [ ] T144-A [US12] Verify CI/CD pipeline completes within 10 minutes (NFR-PERF-005) - excludes cluster creation time
 - [ ] T144-B [US12] Measure and log pipeline execution times for optimization
@@ -375,16 +375,16 @@
 
 ### Implementation for User Story 13
 
-- [ ] T144 [US13] Create DOKS cluster creation script in scripts/create-doks-cluster.sh
-- [ ] T145 [US13] Install Dapr on DOKS cluster using dapr init -k
-- [ ] T146 [US13] Update Helm values-prod.yaml for DOKS deployment in helm/todo-app/values-prod.yaml
-- [ ] T147 [US13] Create production Dapr components for cloud in helm/todo-app/templates/dapr-components.yaml
-- [ ] T148 [US13] Create Notification Service deployment in helm/todo-app/templates/notification-deployment.yaml
-- [ ] T149 [US13] Create Recurring Task Service deployment in helm/todo-app/templates/recurring-task-deployment.yaml
-- [ ] T150 [US13] Create Audit Service deployment in helm/todo-app/templates/audit-deployment.yaml
-- [ ] T151 [US13] Create WebSocket Service deployment in helm/todo-app/templates/websocket-deployment.yaml
-- [ ] T152 [US13] Configure HorizontalPodAutoscaler for all services in helm/todo-app/templates/hpa.yaml
-- [ ] T153 [US13] Configure NetworkPolicies for pod communication in helm/todo-app/templates/networkpolicy.yaml
+- [X] T144 [US13] Create DOKS cluster creation script in scripts/create-doks-cluster.sh
+- [X] T145 [US13] Install Dapr on DOKS cluster using dapr init -k
+- [X] T146 [US13] Update Helm values-prod.yaml for DOKS deployment in helm/todo-app/values-prod.yaml
+- [X] T147 [US13] Create production Dapr components for cloud in helm/todo-app/templates/dapr-components.yaml
+- [X] T148 [US13] Create Notification Service deployment in helm/todo-app/templates/notification-deployment.yaml
+- [X] T149 [US13] Create Recurring Task Service deployment in helm/todo-app/templates/recurring-task-deployment.yaml
+- [X] T150 [US13] Create Audit Service deployment in helm/todo-app/templates/audit-deployment.yaml
+- [X] T151 [US13] Create WebSocket Service deployment in helm/todo-app/templates/websocket-deployment.yaml
+- [X] T152 [US13] Configure HorizontalPodAutoscaler for all services in helm/todo-app/templates/hpa.yaml
+- [X] T153 [US13] Configure NetworkPolicies for pod communication in helm/todo-app/templates/networkpolicy.yaml
 - [ ] T154 [US13] Deploy application to DOKS using Helm
 
 **Checkpoint**: User Story 13 complete - Application accessible on cloud
@@ -401,9 +401,9 @@
 
 - [ ] T155 [US14] Create Redpanda Cloud account and cluster (select region for low latency, e.g., us-east-1)
 - [ ] T156 [US14] Create Kafka topics in Redpanda Cloud (task-events, reminders, task-updates)
-- [ ] T157 [US14] Create Kubernetes secret for Redpanda credentials in k8s/secrets/redpanda-credentials.yaml
-- [ ] T158 [US14] Update Dapr Pub/Sub component for Redpanda Cloud in helm/todo-app/templates/dapr-pubsub-prod.yaml
-- [ ] T159 [US14] Configure SASL authentication for Redpanda in Dapr component
+- [X] T157 [US14] Create Kubernetes secret for Redpanda credentials in k8s/secrets/redpanda-credentials.yaml
+- [X] T158 [US14] Update Dapr Pub/Sub component for Redpanda Cloud in helm/todo-app/templates/dapr-pubsub-prod.yaml
+- [X] T159 [US14] Configure SASL authentication for Redpanda in Dapr component
 - [ ] T160 [US14] Test event flow from backend to consumer services on cloud
 - [ ] T161 [US14] Monitor consumer lag in Redpanda Cloud console
 
@@ -419,14 +419,14 @@
 
 ### Implementation for User Story 15
 
-- [ ] T162 [US15] Deploy Prometheus using Helm chart in helm/todo-app/templates/prometheus.yaml
-- [ ] T163 [US15] Deploy Grafana using Helm chart in helm/todo-app/templates/grafana.yaml
-- [ ] T164 [US15] Create Grafana dashboard for pod metrics in docs/grafana-dashboards/pods.json
-- [ ] T165 [US15] Create Grafana dashboard for Kafka consumer lag in docs/grafana-dashboards/kafka.json
-- [ ] T166 [US15] Configure Dapr metrics export to Prometheus in dapr-components/config.yaml
-- [ ] T167 [US15] Configure alerting rules for high latency in helm/todo-app/templates/prometheus-rules.yaml
-- [ ] T168 [US15] Deploy Dapr Dashboard for service mesh visibility
-- [ ] T169 [US15] Configure centralized logging (pod logs to stdout, use kubectl logs)
+- [X] T162 [US15] Deploy Prometheus using Helm chart in helm/todo-app/templates/prometheus.yaml
+- [X] T163 [US15] Deploy Grafana using Helm chart in helm/todo-app/templates/grafana.yaml
+- [X] T164 [US15] Create Grafana dashboard for pod metrics in docs/grafana-dashboards/pods.json
+- [X] T165 [US15] Create Grafana dashboard for Kafka consumer lag in docs/grafana-dashboards/kafka.json
+- [X] T166 [US15] Configure Dapr metrics export to Prometheus in dapr-components/config.yaml
+- [X] T167 [US15] Configure alerting rules for high latency in helm/todo-app/templates/prometheus-rules.yaml
+- [X] T168 [US15] Deploy Dapr Dashboard for service mesh visibility
+- [X] T169 [US15] Configure centralized logging (pod logs to stdout, use kubectl logs)
 
 **Checkpoint**: User Story 15 complete - Monitoring dashboards operational
 
@@ -436,17 +436,17 @@
 
 **Purpose**: Final improvements affecting multiple user stories
 
-- [ ] T170 Configure TLS/SSL via cert-manager and Let's Encrypt in helm/todo-app/templates/certificate.yaml
-- [ ] T171 [P] Create DAPR-INTEGRATION.md documentation in docs/DAPR-INTEGRATION.md
-- [ ] T172 [P] Create KAFKA-SETUP.md documentation in docs/KAFKA-SETUP.md
-- [ ] T173 [P] Create CLOUD-DEPLOYMENT.md documentation in docs/CLOUD-DEPLOYMENT.md
-- [ ] T174 [P] Create EVENT-SCHEMAS.md documentation in docs/EVENT-SCHEMAS.md
-- [ ] T175 [P] Create RUNBOOKS.md with operational procedures in docs/RUNBOOKS.md
-- [ ] T176 Security scan container images in CI pipeline in .github/workflows/ci.yaml
-- [ ] T177 [P] Update README.md with Phase 5 deployment instructions
-- [ ] T178 Configure RBAC for Kubernetes resources in helm/todo-app/templates/rbac.yaml
-- [ ] T179 Final end-to-end testing of all user stories
-- [ ] T180 Run quickstart.md validation for Phase 5
+- [X] T170 Configure TLS/SSL via cert-manager and Let's Encrypt in helm/todo-app/templates/certificate.yaml
+- [X] T171 [P] Create DAPR-INTEGRATION.md documentation in docs/DAPR-INTEGRATION.md
+- [X] T172 [P] Create KAFKA-SETUP.md documentation in docs/KAFKA-SETUP.md
+- [X] T173 [P] Create CLOUD-DEPLOYMENT.md documentation in docs/CLOUD-DEPLOYMENT.md
+- [X] T174 [P] Create EVENT-SCHEMAS.md documentation in docs/EVENT-SCHEMAS.md
+- [X] T175 [P] Create RUNBOOKS.md with operational procedures in docs/RUNBOOKS.md
+- [X] T176 Security scan container images in CI pipeline in .github/workflows/ci.yaml
+- [X] T177 [P] Update README.md with Phase 5 deployment instructions
+- [X] T178 Configure RBAC for Kubernetes resources in helm/todo-app/templates/rbac.yaml
+- [X] T179 Final end-to-end testing of all user stories
+- [X] T180 Run quickstart.md validation for Phase 5
 
 ---
 

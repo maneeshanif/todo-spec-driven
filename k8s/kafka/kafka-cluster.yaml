@@ -1,40 +1,73 @@
-# Strimzi Kafka Cluster for Local Development (Minikube)
-# Single-node cluster with ephemeral storage for development
----
+# Kafka Cluster Configuration for Local Development
+# Uses minimal resources suitable for Minikube
+
 apiVersion: kafka.strimzi.io/v1beta2
 kind: Kafka
 metadata:
-  name: evolution-kafka
+  name: todo-kafka-cluster
   namespace: kafka
-  labels:
-    app.kubernetes.io/name: evolution-kafka
-    app.kubernetes.io/part-of: evolution-todo
 spec:
   kafka:
     version: 3.7.0
-    replicas: 1
+    replicas: 1  # Single replica for local development
     listeners:
       - name: plain
         port: 9092
         type: internal
         tls: false
-      - name: external
-        port: 9094
-        type: nodeport
-        tls: false
+      - name: tls
+        port: 9093
+        type: internal
+        tls: true
     config:
-      # Single broker configuration
       offsets.topic.replication.factor: 1
       transaction.state.log.replication.factor: 1
       transaction.state.log.min.isr: 1
       default.replication.factor: 1
       min.insync.replicas: 1
-      # Performance tuning for development
+      inter.broker.protocol.version: "3.7"
+      # Performance settings for local dev
+      num.network.threads: 3
+      num.io.threads: 8
+      socket.send.buffer.bytes: 102400
+      socket.receive.buffer.bytes: 102400
+      socket.request.max.bytes: 104857600
+      # Log settings
       log.retention.hours: 24
       log.segment.bytes: 1073741824
-      num.partitions: 3
+      log.retention.check.interval.ms: 300000
+      # Auto-create topics (useful for development)
+      auto.create.topics.enable: true
     storage:
-      type: ephemeral
+      type: jbod
+      volumes:
+        - id: 0
+          type: persistent-claim
+          size: 10Gi
+          deleteClaim: false
+    resources:
+      requests:
+        memory: 1Gi
+        cpu: 500m
+      limits:
+        memory: 2Gi
+        cpu: 1000m
+    jvmOptions:
+      -Xms: 512m
+      -Xmx: 1024m
+    metricsConfig:
+      type: jmxPrometheusExporter
+      valueFrom:
+        configMapKeyRef:
+          name: kafka-metrics
+          key: kafka-metrics-config.yml
+
+  zookeeper:
+    replicas: 1  # Single replica for local development
+    storage:
+      type: persistent-claim
+      size: 5Gi
+      deleteClaim: false
     resources:
       requests:
         memory: 512Mi
@@ -42,17 +75,49 @@ spec:
       limits:
         memory: 1Gi
         cpu: 500m
-  zookeeper:
-    replicas: 1
-    storage:
-      type: ephemeral
-    resources:
-      requests:
-        memory: 256Mi
-        cpu: 100m
-      limits:
-        memory: 512Mi
-        cpu: 250m
+    jvmOptions:
+      -Xms: 256m
+      -Xmx: 512m
+
   entityOperator:
-    topicOperator: {}
-    userOperator: {}
+    topicOperator:
+      resources:
+        requests:
+          memory: 256Mi
+          cpu: 100m
+        limits:
+          memory: 512Mi
+          cpu: 500m
+    userOperator:
+      resources:
+        requests:
+          memory: 256Mi
+          cpu: 100m
+        limits:
+          memory: 512Mi
+          cpu: 500m
+
+---
+# Kafka Metrics ConfigMap for Prometheus
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kafka-metrics
+  namespace: kafka
+data:
+  kafka-metrics-config.yml: |
+    lowercaseOutputName: true
+    rules:
+    - pattern: kafka.server<type=(.+), name=(.+), clientId=(.+), topic=(.+), partition=(.*)><>Value
+      name: kafka_server_$1_$2
+      type: GAUGE
+      labels:
+       clientId: "$3"
+       topic: "$4"
+       partition: "$5"
+    - pattern: kafka.server<type=(.+), name=(.+), clientId=(.+), brokerHost=(.+), brokerPort=(.+)><>Value
+      name: kafka_server_$1_$2
+      type: GAUGE
+      labels:
+       clientId: "$3"
+       broker: "$4:$5"

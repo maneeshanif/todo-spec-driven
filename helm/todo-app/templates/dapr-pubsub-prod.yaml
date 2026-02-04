@@ -1,0 +1,94 @@
+# Dapr Pub/Sub Component for Production (Redpanda Cloud)
+# Task: T158
+#
+# This component is used for production deployments with Redpanda Cloud.
+# For local development, use dapr-components/pubsub-kafka.yaml instead.
+#
+{{- if eq .Values.environment "production" }}
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: pubsub-kafka
+  namespace: {{ .Values.namespace }}
+spec:
+  type: pubsub.kafka
+  version: v1
+  metadata:
+    # Redpanda Cloud bootstrap servers
+    - name: brokers
+      secretKeyRef:
+        name: redpanda-credentials
+        key: bootstrap-servers
+    
+    # Consumer group for this service
+    - name: consumerGroup
+      value: "{{ .Values.service.name }}-group"
+    
+    # Client ID
+    - name: clientID
+      value: "{{ .Values.service.name }}"
+    
+    # SASL Authentication
+    - name: authType
+      value: "password"
+    
+    - name: saslUsername
+      secretKeyRef:
+        name: redpanda-credentials
+        key: sasl-username
+    
+    - name: saslPassword
+      secretKeyRef:
+        name: redpanda-credentials
+        key: sasl-password
+    
+    - name: saslMechanism
+      secretKeyRef:
+        name: redpanda-credentials
+        key: sasl-mechanism
+    
+    # Security protocol (SASL_SSL for Redpanda Cloud)
+    - name: securityProtocol
+      secretKeyRef:
+        name: redpanda-credentials
+        key: security-protocol
+    
+    # Additional Kafka settings
+    - name: maxMessageBytes
+      value: "1048576"  # 1MB
+    
+    - name: consumeRetryInterval
+      value: "1s"
+    
+    - name: version
+      value: "3.7.0"
+    
+    # Consumer settings
+    - name: sessionTimeout
+      value: "30000"
+    
+    - name: heartbeatInterval
+      value: "3000"
+    
+    - name: autoOffsetReset
+      value: "earliest"
+    
+    # Producer settings
+    - name: producerIdempotent
+      value: "true"
+    
+    - name: producerAcks
+      value: "all"
+    
+    - name: producerRetries
+      value: "3"
+
+---
+# Scopes - restrict which apps can access this pub/sub
+scopes:
+  - backend
+  - notification-service
+  - recurring-task-service
+  - audit-service
+  - websocket-service
+{{- end }}

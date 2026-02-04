@@ -1,0 +1,31 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: todo-app-metrics
+  namespace: todo-app
+  labels:
+    app.kubernetes.io/name: todo-app
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: todo-app
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: 30s
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: todo-app-backend-metrics
+  namespace: todo-app
+  labels:
+    app.kubernetes.io/name: todo-app
+spec:
+  selector:
+    app.kubernetes.io/name: todo-app
+    app.kubernetes.io/component: backend
+  ports:
+  - name: http
+    port: 8000
+    targetPort: 8000

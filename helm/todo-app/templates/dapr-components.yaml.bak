@@ -1,0 +1,155 @@
+{{- if .Values.dapr.enabled }}
+---
+# Dapr Pub/Sub Component for Kafka (Production - Redpanda Cloud / Confluent Cloud)
+{{- if .Values.kafka.enabled }}
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: kafka-pubsub
+  namespace: {{ .Values.global.namespace }}
+spec:
+  type: pubsub.kafka
+  version: v1
+  metadata:
+    - name: brokers
+      value: {{ .Values.kafka.brokers | quote }}
+    - name: consumerGroup
+      value: "todo-service-group"
+    - name: clientID
+      value: "todo-dapr-client"
+    {{- if .Values.kafka.auth.enabled }}
+    - name: authType
+      value: {{ .Values.kafka.auth.type | quote }}
+    - name: saslUsername
+      secretKeyRef:
+        name: {{ include "todo-app.fullname" . }}-kafka-secrets
+        key: username
+    - name: saslPassword
+      secretKeyRef:
+        name: {{ include "todo-app.fullname" . }}-kafka-secrets
+        key: password
+    {{- end }}
+    {{- if .Values.kafka.tls.enabled }}
+    - name: skipVerify
+      value: "false"
+    {{- end }}
+    - name: initialOffset
+      value: "latest"
+    - name: autoEnable
+      value: "true"
+  {{- if .Values.dapr.scopes }}
+  scopes:
+    {{- range $component, $topics := .Values.dapr.scopes }}
+    - name: {{ $component }}
+      permissions: {{ $topics }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+---
+# Dapr State Management Component for PostgreSQL
+{{- if .Values.dapr.stateStore.enabled }}
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: statestore
+  namespace: {{ .Values.global.namespace }}
+spec:
+  type: state.postgresql
+  version: v1
+  metadata:
+    - name: connectionString
+      valueFrom:
+        secretKeyRef:
+          name: {{ include "todo-app.fullname" . }}-secrets
+          key: DATABASE_URL
+    - name: tableName
+      value: {{ .Values.dapr.stateStore.tableName | quote }}
+    - name: maxConns
+      value: {{ .Values.dapr.stateStore.maxConnections | quote }}
+    - name: idleTimeout
+      value: {{ .Values.dapr.stateStore.idleTimeout | quote }}
+    - name: timeout
+      value: {{ .Values.dapr.stateStore.timeout | quote }}
+{{- end }}
+---
+# Dapr Secret Store Component
+{{- if .Values.dapr.secretStore.type == "kubernetes" }}
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: kubernetes-secrets
+  namespace: {{ .Values.global.namespace }}
+spec:
+  type: secretstores.kubernetes
+  version: v1
+  metadata: []
+{{- else if eq .Values.dapr.secretStore.type "azure" }}
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: azure-keyvault
+  namespace: {{ .Values.global.namespace }}
+spec:
+  type: secretstores.azure.keyvault
+  version: v1
+  metadata:
+    - name: vaultName
+      value: {{ .Values.dapr.secretStore.azure.vaultName | quote }}
+{{- else if eq .Values.dapr.secretStore.type "gcp" }}
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: gcp-secret-manager
+  namespace: {{ .Values.global.namespace }}
+spec:
+  type: secretstores.gcp.secretmanager
+  version: v1
+  metadata: []
+{{- end }}
+---
+# Dapr Configuration for Resiliency and Observability
+apiVersion: dapr.io/v1alpha1
+kind: Configuration
+metadata:
+  name: {{ .Values.dapr.config }}
+  namespace: {{ .Values.global.namespace }}
+spec:
+  {{- if .Values.dapr.tracing.enabled }}
+  tracing:
+    samplingRate: {{ .Values.dapr.tracing.samplingRate | quote }}
+    zipkin:
+      endpointAddress: {{ .Values.dapr.tracing.zipkinEndpoint | quote }}
+  {{- end }}
+  {{- if .Values.dapr.metrics.enabled }}
+  metrics:
+    enabled: true
+  {{- end }}
+  {{- if .Values.dapr.resiliency.enabled }}
+  appPolicy:
+    {{- range $policy, $config := .Values.dapr.resiliency.policies }}
+    {{ $policy }}:
+      {{- toYaml $config | nindent 6 }}
+    {{- end }}
+  {{- end }}
+  {{- if .Values.dapr.features }}
+  features:
+    {{- toYaml .Values.dapr.features | nindent 4 }}
+  {{- end }}
+---
+# Dapr Subscription Configuration (Declarative)
+{{- range $service, $subs := .Values.dapr.subscriptions }}
+apiVersion: dapr.io/v1alpha1
+kind: Subscription
+metadata:
+  name: {{ $service }}-subscription
+  namespace: {{ .Values.global.namespace }}
+spec:
+  {{- range $sub := $subs }}
+  pubsubname: kafka-pubsub
+  topic: {{ $sub.topic }}
+  route: {{ $sub.route }}
+  scopes:
+    - {{ $service }}
+  {{- end }}
+{{- end }}
+{{- end }}

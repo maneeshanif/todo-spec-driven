@@ -1,0 +1,136 @@
+apiVersion: dapr.io/v1alpha1
+kind: Configuration
+metadata:
+  name: todo-app-config
+  namespace: todo-app
+spec:
+  # Metrics Configuration - Export to Prometheus
+  metric:
+    enabled: true
+    # HTTP endpoint for metrics scraping
+    http:
+      enabled: true
+      port: 9090
+      path: "/metrics"
+
+  # Distributed Tracing Configuration
+  tracing:
+    samplingRate: "0.1"  # 10% sampling
+    zipkin:
+      endpointAddress: "http://zipkin.istio-system.svc:9411/api/v2/spans"
+
+  # Access Control Configuration
+  accessControl:
+    defaultAction: allow
+    trustDomain: "public"
+    policies: []
+
+  # API Configuration
+  api:
+    # Enable token authentication for Dapr API
+    allowed:
+      - name: state
+        version: v1
+        protocol: http
+      - name: pubsub
+        version: v1
+        protocol: http
+      - name: bindings
+        version: v1
+        protocol: http
+      - name: secrets
+        version: v1
+        protocol: http
+      - name: actors
+        version: v1
+        protocol: http
+      - name: metadata
+        version: v1
+        protocol: http
+
+  # Features Configuration
+  features:
+    - name: Actor.Reentrancy
+      enabled: true
+    - name: ServiceInvocation.RequestMetrics
+      enabled: true
+    - name: PubSub.RequestMetrics
+      enabled: true
+    - name: State.RequestMetrics
+      enabled: true
+
+  # Middleware Pipeline
+  httpPipeline:
+    handlers: []
+
+  # Secrets Configuration
+  secrets:
+    scopes:
+      - storeName: kubernetes
+        defaultAccess: allow
+
+  # Component Scopes
+  components:
+    # Pub/Sub component scoping
+    - name: pubsub-kafka
+      spec:
+        # Backend service can publish to task-events and reminders
+        - appId: backend-service
+          operations:
+            - publish:task-events
+            - publish:reminders
+            - subscribe:task-updates
+
+        # Notification service subscribes to reminders
+        - appId: notification-service
+          operations:
+            - subscribe:reminders
+            - publish:task-updates
+
+        # Recurring task service subscribes to task-events
+        - appId: recurring-task-service
+          operations:
+            - subscribe:task-events
+            - publish:task-events
+            - publish:task-updates
+
+        # Audit service subscribes to task-events
+        - appId: audit-service
+          operations:
+            - subscribe:task-events
+
+        # WebSocket service subscribes to task-updates
+        - appId: websocket-service
+          operations:
+            - subscribe:task-updates
+
+    # State store component scoping
+    - name: statestore-postgres
+      spec:
+        - appId: backend-service
+          operations:
+            - get
+            - set
+            - delete
+        - appId: notification-service
+          operations:
+            - get
+            - set
+        - appId: recurring-task-service
+          operations:
+            - get
+            - set
+        - appId: audit-service
+          operations:
+            - get
+            - set
+        - appId: websocket-service
+          operations:
+            - get
+            - set
+
+  # Logging Configuration
+  logging:
+    apiLogging:
+      enabled: true
+      obfuscateURLs: false

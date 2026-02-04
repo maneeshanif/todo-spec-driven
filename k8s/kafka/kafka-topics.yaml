@@ -1,5 +1,6 @@
-# Kafka Topics for Evolution of Todo Phase 5
-# These topics are created by Strimzi Topic Operator
+# Kafka Topics for Todo Application Events
+# Managed by Strimzi Topic Operator
+
 ---
 apiVersion: kafka.strimzi.io/v1beta2
 kind: KafkaTopic
@@ -7,33 +8,35 @@ metadata:
   name: task-events
   namespace: kafka
   labels:
-    strimzi.io/cluster: evolution-kafka
-    app.kubernetes.io/name: task-events
-    app.kubernetes.io/part-of: evolution-todo
+    strimzi.io/cluster: todo-kafka-cluster
 spec:
   partitions: 3
   replicas: 1
   config:
-    retention.ms: 86400000  # 24 hours
+    retention.ms: 604800000  # 7 days
+    segment.bytes: 1073741824  # 1GB
+    compression.type: snappy
     cleanup.policy: delete
-    segment.bytes: 1073741824
+    min.insync.replicas: 1
+
 ---
 apiVersion: kafka.strimzi.io/v1beta2
 kind: KafkaTopic
 metadata:
-  name: reminders
+  name: reminder-events
   namespace: kafka
   labels:
-    strimzi.io/cluster: evolution-kafka
-    app.kubernetes.io/name: reminders
-    app.kubernetes.io/part-of: evolution-todo
+    strimzi.io/cluster: todo-kafka-cluster
 spec:
-  partitions: 3
+  partitions: 2
   replicas: 1
   config:
-    retention.ms: 86400000  # 24 hours
+    retention.ms: 259200000  # 3 days
+    segment.bytes: 536870912  # 512MB
+    compression.type: snappy
     cleanup.policy: delete
-    segment.bytes: 1073741824
+    min.insync.replicas: 1
+
 ---
 apiVersion: kafka.strimzi.io/v1beta2
 kind: KafkaTopic
@@ -41,13 +44,31 @@ metadata:
   name: task-updates
   namespace: kafka
   labels:
-    strimzi.io/cluster: evolution-kafka
-    app.kubernetes.io/name: task-updates
-    app.kubernetes.io/part-of: evolution-todo
+    strimzi.io/cluster: todo-kafka-cluster
 spec:
   partitions: 3
   replicas: 1
   config:
-    retention.ms: 3600000  # 1 hour (real-time updates don't need long retention)
+    retention.ms: 86400000  # 1 day
+    segment.bytes: 268435456  # 256MB
+    compression.type: snappy
     cleanup.policy: delete
-    segment.bytes: 536870912
+    min.insync.replicas: 1
+
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: audit-events
+  namespace: kafka
+  labels:
+    strimzi.io/cluster: todo-kafka-cluster
+spec:
+  partitions: 2
+  replicas: 1
+  config:
+    retention.ms: 2592000000  # 30 days
+    segment.bytes: 536870912  # 512MB
+    compression.type: snappy
+    cleanup.policy: delete
+    min.insync.replicas: 1

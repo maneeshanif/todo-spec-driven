@@ -1,5 +1,5 @@
 """Task request/response schemas."""
-from typing import Optional, List
+from typing import Optional, List, Any
 from datetime import datetime
 from pydantic import BaseModel, Field, field_validator, model_validator
 from src.schemas.category import CategoryResponse
@@ -32,6 +32,34 @@ class TaskPublic(BaseModel):
     has_reminder: bool = Field(default=False, description="Whether task has pending reminder")
     created_at: datetime = Field(..., description="Creation timestamp")
     updated_at: datetime = Field(..., description="Last update timestamp")
+
+    @field_validator('tags', mode='before')
+    @classmethod
+    def extract_tags_safely(cls, v: Any) -> List[dict]:
+        """Extract tags safely to avoid async lazy loading issues.
+
+        This validator converts ORM Tag objects to plain dicts synchronously,
+        preventing SQLAlchemy from triggering lazy loading in async context
+        which would cause MissingGreenlet errors.
+        """
+        if not v:
+            return []
+        if isinstance(v, list):
+            result = []
+            for tag in v:
+                if isinstance(tag, dict):
+                    result.append(tag)
+                elif hasattr(tag, 'id') and hasattr(tag, 'name') and hasattr(tag, 'color'):
+                    # Safely extract attributes without triggering lazy loads
+                    # Access __dict__ directly to avoid instrumented attribute access
+                    tag_dict = getattr(tag, '__dict__', {})
+                    result.append({
+                        'id': tag_dict.get('id', getattr(tag, 'id', 0)),
+                        'name': tag_dict.get('name', getattr(tag, 'name', '')),
+                        'color': tag_dict.get('color', getattr(tag, 'color', '#808080'))
+                    })
+            return result
+        return []
 
     class Config:
         from_attributes = True

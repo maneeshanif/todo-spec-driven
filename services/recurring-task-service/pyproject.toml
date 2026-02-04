@@ -1,0 +1,27 @@
+[project]
+name = "recurring-task-service"
+version = "0.1.0"
+description = "Recurring Task Service - Auto-create next occurrences of recurring tasks"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi[standard]>=0.115",
+    "dapr>=1.14.0",
+    "dapr-ext-fastapi>=1.14.0",
+    "httpx>=0.28.1",
+    "python-dateutil>=2.9.0",
+    "pydantic-settings>=2.12.0",
+    "python-dotenv>=1.2.1",
+    "python-json-logger>=4.0.0",
+]
+
+[tool.uv]
+package = false
+dev-dependencies = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.25.0",
+    "pytest-cov>=6.0.0",
+]
+
+[project.scripts]
+service = "src.main:app"

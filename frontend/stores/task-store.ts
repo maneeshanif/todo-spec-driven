@@ -2,17 +2,27 @@
 import { create } from 'zustand';
 import { taskApi } from '@/lib/api/tasks';
 import { Task, TaskFilters } from '@/types';
+import { WebSocketMessage, TaskEventType } from '@/lib/websocket/sync-client';
+import { showTaskNotification } from '@/components/tasks/notification-toast';
+
+// Debounce helper
+let searchDebounceTimer: NodeJS.Timeout | null = null;
 
 interface TaskState {
   tasks: Task[];
   loading: boolean;
   error: string | null;
   filters: TaskFilters;
+  searchQuery: string;
+  wsEnabled: boolean; // WebSocket sync enabled flag
 
   // Actions
   fetchTasks: (filters?: TaskFilters) => Promise<void>;
   setFilters: (filters: Partial<TaskFilters>) => void;
   clearFilters: () => void;
+  setSearchQuery: (query: string) => void;
+  handleWebSocketMessage: (message: WebSocketMessage) => void;
+  setWebSocketEnabled: (enabled: boolean) => void;
   addTask: (data: {
     title: string;
     description?: string;
@@ -38,6 +48,8 @@ export const useTaskStore = create<TaskState>((set, get) => ({
   loading: false,
   error: null,
   filters: defaultFilters,
+  searchQuery: '',
+  wsEnabled: false,
 
   fetchTasks: async (filters?: TaskFilters) => {
     set({ loading: true, error: null });
@@ -60,8 +72,28 @@ export const useTaskStore = create<TaskState>((set, get) => ({
   },
 
   clearFilters: () => {
-    set({ filters: defaultFilters });
+    set({ filters: defaultFilters, searchQuery: '' });
     get().fetchTasks(defaultFilters);
+  },
+
+  setSearchQuery: (query: string) => {
+    set({ searchQuery: query });
+
+    // Clear existing timer
+    if (searchDebounceTimer) {
+      clearTimeout(searchDebounceTimer);
+    }
+
+    // Debounce search API calls (300ms delay)
+    searchDebounceTimer = setTimeout(() => {
+      const currentFilters = get().filters;
+      const updatedFilters = {
+        ...currentFilters,
+        search: query.trim() || undefined,
+      };
+      set({ filters: updatedFilters });
+      get().fetchTasks(updatedFilters);
+    }, 300);
   },
   
   addTask: async (data: {
@@ -212,4 +244,59 @@ export const useTaskStore = create<TaskState>((set, get) => ({
   },
   
   clearError: () => set({ error: null }),
+
+  /**
+   * Handle WebSocket messages for real-time task updates
+   *
+   * @param message - WebSocket message containing task update
+   */
+  handleWebSocketMessage: (message: WebSocketMessage) => {
+    if (message.type !== 'task_update' || !message.event || !message.task) {
+      return;
+    }
+
+    const { event, task } = message;
+
+    // Update local state based on event type
+    set((state) => {
+      let updatedTasks = [...state.tasks];
+
+      switch (event) {
+        case 'task.created':
+          // Add new task if not already present
+          if (!updatedTasks.some((t) => t.id === task.id)) {
+            updatedTasks = [task, ...updatedTasks];
+          }
+          break;
+
+        case 'task.updated':
+        case 'task.completed':
+          // Update existing task (prefer remote state)
+          updatedTasks = updatedTasks.map((t) => (t.id === task.id ? task : t));
+          break;
+
+        case 'task.deleted':
+          // Remove deleted task
+          updatedTasks = updatedTasks.filter((t) => t.id !== task.id);
+          break;
+
+        default:
+          console.warn('[TaskStore] Unknown event type:', event);
+      }
+
+      return { tasks: updatedTasks };
+    });
+
+    // Show notification toast (only if WebSocket sync is enabled)
+    if (get().wsEnabled) {
+      showTaskNotification(event, task);
+    }
+  },
+
+  /**
+   * Enable/disable WebSocket sync and notifications
+   *
+   * @param enabled - Whether WebSocket sync is enabled
+   */
+  setWebSocketEnabled: (enabled: boolean) => set({ wsEnabled: enabled }),
 }));

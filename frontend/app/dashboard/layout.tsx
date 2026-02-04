@@ -18,11 +18,16 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const { user, setUser } = useAuthStore();
+  const { user, setUser, _hasHydrated } = useAuthStore();
   const [isChecking, setIsChecking] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
+    // Wait for store to hydrate from localStorage first
+    if (!_hasHydrated) {
+      return; // Don't check auth until hydration is complete
+    }
+
     // Always verify session with server on dashboard load
     const checkAuth = async () => {
       try {
@@ -62,7 +67,7 @@ export default function DashboardLayout({
     };
 
     checkAuth();
-  }, [user, setUser, router]);
+  }, [user, setUser, router, _hasHydrated]);
 
   // Show loading state while checking auth
   if (isChecking) {

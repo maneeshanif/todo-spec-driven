@@ -7,6 +7,8 @@ from typing import Optional, List, TYPE_CHECKING
 if TYPE_CHECKING:
     from src.models.task import Task
 
+from src.models.task_tag import TaskTag
+
 
 def utcnow() -> datetime:
     """Return current UTC time without timezone info (for PostgreSQL TIMESTAMP WITHOUT TIME ZONE)."""
@@ -61,7 +63,7 @@ class Tag(SQLModel, table=True):
     )
 
     # Relationships
-    tasks: List["Task"] = Relationship(back_populates="tags", link_model="TaskTag")
+    tasks: List["Task"] = Relationship(back_populates="tags", link_model=TaskTag)
 
     class Config:
         json_schema_extra = {

@@ -30,7 +30,8 @@ load_dotenv()
 
 from fastmcp import FastMCP
 from fastmcp.server.dependencies import get_http_request
-from sqlmodel import Session, create_engine, select
+from sqlmodel import Session, create_engine, select, or_
+from sqlalchemy import asc, desc
 from sqlalchemy.pool import NullPool
 
 from src.models.task import Task, utcnow

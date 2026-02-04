@@ -1,0 +1,283 @@
+{{- if .Values.observability.metrics.enabled }}`}}
+---
+# Prometheus Alert Rules ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "todo-app.fullname" . }}`}}-prometheus-rules
+  namespace: {{ .Values.global.namespace }}`}}
+  labels:
+    {{- include "todo-app.labels" . | nindent 4 }}`}}
+    app.kubernetes.io/component: prometheus
+data:
+  todo-app-alerts.yaml: |
+    groups:
+      - name: todo-app-performance
+        interval: 30s
+        rules:
+          # High Latency Alert - p95 > 500ms
+          - alert: HighLatency
+            expr: |
+              histogram_quantile(0.95,
+                rate(http_request_duration_milliseconds_bucket{namespace="todo-app"}[5m])
+              ) > 500
+            for: 5m
+            labels:
+              severity: warning
+              component: performance
+            annotations:
+              summary: "High latency detected on {{`{{`{{ $labels.pod }}`}}`}}"
+              description: "P95 latency is {{`{{`{{ $value | humanizeDuration }}`}}`}} (threshold: 500ms)"
+              runbook: "Check pod logs and resource usage. Consider scaling up."
+
+          # Critical Latency Alert - p95 > 1000ms
+          - alert: CriticalLatency
+            expr: |
+              histogram_quantile(0.95,
+                rate(http_request_duration_milliseconds_bucket{namespace="todo-app"}[5m])
+              ) > 1000
+            for: 5m
+            labels:
+              severity: critical
+              component: performance
+            annotations:
+              summary: "CRITICAL: Very high latency on {{`{{ $labels.pod }}`}}"
+              description: "P95 latency is {{`{{ $value | humanizeDuration }}`}} (threshold: 1000ms)"
+              runbook: "Immediate action required. Check resource limits, database connections, and recent deployments."
+
+          # Error Rate Alert - > 5%
+          - alert: HighErrorRate
+            expr: |
+              (
+                rate(http_requests_total{namespace="todo-app",status=~"5.."}[5m])
+                /
+                rate(http_requests_total{namespace="todo-app"}[5m])
+              ) > 0.05
+            for: 5m
+            labels:
+              severity: critical
+              component: reliability
+            annotations:
+              summary: "High error rate detected on {{`{{ $labels.pod }}`}}"
+              description: "Error rate is {{`{{ $value | humanizePercentage }}`}} (threshold: 5%)"
+              runbook: "Check error logs, database connectivity, and dependent services."
+
+          # Request Rate Drop - traffic drop > 50%
+          - alert: RequestRateDrop
+            expr: |
+              (
+                rate(http_requests_total{namespace="todo-app"}[5m])
+                /
+                rate(http_requests_total{namespace="todo-app"}[1h] offset 1h)
+              ) < 0.5
+            for: 10m
+            labels:
+              severity: warning
+              component: availability
+            annotations:
+              summary: "Significant drop in request rate on {{`{{ $labels.pod }}`}}"
+              description: "Current rate is {{`{{ $value | humanizePercentage }}`}} of historical average"
+              runbook: "Check if service is healthy, investigate potential client-side issues."
+
+      - name: todo-app-resources
+        interval: 30s
+        rules:
+          # High CPU Usage - > 80%
+          - alert: HighCPUUsage
+            expr: |
+              100 * (
+                1 - avg(rate(container_cpu_usage_seconds_total{
+                  namespace="todo-app",
+                  container!="",
+                  container!="POD"
+                }[5m]))
+              ) by (pod, container) > 80
+            for: 5m
+            labels:
+              severity: warning
+              component: resources
+            annotations:
+              summary: "High CPU usage on {{`{{ $labels.pod }}`}}/{{`{{ $labels.container }}`}}"
+              description: "CPU usage is {{`{{ $value | humanizePercentage }}`}} (threshold: 80%)"
+              runbook: "Consider increasing CPU limits or optimizing application."
+
+          # High Memory Usage - > 90%
+          - alert: HighMemoryUsage
+            expr: |
+              (
+                container_memory_usage_bytes{namespace="todo-app",container!="",container!="POD"}
+                /
+                container_spec_memory_limit_bytes{namespace="todo-app",container!="",container!="POD"}
+              ) > 0.9
+            for: 5m
+            labels:
+              severity: warning
+              component: resources
+            annotations:
+              summary: "High memory usage on {{`{{ $labels.pod }}`}}/{{`{{ $labels.container }}`}}"
+              description: "Memory usage is {{`{{ $value | humanizePercentage }}`}} of limit (threshold: 90%)"
+              runbook: "Check for memory leaks, consider increasing memory limits."
+
+          # Critical Memory Usage - > 95%
+          - alert: CriticalMemoryUsage
+            expr: |
+              (
+                container_memory_usage_bytes{namespace="todo-app",container!="",container!="POD"}
+                /
+                container_spec_memory_limit_bytes{namespace="todo-app",container!="",container!="POD"}
+              ) > 0.95
+            for: 2m
+            labels:
+              severity: critical
+              component: resources
+            annotations:
+              summary: "CRITICAL: Memory exhaustion imminent on {{`{{ $labels.pod }}`}}/{{`{{ $labels.container }}`}}"
+              description: "Memory usage is {{`{{ $value | humanizePercentage }}`}} of limit (threshold: 95%)"
+              runbook: "Immediate action required. Pod may be OOMKilled soon. Scale up or restart pod."
+
+      - name: todo-app-pods
+        interval: 30s
+        rules:
+          # Pod Restarting Frequently
+          - alert: PodRestarting
+            expr: |
+              increase(kube_pod_container_status_restarts_total{namespace="todo-app"}[1h]) > 3
+            for: 5m
+            labels:
+              severity: warning
+              component: availability
+            annotations:
+              summary: "Pod {{`{{ $labels.pod }}`}} restarting frequently"
+              description: "Pod has restarted {{`{{ $value }}`}} times in the last hour"
+              runbook: "Check pod logs with `kubectl logs {{`{{ $labels.pod }}`}} -n todo-app --previous`. Look for OOMKilled, startup failures, or health check failures."
+
+          # Pod Not Ready
+          - alert: PodNotReady
+            expr: |
+              kube_pod_status_ready{namespace="todo-app",condition="false"} == 1
+            for: 5m
+            labels:
+              severity: warning
+              component: availability
+            annotations:
+              summary: "Pod {{`{{ $labels.pod }}`}} not ready"
+              description: "Pod has been in not-ready state for 5 minutes"
+              runbook: "Check pod events and logs. Verify health checks are configured correctly."
+
+          # Pod Pending Too Long
+          - alert: PodPendingTooLong
+            expr: |
+              kube_pod_status_phase{namespace="todo-app",phase="Pending"} == 1
+            for: 10m
+            labels:
+              severity: warning
+              component: availability
+            annotations:
+              summary: "Pod {{`{{ $labels.pod }}`}} pending for too long"
+              description: "Pod has been in pending state for 10 minutes"
+              runbook: "Check node resources, pod scheduling constraints, and PVC availability."
+
+      - name: todo-app-kafka
+        interval: 30s
+        rules:
+          # High Kafka Consumer Lag
+          - alert: KafkaConsumerLag
+            expr: |
+              kafka_consumer_group_lag{namespace="todo-app"} > 1000
+            for: 10m
+            labels:
+              severity: warning
+              component: messaging
+            annotations:
+              summary: "High Kafka consumer lag for {{`{{ $labels.consumer_group }}`}}"
+              description: "Consumer group {{`{{ $labels.consumer_group }}`}} has lag of {{`{{ $value }}`}} on topic {{`{{ $labels.topic }}`}}"
+              runbook: "Check consumer service health, consider scaling up consumers."
+
+          # Critical Kafka Consumer Lag
+          - alert: CriticalKafkaConsumerLag
+            expr: |
+              kafka_consumer_group_lag{namespace="todo-app"} > 5000
+            for: 5m
+            labels:
+              severity: critical
+              component: messaging
+            annotations:
+              summary: "CRITICAL: Very high Kafka consumer lag for {{`{{ $labels.consumer_group }}`}}"
+              description: "Consumer group {{`{{ $labels.consumer_group }}`}} has lag of {{`{{ $value }}`}} on topic {{`{{ $labels.topic }}`}}"
+              runbook: "Immediate action required. Scale up consumers or investigate processing issues."
+
+          # Consumer Not Consuming
+          - alert: KafkaConsumerNotConsuming
+            expr: |
+              rate(kafka_consumer_group_offset{namespace="todo-app"}[5m]) == 0
+                and
+              rate(kafka_topic_partition_current_offset{namespace="todo-app"}[5m]) > 0
+            for: 10m
+            labels:
+              severity: critical
+              component: messaging
+            annotations:
+              summary: "Kafka consumer {{`{{ $labels.consumer_group }}`}} not consuming"
+              description: "Consumer has not consumed any messages while messages are being produced"
+              runbook: "Check consumer service health and logs. Verify Dapr pub/sub configuration."
+
+      - name: todo-app-dapr
+        interval: 30s
+        rules:
+          # Dapr Sidecar Not Ready
+          - alert: DaprSidecarNotReady
+            expr: |
+              up{job="dapr",namespace="todo-app"} == 0
+            for: 5m
+            labels:
+              severity: critical
+              component: dapr
+            annotations:
+              summary: "Dapr sidecar not ready for {{`{{ $labels.app_id }}`}}"
+              description: "Dapr sidecar is down or not responding"
+              runbook: "Check pod logs for Dapr sidecar container. Verify Dapr configuration."
+
+          # High Dapr Pub/Sub Failures
+          - alert: HighDaprPubSubFailures
+            expr: |
+              rate(dapr_component_pubsub_ingress_failures_total{namespace="todo-app"}[5m]) > 0.1
+            for: 5m
+            labels:
+              severity: warning
+              component: dapr
+            annotations:
+              summary: "High Dapr pub/sub failure rate for {{`{{ $labels.app_id }}`}}"
+              description: "Pub/sub ingress failure rate is {{`{{ $value | humanize }}`}} ops/s"
+              runbook: "Check Dapr logs and Kafka connectivity. Verify component configuration."
+
+      - name: todo-app-availability
+        interval: 30s
+        rules:
+          # Service Down
+          - alert: ServiceDown
+            expr: |
+              up{namespace="todo-app"} == 0
+            for: 2m
+            labels:
+              severity: critical
+              component: availability
+            annotations:
+              summary: "Service {{`{{ $labels.job }}`}} is down"
+              description: "Service has been unreachable for 2 minutes"
+              runbook: "Check service status, pod health, and recent deployments."
+
+          # Low Replica Count
+          - alert: LowReplicaCount
+            expr: |
+              kube_deployment_status_replicas_available{namespace="todo-app"}
+                <
+              kube_deployment_spec_replicas{namespace="todo-app"} * 0.5
+            for: 5m
+            labels:
+              severity: warning
+              component: availability
+            annotations:
+              summary: "Low replica count for {{`{{ $labels.deployment }}`}}"
+              description: "Only {{`{{ $value }}`}} replicas available out of desired count"
+              runbook: "Check pod status and logs. Verify node resources and scheduling constraints."
+{{- end }}`}}

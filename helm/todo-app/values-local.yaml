@@ -1,0 +1,148 @@
+# Local Minikube Testing values
+# Use: helm install todo-app ./helm/todo-app -f ./helm/todo-app/values-local.yaml
+
+# Global configuration for local testing
+global:
+  namespace: todo-app
+  imagePullPolicy: Never  # Use local images in minikube
+  registry: ""
+
+# Frontend configuration
+frontend:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: todo-app/frontend
+    tag: "latest"
+    pullPolicy: Never
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+  env:
+    NODE_ENV: "production"
+    NEXT_TELEMETRY_DISABLED: "1"
+    NEXT_PUBLIC_API_URL: "http://backend:8000"
+
+# Backend configuration
+backend:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: todo-app/backend
+    tag: "latest"
+    pullPolicy: Never
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+
+# MCP Server configuration
+mcpServer:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: todo-app/mcp-server
+    tag: "latest"
+    pullPolicy: Never
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+
+# Ingress for local testing
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+  hosts:
+    - host: todo.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+  auth:
+    enabled: false
+
+# Secrets - Use PostgreSQL in minikube for local testing
+# IMPORTANT: Use postgresql+asyncpg:// for async SQLAlchemy
+secrets:
+  databaseUrl: "postgresql+asyncpg://postgres:postgres@postgres:5432/todo"
+  geminiApiKey: "${GEMINI_API_KEY}"  # Set via: export GEMINI_API_KEY=your-key
+  betterAuthSecret: "local-test-secret-32-chars-long-"
+  openaiDomainKey: ""
+  secretKey: "local-secret-key-for-testing-32c"
+  basicAuthUsername: ""
+  basicAuthPassword: ""
+
+# PostgreSQL for local testing
+postgresql:
+  enabled: true
+  auth:
+    username: postgres
+    password: postgres
+    database: todo
+
+# Phase 5 microservices - DISABLED for local testing
+notificationService:
+  enabled: false
+
+recurringTaskService:
+  enabled: false
+
+auditService:
+  enabled: false
+
+websocketService:
+  enabled: false
+
+# Dapr - DISABLED for local testing
+dapr:
+  enabled: false
+
+# Kafka - DISABLED for local testing
+kafka:
+  enabled: false
+
+# Network Policy - DISABLED for local testing
+networkPolicy:
+  enabled: false
+
+# Advanced Features - Enabled
+advancedFeatures:
+  priorities:
+    enabled: true
+    default: "medium"
+  tags:
+    enabled: true
+    maxPerTask: 10
+  dueDates:
+    enabled: true
+  recurring:
+    enabled: true
+  search:
+    enabled: true
+  filter:
+    enabled: true
+  sort:
+    enabled: true
+
+# Observability - Minimal for local
+observability:
+  logging:
+    level: "debug"
+    format: "text"
+  metrics:
+    enabled: false
+  tracing:
+    enabled: false

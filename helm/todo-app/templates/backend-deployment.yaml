@@ -15,6 +15,14 @@ spec:
     metadata:
       labels:
         {{- include "todo-app.backendSelectorLabels" . | nindent 8 }}
+      annotations:
+        {{- if .Values.dapr.enabled }}
+        dapr.io/enabled: "true"
+        dapr.io/app-id: "backend"
+        dapr.io/app-port: "{{ .Values.backend.service.targetPort }}"
+        dapr.io/config: "{{ .Values.dapr.config | default "appconfig" }}"
+        dapr.io/app-protocol: "http"
+        {{- end }}
     spec:
       containers:
       - name: backend
@@ -55,6 +63,11 @@ spec:
             configMapKeyRef:
               name: {{ include "todo-app.fullname" . }}-config
               key: BETTER_AUTH_URL
+        - name: ALLOWED_ORIGINS
+          valueFrom:
+            configMapKeyRef:
+              name: {{ include "todo-app.fullname" . }}-config
+              key: ALLOWED_ORIGINS
         resources:
           {{- toYaml .Values.backend.resources | nindent 10 }}
         livenessProbe:

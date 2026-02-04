@@ -96,6 +96,7 @@ class ReminderService:
         """Create a new reminder for a task.
 
         Validates task ownership and schedules Dapr job if available.
+        If reminder time is in the past, fires it immediately.
 
         Args:
             session: Database session
@@ -122,14 +123,9 @@ class ReminderService:
                 detail=f"Task {task_id} not found or access denied"
             )
 
-        # Ensure remind_at is in the future
+        # Normalize timezone
         now = datetime.now(timezone.utc).replace(tzinfo=None)
         remind_at_naive = remind_at.replace(tzinfo=None) if remind_at.tzinfo else remind_at
-
-        if remind_at_naive <= now:
-            raise AppException.bad_request(
-                detail="Reminder time must be in the future"
-            )
 
         # Create reminder with pending status
         reminder = Reminder(
@@ -143,7 +139,21 @@ class ReminderService:
         await session.commit()
         await session.refresh(reminder)
 
-        # Schedule Dapr job (fire and forget - gracefully handle failure)
+        # Check if reminder is past due
+        if remind_at_naive <= now:
+            # Fire immediately via pub/sub
+            await ReminderService.fire_past_due_reminder(
+                session=session,
+                reminder=reminder,
+                task=task
+            )
+            logger.info(
+                f"Fired past-due reminder {reminder.id} immediately",
+                extra={"reminder_id": reminder.id, "was_past_due": True}
+            )
+            return reminder
+
+        # Schedule Dapr job for future reminder (fire and forget - gracefully handle failure)
         job_name = f"reminder-{reminder.id}"
         job_scheduled = await DaprClient.schedule_job(
             job_name=job_name,
@@ -338,3 +348,67 @@ class ReminderService:
 
         result = await session.exec(statement)
         return result.all()
+
+    @staticmethod
+    async def fire_past_due_reminder(
+        session: AsyncSession,
+        reminder: Reminder,
+        task: Task
+    ) -> None:
+        """Fire a past-due reminder immediately by publishing to Dapr pub/sub.
+
+        This method is called when a reminder is created with a time in the past.
+        Instead of scheduling, it immediately publishes the reminder event and
+        marks the reminder as sent.
+
+        Args:
+            session: Database session
+            reminder: Reminder to fire
+            task: Associated task (for event data)
+        """
+        from src.schemas.events import ReminderEvent, ReminderEventType
+
+        # Publish reminder event to "reminder-events" topic
+        event = ReminderEvent(
+            event_type=ReminderEventType.DUE,
+            reminder_id=reminder.id,
+            task_id=task.id,
+            user_id=reminder.user_id,
+            title=task.title,
+            due_at=task.due_date,
+            remind_at=reminder.remind_at
+        )
+
+        # Publish via Dapr pub/sub
+        published = await DaprClient.publish_event(
+            pubsub_name="pubsub-kafka",
+            topic="reminder-events",
+            data=event.model_dump(mode='json')
+        )
+
+        if published:
+            # Mark reminder as sent
+            reminder.status = ReminderStatus.SENT
+            reminder.sent_at = datetime.now(timezone.utc).replace(tzinfo=None)
+            await session.commit()
+            await session.refresh(reminder)
+
+            logger.info(
+                f"Published past-due reminder {reminder.id} to reminder-events topic",
+                extra={
+                    "reminder_id": reminder.id,
+                    "task_id": task.id,
+                    "user_id": reminder.user_id,
+                    "was_past_due": True
+                }
+            )
+        else:
+            # Mark as failed if publish didn't succeed
+            reminder.status = ReminderStatus.FAILED
+            await session.commit()
+            await session.refresh(reminder)
+
+            logger.error(
+                f"Failed to publish past-due reminder {reminder.id}",
+                extra={"reminder_id": reminder.id, "task_id": task.id}
+            )

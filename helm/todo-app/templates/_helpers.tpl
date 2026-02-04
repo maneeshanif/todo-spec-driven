@@ -159,3 +159,114 @@ Full image name for MCP server
 {{- printf "%s:%s" .Values.mcpServer.image.repository (.Values.mcpServer.image.tag | default .Chart.AppVersion) }}
 {{- end }}
 {{- end }}
+{{/*
+Notification Service labels
+*/}}
+{{- define "todo-app.notificationLabels" -}}
+{{ include "todo-app.labels" . }}
+{{ include "todo-app.componentLabels" "notification" }}
+tier: backend
+{{- end }}
+
+{{/*
+Notification Service selector labels
+*/}}
+{{- define "todo-app.notificationSelectorLabels" -}}
+{{ include "todo-app.selectorLabels" . }}
+{{ include "todo-app.componentLabels" "notification" }}
+{{- end }}
+
+{{/*
+Recurring Task Service labels
+*/}}
+{{- define "todo-app.recurringTaskLabels" -}}
+{{ include "todo-app.labels" . }}
+{{ include "todo-app.componentLabels" "recurring-task" }}
+tier: backend
+{{- end }}
+
+{{/*
+Recurring Task Service selector labels
+*/}}
+{{- define "todo-app.recurringTaskSelectorLabels" -}}
+{{ include "todo-app.selectorLabels" . }}
+{{ include "todo-app.componentLabels" "recurring-task" }}
+{{- end }}
+
+{{/*
+Audit Service labels
+*/}}
+{{- define "todo-app.auditLabels" -}}
+{{ include "todo-app.labels" . }}
+{{ include "todo-app.componentLabels" "audit" }}
+tier: backend
+{{- end }}
+
+{{/*
+Audit Service selector labels
+*/}}
+{{- define "todo-app.auditSelectorLabels" -}}
+{{ include "todo-app.selectorLabels" . }}
+{{ include "todo-app.componentLabels" "audit" }}
+{{- end }}
+
+{{/*
+WebSocket Service labels
+*/}}
+{{- define "todo-app.websocketLabels" -}}
+{{ include "todo-app.labels" . }}
+{{ include "todo-app.componentLabels" "websocket" }}
+tier: backend
+{{- end }}
+
+{{/*
+WebSocket Service selector labels
+*/}}
+{{- define "todo-app.websocketSelectorLabels" -}}
+{{ include "todo-app.selectorLabels" . }}
+{{ include "todo-app.componentLabels" "websocket" }}
+{{- end }}
+
+{{/*
+Full image name for Notification Service
+*/}}
+{{- define "todo-app.notificationImage" -}}
+{{- if .Values.global.registry }}
+{{- printf "%s/%s:%s" .Values.global.registry .Values.notificationService.image.repository (.Values.notificationService.image.tag | default .Chart.AppVersion) }}
+{{- else }}
+{{- printf "%s:%s" .Values.notificationService.image.repository (.Values.notificationService.image.tag | default .Chart.AppVersion) }}
+{{- end }}
+{{- end }}
+
+{{/*
+Full image name for Recurring Task Service
+*/}}
+{{- define "todo-app.recurringTaskImage" -}}
+{{- if .Values.global.registry }}
+{{- printf "%s/%s:%s" .Values.global.registry .Values.recurringTaskService.image.repository (.Values.recurringTaskService.image.tag | default .Chart.AppVersion) }}
+{{- else }}
+{{- printf "%s:%s" .Values.recurringTaskService.image.repository (.Values.recurringTaskService.image.tag | default .Chart.AppVersion) }}
+{{- end }}
+{{- end }}
+
+{{/*
+Full image name for Audit Service
+*/}}
+{{- define "todo-app.auditImage" -}}
+{{- if .Values.global.registry }}
+{{- printf "%s/%s:%s" .Values.global.registry .Values.auditService.image.repository (.Values.auditService.image.tag | default .Chart.AppVersion) }}
+{{- else }}
+{{- printf "%s:%s" .Values.auditService.image.repository (.Values.auditService.image.tag | default .Chart.AppVersion) }}
+{{- end }}
+{{- end }}
+
+{{/*
+Full image name for WebSocket Service
+*/}}
+{{- define "todo-app.websocketImage" -}}
+{{- if .Values.global.registry }}
+{{- printf "%s/%s:%s" .Values.global.registry .Values.websocketService.image.repository (.Values.websocketService.image.tag | default .Chart.AppVersion) }}
+{{- else }}
+{{- printf "%s:%s" .Values.websocketService.image.repository (.Values.websocketService.image.tag | default .Chart.AppVersion) }}
+{{- end }}
+{{- end }}

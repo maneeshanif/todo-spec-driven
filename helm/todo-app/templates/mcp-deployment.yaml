@@ -30,6 +30,18 @@ spec:
             secretKeyRef:
               name: {{ include "todo-app.fullname" . }}-secrets
               key: DATABASE_URL
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "todo-app.fullname" . }}-secrets
+              key: BETTER_AUTH_SECRET
+        - name: MCP_SERVER_PORT
+          value: "{{ .Values.mcpServer.service.targetPort }}"
+        - name: GEMINI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "todo-app.fullname" . }}-secrets
+              key: GEMINI_API_KEY
         resources:
           {{- toYaml .Values.mcpServer.resources | nindent 10 }}
         livenessProbe:

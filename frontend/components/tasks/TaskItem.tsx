@@ -4,13 +4,15 @@ import { useState } from 'react';
 import { Task } from '@/types';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
-import { formatDistanceToNow } from 'date-fns';
+import { Badge } from '@/components/ui/badge';
+import { formatDistanceToNow, format } from 'date-fns';
 import { motion } from 'framer-motion';
 import { useTaskStore } from '@/stores/task-store';
 import { toast } from 'sonner';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil, Trash2, Repeat } from 'lucide-react';
 import EditTaskModal from './EditTaskModal';
 import DeleteTaskDialog from './DeleteTaskDialog';
+import { PriorityBadge } from './priority-badge';
 
 // Luxury color palette
 const colors = {
@@ -64,17 +66,48 @@ export default function TaskItem({ task }: TaskItemProps) {
               animate={{ opacity: task.completed ? 0.6 : 1 }}
               transition={{ duration: 0.2 }}
             >
-              <h3
-                className={`text-lg font-light transition-all ${task.completed ? 'line-through' : ''}`}
-                style={{ color: task.completed ? colors.textMuted : colors.text, fontFamily: "serif" }}
-              >
-                {task.title}
-              </h3>
+              <div className="flex items-start gap-2 mb-2">
+                <h3
+                  className={`text-lg font-light transition-all flex-1 ${task.completed ? 'line-through' : ''}`}
+                  style={{ color: task.completed ? colors.textMuted : colors.text, fontFamily: "serif" }}
+                >
+                  {task.title}
+                </h3>
+                {task.priority && (
+                  <PriorityBadge priority={task.priority} className="mt-1" />
+                )}
+              </div>
+
               {task.description && (
                 <p className="mt-2 text-sm" style={{ color: colors.textMuted }}>
                   {task.description}
                 </p>
               )}
+
+              <div className="flex items-center gap-2 mt-3 flex-wrap">
+                {/* Recurring indicator */}
+                {task.is_recurring && task.recurrence_pattern && (
+                  <Badge variant="outline" className="flex items-center gap-1 text-xs">
+                    <Repeat className="h-3 w-3" />
+                    <span className="capitalize">{task.recurrence_pattern}</span>
+                  </Badge>
+                )}
+
+                {/* Next occurrence for recurring tasks */}
+                {task.is_recurring && task.due_date && (
+                  <Badge variant="secondary" className="text-xs">
+                    Next: {format(new Date(task.due_date), 'MMM dd, yyyy')}
+                  </Badge>
+                )}
+
+                {/* Due date for non-recurring tasks */}
+                {!task.is_recurring && task.due_date && (
+                  <Badge variant="secondary" className="text-xs">
+                    Due: {format(new Date(task.due_date), 'MMM dd, yyyy')}
+                  </Badge>
+                )}
+              </div>
+
               <p className="text-xs mt-2" style={{ color: colors.textMuted, fontStyle: "italic" }}>
                 Created {formatDistanceToNow(new Date(task.created_at), { addSuffix: true })}
               </p>

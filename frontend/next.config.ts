@@ -7,6 +7,18 @@ const nextConfig: NextConfig = {
   // Standalone output for Docker deployment
   output: 'standalone',
 
+  // API rewrites to proxy requests to backend
+  // This allows the frontend to work with port-forwarding and in-cluster
+  async rewrites() {
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+    return [
+      {
+        source: '/backend-api/:path*',
+        destination: `${backendUrl}/api/:path*`,
+      },
+    ];
+  },
+
   // Image optimization
   images: {
     formats: ['image/avif', 'image/webp'],

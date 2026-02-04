@@ -3,6 +3,7 @@ from typing import List, Optional
 from datetime import datetime, timezone
 from sqlmodel import select, desc, asc, or_, and_, col
 from sqlmodel.ext.asyncio.session import AsyncSession
+from sqlalchemy.orm import selectinload, joinedload
 from src.models.task import Task
 from src.models.category import TaskCategoryMapping
 from src.models.task_tag import TaskTag
@@ -51,8 +52,12 @@ class TaskService:
         Returns:
             List of Task objects
         """
-        # Build base query
-        statement = select(Task).where(Task.user_id == user_id)
+        # Build base query with eager loading for relationships
+        statement = (
+            select(Task)
+            .where(Task.user_id == user_id)
+            .options(selectinload(Task.tags))
+        )
 
         # Apply completed filter
         if completed is not None:
@@ -110,7 +115,24 @@ class TaskService:
 
         # Execute query
         result = await session.exec(statement)
-        tasks = result.all()
+        tasks = result.unique().all()
+
+        # Explicitly load tags for each task to avoid async lazy loading issues
+        # We query tags separately and attach them to the task's internal dict
+        from src.models.tag import Tag
+        for task in tasks:
+            tag_stmt = (
+                select(Tag)
+                .join(TaskTag)
+                .where(TaskTag.task_id == task.id)
+            )
+            tag_result = await session.exec(tag_stmt)
+            loaded_tags = list(tag_result.all())
+
+            # Store tags in SQLAlchemy's internal state to make them accessible
+            # without triggering lazy loading
+            from sqlalchemy.orm.attributes import set_committed_value
+            set_committed_value(task, "tags", loaded_tags)
 
         logger.info(
             f"Retrieved tasks for user",
@@ -140,27 +162,39 @@ class TaskService:
     ) -> Optional[Task]:
         """
         Get a specific task by ID (with user isolation).
-        
+
         Args:
             session: Database session
             task_id: Task ID
             user_id: User ID for ownership verification
-            
+
         Returns:
             Task object if found and owned by user, None otherwise
         """
-        statement = select(Task).where(
-            Task.id == task_id,
-            Task.user_id == user_id
+        statement = (
+            select(Task)
+            .where(Task.id == task_id, Task.user_id == user_id)
+            .options(selectinload(Task.tags))
         )
         result = await session.exec(statement)
         task = result.first()
-        
+
         if task:
+            # Explicitly load tags to avoid async lazy loading issues
+            from src.models.tag import Tag
+            tag_stmt = (
+                select(Tag)
+                .join(TaskTag)
+                .where(TaskTag.task_id == task.id)
+            )
+            tag_result = await session.exec(tag_stmt)
+            loaded_tags = list(tag_result.all())
+            from sqlalchemy.orm.attributes import set_committed_value
+            set_committed_value(task, "tags", loaded_tags)
             logger.info(f"Task retrieved", extra={"task_id": task_id, "user_id": user_id})
         else:
             logger.warning(f"Task not found or access denied", extra={"task_id": task_id, "user_id": user_id})
-        
+
         return task
     
     @staticmethod
@@ -257,6 +291,18 @@ class TaskService:
             await session.commit()
             await session.refresh(task)
 
+        # Explicitly load tags to avoid async lazy loading issues
+        from src.models.tag import Tag
+        tag_stmt = (
+            select(Tag)
+            .join(TaskTag)
+            .where(TaskTag.task_id == task.id)
+        )
+        tag_result = await session.exec(tag_stmt)
+        loaded_tags = list(tag_result.all())
+        from sqlalchemy.orm.attributes import set_committed_value
+        set_committed_value(task, "tags", loaded_tags)
+
         logger.info(
             f"Task created",
             extra={
@@ -270,7 +316,7 @@ class TaskService:
         )
 
         return task
-    
+
     @staticmethod
     async def update_task(
         session: AsyncSession,
@@ -390,13 +436,25 @@ class TaskService:
         await session.commit()
         await session.refresh(task)
 
+        # Explicitly load tags to avoid async lazy loading issues
+        from src.models.tag import Tag
+        tag_stmt = (
+            select(Tag)
+            .join(TaskTag)
+            .where(TaskTag.task_id == task.id)
+        )
+        tag_result = await session.exec(tag_stmt)
+        loaded_tags = list(tag_result.all())
+        from sqlalchemy.orm.attributes import set_committed_value
+        set_committed_value(task, "tags", loaded_tags)
+
         logger.info(
             f"Task updated",
             extra={"task_id": task.id, "user_id": task.user_id}
         )
 
         return task
-    
+
     @staticmethod
     async def delete_task(
         session: AsyncSession,

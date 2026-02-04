@@ -109,3 +109,280 @@ secrets:
   geminiApiKey: ""  # Set via: --set secrets.geminiApiKey="..."
   betterAuthSecret: ""  # Set via: --set secrets.betterAuthSecret="..."
   openaiDomainKey: ""  # Set via: --set secrets.openaiDomainKey="..."
+
+# ============================================================================
+# PHASE 5: Production Configuration - Advanced Cloud Deployment
+# ============================================================================
+
+# Enable Phase 5 Microservices
+notificationService:
+  enabled: true
+  replicaCount: 3
+
+  image:
+    repository: todo-notification-service
+    tag: "1.0.0"
+    pullPolicy: IfNotPresent
+
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 512Mi
+
+  autoscaling:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+
+recurringTaskService:
+  enabled: true
+  replicaCount: 2
+
+  image:
+    repository: todo-recurring-task-service
+    tag: "1.0.0"
+    pullPolicy: IfNotPresent
+
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 512Mi
+
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+
+auditService:
+  enabled: true
+  replicaCount: 2
+
+  image:
+    repository: todo-audit-service
+    tag: "1.0.0"
+    pullPolicy: IfNotPresent
+
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 512Mi
+
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+
+websocketService:
+  enabled: true
+  replicaCount: 3
+
+  image:
+    repository: todo-websocket-service
+    tag: "1.0.0"
+    pullPolicy: IfNotPresent
+
+  resources:
+    requests:
+      cpu: 500m
+      memory: 512Mi
+    limits:
+      cpu: 2000m
+      memory: 1Gi
+
+  autoscaling:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 20
+    targetCPUUtilizationPercentage: 60
+    targetMemoryUtilizationPercentage: 75
+
+  pingInterval: 30
+  maxConnections: 2000
+
+# Enable Dapr for production
+dapr:
+  enabled: true
+
+  # Production Dapr configuration
+  config: "todo-app-prod-config"
+
+  # State Management (production settings)
+  stateStore:
+    enabled: true
+    tableName: "dapr_state_prod"
+    maxConnections: "20"
+    idleTimeout: "10m"
+    timeout: "10s"
+
+  # Use cloud secret manager
+  secretStore:
+    type: "gcp"  # Change to azure or kubernetes as needed
+    gcp:
+      projectId: "your-gcp-project-id"
+    azure:
+      vaultName: "your-keyvault-name"
+
+  # Tracing for production
+  tracing:
+    enabled: true
+    samplingRate: "0.05"  # 5% for production (reduced from 10%)
+    zipkinEndpoint: "http://zipkin.observability:9411/api/v2/spans"
+
+  # Metrics for production
+  metrics:
+    enabled: true
+
+  # Production resiliency policies
+  resiliency:
+    enabled: true
+    policies:
+      timeout:
+        timeout: "10s"  # Longer timeout for production
+      retry:
+        policy: "exponential"
+        initialInterval: "500ms"
+        maxInterval: "30s"
+        maxRetries: 5
+      circuitBreaker:
+        threshold: 10
+        timeout: "30s"
+        maxRetries: 5
+
+# Enable Kafka for production
+kafka:
+  enabled: true
+
+  # Production Kafka (Redpanda Cloud example)
+  brokers: "your-cluster.redpanda.cloud:9092"
+  port: 9092
+
+  auth:
+    enabled: true
+    type: "sasl"
+    saslMechanism: "SCRAM-SHA-256"
+    # NOTE: Set these via --set-file or external secrets
+    username: ""
+    password: ""
+
+  tls:
+    enabled: true
+    # NOTE: Set CA certificate via --set-file or external secrets
+    caCert: ""
+
+  # Production topic configuration
+  topics:
+    taskEvents: "task-events-prod"
+    reminders: "reminders-prod"
+    taskUpdates: "task-updates-prod"
+    auditEvents: "audit-events-prod"
+
+  topicConfig:
+    partitions:
+      taskEvents: 10
+      reminders: 10
+      taskUpdates: 10
+      auditEvents: 5
+    replicationFactor: 3  # Production replication factor
+    retentionMs: "2592000000"  # 30 days in milliseconds
+
+# Enable Network Policies for production
+networkPolicy:
+  enabled: true
+  podCIDR: "10.244.0.0/16"
+  ingressNamespaceLabels:
+    name: ingress-nginx
+
+# RBAC for production
+rbac:
+  create: true
+  daprRoles: true
+  clusterAdmin: false
+
+# Production Ingress configuration (add WebSocket)
+ingressWebSocket:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    nginx.ingress.kubernetes.io/websocket-services: "todo-app-websocket"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+  hosts:
+    - host: ws.todo.example.com
+      paths:
+        - path: /ws
+          pathType: Prefix
+  tls:
+    - secretName: todo-ws-prod-tls
+      hosts:
+        - ws.todo.example.com
+
+# Production Observability
+observability:
+  logging:
+    level: "info"
+    format: "json"
+
+  metrics:
+    enabled: true
+    port: 9090
+    path: "/metrics"
+
+  tracing:
+    enabled: true
+    sampling: 0.05  # 5% for production
+    exporter: "otel"
+
+# Advanced Features (all enabled for production)
+advancedFeatures:
+  priorities:
+    enabled: true
+    default: "medium"
+
+  tags:
+    enabled: true
+    maxPerTask: 10
+    maxPerUser: 100
+
+  dueDates:
+    enabled: true
+    reminderDefaults:
+      enabled: true
+      offsetHours: 1
+
+  recurring:
+    enabled: true
+    patterns:
+      - "daily"
+      - "weekly"
+      - "biweekly"
+      - "monthly"
+
+  search:
+    enabled: true
+    type: "simple"
+
+  filter:
+    enabled: true
+
+  sort:
+    enabled: true
+    default: "created_at"
+    direction: "desc"

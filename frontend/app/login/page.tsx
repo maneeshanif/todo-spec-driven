@@ -73,12 +73,19 @@ export default function LoginPage() {
           name: sessionUser.name,
           image: sessionUser.image || undefined,
         });
+
+        // Wait a tick for Zustand persist to complete
+        await new Promise(resolve => setTimeout(resolve, 50));
+        console.log('[Login] User state persisted, ready to navigate');
       }
 
       toast.success('Login successful!');
+      console.log('[Login] Navigating to dashboard...');
       // Use replace to prevent back navigation to login
       router.replace('/dashboard');
+      console.log('[Login] Navigation initiated');
     } catch (error: any) {
+      console.error('[Login] Login error:', error);
       toast.error(error.message || 'An error occurred');
       setIsLoading(false);
     }

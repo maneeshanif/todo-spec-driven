@@ -1,0 +1,17 @@
+{{- if .Values.observability.metrics.enabled }}
+---
+# Grafana Dashboards ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "todo-app.fullname" . }}-grafana-dashboards
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "todo-app.labels" . | nindent 4 }}
+    app.kubernetes.io/component: grafana
+data:
+  pods.json: |
+{{ .Files.Get "files/grafana-dashboards/pods.json" | indent 4 }}
+  kafka.json: |
+{{ .Files.Get "files/grafana-dashboards/kafka.json" | indent 4 }}
+{{- end }}

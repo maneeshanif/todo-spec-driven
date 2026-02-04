@@ -9,10 +9,13 @@ data:
   # Environment
   NODE_ENV: "production"
 
-  # Service Discovery (Internal K8s DNS)
-  NEXT_PUBLIC_API_URL: "http://backend:8000"
-  NEXT_PUBLIC_MCP_URL: "http://mcp-server:8001"
+  # Service Discovery (Internal K8s DNS for SSR)
+  NEXT_PUBLIC_API_URL: "http://localhost:8000"
+  NEXT_PUBLIC_MCP_URL: "http://localhost:8001"
   MCP_SERVER_URL: "http://mcp-server:8001"
+  
+  # CORS Configuration (Backend)
+  ALLOWED_ORIGINS: "http://localhost:3000,http://localhost:3001"
 
   # Next.js Configuration
   NEXT_TELEMETRY_DISABLED: "1"

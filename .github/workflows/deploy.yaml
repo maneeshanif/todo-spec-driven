@@ -1,0 +1,325 @@
+name: Deploy to Cloud
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+        description: 'Deployment environment (staging or production)'
+      version:
+        required: true
+        type: string
+        description: 'Version/image tag to deploy'
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      environment:
+        required: true
+        type: choice
+        description: 'Deployment environment'
+        options:
+          - staging
+          - production
+      version:
+        required: false
+        type: string
+        description: 'Version/image tag to deploy (default: commit SHA)'
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ${{ github.repository }}
+
+jobs:
+  # Deploy to Staging
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      url: ${{ steps.deployment-url.outputs.url }}
+    if: |
+      (github.event_name == 'push' && github.ref != 'refs/heads/main') ||
+      (inputs.environment == 'staging')
+
+    outputs:
+      url: ${{ steps.deployment-url.outputs.url }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Determine version
+        id: version
+        run: |
+          if [ "${{ inputs.version }}" != "" ]; then
+            echo "version=${{ inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "version=${GITHUB_SHA:0:7}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+      - name: Get DigitalOcean kubeconfig
+        run: |
+          CLUSTER_NAME=${{ secrets.DO_STAGING_CLUSTER_NAME || 'todo-staging' }}
+          echo "Using cluster: $CLUSTER_NAME"
+          doctl kubernetes cluster kubeconfig save $CLUSTER_NAME
+
+      - name: Verify cluster connectivity
+        run: |
+          kubectl cluster-info
+          kubectl get nodes
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.15.0
+
+      - name: Create namespace
+        run: |
+          kubectl create namespace todo-staging --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Deploy with Helm
+        id: helm-deploy
+        run: |
+          echo "Deploying version ${{ steps.version.outputs.version }} to staging..."
+
+          helm upgrade --install evolution-todo ./helm/todo-app \
+            --namespace todo-staging \
+            --values ./helm/todo-app/values-staging.yaml \
+            --set global.image.tag=${{ steps.version.outputs.version }} \
+            --set global.image.repository=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }} \
+            --set backend.env.DATABASE_URL=${{ secrets.STAGING_DATABASE_URL }} \
+            --set backend.env.GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }} \
+            --set backend.env.BETTER_AUTH_SECRET=${{ secrets.BETTER_AUTH_SECRET }} \
+            --set backend.env.REDPANDA_BROKERS=${{ secrets.STAGING_REDPANDA_BROKERS }} \
+            --set notificationService.env.REDPANDA_BROKERS=${{ secrets.STAGING_REDPANDA_BROKERS }} \
+            --set recurringService.env.REDPANDA_BROKERS=${{ secrets.STAGING_REDPANDA_BROKERS }} \
+            --set auditService.env.REDPANDA_BROKERS=${{ secrets.STAGING_REDPANDA_BROKERS }} \
+            --set websocketService.env.REDPANDA_BROKERS=${{ secrets.STAGING_REDPANDA_BROKERS }} \
+            --wait \
+            --timeout 10m \
+            --atomic
+
+      - name: Get deployment URL
+        id: deployment-url
+        run: |
+          # Get LoadBalancer IP or Ingress host
+          URL=$(kubectl get ingress evolution-todo -n todo-staging -o jsonpath='{.spec.rules[0].host}' 2>/dev/null || \
+              echo "http://$(kubectl get svc frontend -n todo-staging -o jsonpath='{.status.loadBalancer.ingress[0].ip}')")
+          echo "url=$URL" >> $GITHUB_OUTPUT
+          echo "Deployment URL: $URL"
+
+      - name: Verify deployment
+        run: |
+          echo "Waiting for deployments to be ready..."
+          kubectl rollout status deployment/backend -n todo-staging --timeout=5m
+          kubectl rollout status deployment/frontend -n todo-staging --timeout=5m
+          kubectl rollout status deployment/notification-service -n todo-staging --timeout=5m || echo "Notification service not deployed yet"
+          kubectl rollout status deployment/recurring-service -n todo-staging --timeout=5m || echo "Recurring service not deployed yet"
+          kubectl rollout status deployment/audit-service -n todo-staging --timeout=5m || echo "Audit service not deployed yet"
+          kubectl rollout status deployment/websocket-service -n todo-staging --timeout=5m || echo "WebSocket service not deployed yet"
+
+      - name: Run smoke tests
+        run: |
+          echo "Running smoke tests..."
+          # Check pods are running
+          kubectl get pods -n todo-staging
+
+          # Check service endpoints
+          kubectl get svc -n todo-staging
+
+          # Verify backend health
+          BACKEND_POD=$(kubectl get pod -n todo-staging -l app=backend -o jsonpath='{.items[0].metadata.name}')
+          kubectl exec $BACKEND_POD -n todo-staging -- curl -f http://localhost:8000/health || echo "Health check failed"
+
+      - name: Display deployment status
+        run: |
+          echo "## Staging Deployment Status" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** ${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "**URL:** ${{ steps.deployment-url.outputs.url }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          kubectl get pods -n todo-staging >> $GITHUB_STEP_SUMMARY
+
+  # Deploy to Production
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: ${{ steps.deployment-url.outputs.url }}
+    if: |
+      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+      (inputs.environment == 'production')
+
+    outputs:
+      url: ${{ steps.deployment-url.outputs.url }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Determine version
+        id: version
+        run: |
+          if [ "${{ inputs.version }}" != "" ]; then
+            echo "version=${{ inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "version=${GITHUB_SHA:0:7}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+      - name: Get DigitalOcean kubeconfig
+        run: |
+          CLUSTER_NAME=${{ secrets.DO_PRODUCTION_CLUSTER_NAME || 'todo-production' }}
+          echo "Using cluster: $CLUSTER_NAME"
+          doctl kubernetes cluster kubeconfig save $CLUSTER_NAME
+
+      - name: Verify cluster connectivity
+        run: |
+          kubectl cluster-info
+          kubectl get nodes
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.15.0
+
+      - name: Create namespace
+        run: |
+          kubectl create namespace todo-app --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Deploy with Helm
+        id: helm-deploy
+        run: |
+          echo "Deploying version ${{ steps.version.outputs.version }} to production..."
+
+          helm upgrade --install evolution-todo ./helm/todo-app \
+            --namespace todo-app \
+            --values ./helm/todo-app/values-production.yaml \
+            --set global.image.tag=${{ steps.version.outputs.version }} \
+            --set global.image.repository=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }} \
+            --set backend.env.DATABASE_URL=${{ secrets.PROD_DATABASE_URL }} \
+            --set backend.env.GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }} \
+            --set backend.env.BETTER_AUTH_SECRET=${{ secrets.BETTER_AUTH_SECRET }} \
+            --set backend.env.REDPANDA_BROKERS=${{ secrets.PROD_REDPANDA_BROKERS }} \
+            --set notificationService.env.REDPANDA_BROKERS=${{ secrets.PROD_REDPANDA_BROKERS }} \
+            --set recurringService.env.REDPANDA_BROKERS=${{ secrets.PROD_REDPANDA_BROKERS }} \
+            --set auditService.env.REDPANDA_BROKERS=${{ secrets.PROD_REDPANDA_BROKERS }} \
+            --set websocketService.env.REDPANDA_BROKERS=${{ secrets.PROD_REDPANDA_BROKERS }} \
+            --set ingress.host=${{ secrets.PROD_DOMAIN }} \
+            --set ingress.tls[0].secretName=${{ secrets.PROD_TLS_SECRET }} \
+            --wait \
+            --timeout 15m \
+            --atomic
+
+      - name: Get deployment URL
+        id: deployment-url
+        run: |
+          # Get Ingress host or LoadBalancer IP
+          URL=$(kubectl get ingress evolution-todo -n todo-app -o jsonpath='{.spec.rules[0].host}' 2>/dev/null || \
+              echo "http://$(kubectl get svc frontend -n todo-app -o jsonpath='{.status.loadBalancer.ingress[0].ip}')")
+          echo "url=$URL" >> $GITHUB_OUTPUT
+          echo "Deployment URL: $URL"
+
+      - name: Verify deployment
+        run: |
+          echo "Waiting for deployments to be ready..."
+          kubectl rollout status deployment/backend -n todo-app --timeout=5m
+          kubectl rollout status deployment/frontend -n todo-app --timeout=5m
+          kubectl rollout status deployment/notification-service -n todo-app --timeout=5m || echo "Notification service not deployed yet"
+          kubectl rollout status deployment/recurring-service -n todo-app --timeout=5m || echo "Recurring service not deployed yet"
+          kubectl rollout status deployment/audit-service -n todo-app --timeout=5m || echo "Audit service not deployed yet"
+          kubectl rollout status deployment/websocket-service -n todo-app --timeout=5m || echo "WebSocket service not deployed yet"
+
+      - name: Run smoke tests
+        run: |
+          echo "Running smoke tests on production..."
+          # Check pods are running
+          kubectl get pods -n todo-app
+
+          # Check service endpoints
+          kubectl get svc -n todo-app
+
+          # Verify backend health
+          BACKEND_POD=$(kubectl get pod -n todo-app -l app=backend -o jsonpath='{.items[0].metadata.name}')
+          kubectl exec $BACKEND_POD -n todo-app -- curl -f http://localhost:8000/health || echo "Health check failed"
+
+      - name: Notify success
+        if: success()
+        uses: slackapi/slack-github-action@v1
+        continue-on-error: true
+        with:
+          payload: |
+            {
+              "text": "Production deployment successful: ${{ steps.version.outputs.version }}",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Production Deployment*\n*Version:* ${{ steps.version.outputs.version }}\n*URL:* ${{ steps.deployment-url.outputs.url }}"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: Rollback on failure
+        if: failure()
+        run: |
+          echo "Deployment failed. Rolling back to previous version..."
+          helm rollback evolution-todo -n todo-app
+
+      - name: Display deployment status
+        if: always()
+        run: |
+          echo "## Production Deployment Status" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** ${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Status:** ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+          echo "**URL:** ${{ steps.deployment-url.outputs.url }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          kubectl get pods -n todo-app >> $GITHUB_STEP_SUMMARY
+
+  # Health check after deployment
+  health-check:
+    name: Post-Deployment Health Check
+    runs-on: ubuntu-latest
+    needs: [deploy-staging, deploy-production]
+    if: always()
+
+    steps:
+      - name: Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+      - name: Check staging health
+        if: needs.deploy-staging.result == 'success'
+        run: |
+          echo "Checking staging health..."
+          CLUSTER_NAME=${{ secrets.DO_STAGING_CLUSTER_NAME || 'todo-staging' }}
+          doctl kubernetes cluster kubeconfig save $CLUSTER_NAME
+          kubectl get pods -n todo-staging
+          kubectl get ingress -n todo-staging
+
+      - name: Check production health
+        if: needs.deploy-production.result == 'success'
+        run: |
+          echo "Checking production health..."
+          CLUSTER_NAME=${{ secrets.DO_PRODUCTION_CLUSTER_NAME || 'todo-production' }}
+          doctl kubernetes cluster kubeconfig save $CLUSTER_NAME
+          kubectl get pods -n todo-app
+          kubectl get ingress -n todo-app

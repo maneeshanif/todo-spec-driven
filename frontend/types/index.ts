@@ -39,6 +39,7 @@ export interface TaskFilters {
   completed?: boolean;
   priority?: 'low' | 'medium' | 'high';
   categoryId?: number;
+  categoryIds?: number[]; // For filtering by multiple tags/categories
   search?: string;
   dueDateStart?: string; // ISO date string
   dueDateEnd?: string; // ISO date string

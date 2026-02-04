@@ -1,0 +1,96 @@
+{{- if .Values.websocketService.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "todo-app.fullname" . }}-websocket
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "todo-app.websocketLabels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.websocketService.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "todo-app.websocketSelectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "todo-app.websocketSelectorLabels" . | nindent 8 }}
+      annotations:
+        {{- if .Values.dapr.enabled }}
+        dapr.io/enabled: "true"
+        dapr.io/app-id: "websocket-service"
+        dapr.io/app-port: "{{ .Values.websocketService.service.targetPort }}"
+        dapr.io/config: {{ .Values.dapr.config | quote }}
+        dapr.io/app-protocol: "http"
+        {{- end }}
+    spec:
+      {{- if .Values.serviceAccount.create }}
+      serviceAccountName: {{ include "todo-app.fullname" . }}-service
+      {{- end }}
+      containers:
+      - name: websocket
+        image: {{ include "todo-app.websocketImage" . }}
+        imagePullPolicy: {{ .Values.websocketService.image.pullPolicy | default .Values.global.imagePullPolicy }}
+        ports:
+        - name: http
+          containerPort: {{ .Values.websocketService.service.targetPort }}
+          protocol: TCP
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "todo-app.fullname" . }}-secrets
+              key: DATABASE_URL
+        - name: KAFKA_BROKERS
+          valueFrom:
+            configMapKeyRef:
+              name: {{ include "todo-app.fullname" . }}-config
+              key: KAFKA_BROKERS
+        - name: DAPR_HTTP_PORT
+          value: "{{ .Values.dapr.httpPort }}"
+        - name: DAPR_GRPC_PORT
+          value: "{{ .Values.dapr.grpcPort }}"
+        - name: TASK_UPDATES_TOPIC
+          value: {{ .Values.kafka.topics.taskUpdates | quote }}
+        - name: WEBSOCKET_PING_INTERVAL
+          value: {{ .Values.websocketService.pingInterval | quote }}
+        - name: WEBSOCKET_MAX_CONNECTIONS
+          value: {{ .Values.websocketService.maxConnections | quote }}
+        resources:
+          {{- toYaml .Values.websocketService.resources | nindent 10 }}
+        livenessProbe:
+          httpGet:
+            path: {{ .Values.websocketService.livenessProbe.path }}
+            port: {{ .Values.websocketService.service.targetPort }}
+          initialDelaySeconds: {{ .Values.websocketService.livenessProbe.initialDelaySeconds }}
+          periodSeconds: {{ .Values.websocketService.livenessProbe.periodSeconds }}
+          timeoutSeconds: {{ .Values.websocketService.livenessProbe.timeoutSeconds }}
+          failureThreshold: {{ .Values.websocketService.livenessProbe.failureThreshold }}
+        readinessProbe:
+          httpGet:
+            path: {{ .Values.websocketService.readinessProbe.path }}
+            port: {{ .Values.websocketService.service.targetPort }}
+          initialDelaySeconds: {{ .Values.websocketService.readinessProbe.initialDelaySeconds }}
+          periodSeconds: {{ .Values.websocketService.readinessProbe.periodSeconds }}
+          timeoutSeconds: {{ .Values.websocketService.readinessProbe.timeoutSeconds }}
+          failureThreshold: {{ .Values.websocketService.readinessProbe.failureThreshold }}
+{{- end }}
+---
+{{- if .Values.websocketService.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "todo-app.fullname" . }}-websocket
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "todo-app.websocketLabels" . | nindent 4 }}
+spec:
+  type: {{ .Values.websocketService.service.type }}
+  selector:
+    {{- include "todo-app.websocketSelectorLabels" . | nindent 4 }}
+  ports:
+  - name: http
+    port: {{ .Values.websocketService.service.port }}
+    targetPort: http
+    protocol: TCP
+{{- end }}

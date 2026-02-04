@@ -1,0 +1,335 @@
+{{- if .Values.networkPolicy.enabled }}
+---
+# Network Policy for Frontend
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "todo-app.fullname" . }}-frontend
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "todo-app.frontendLabels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "todo-app.frontendSelectorLabels" . | nindent 6 }}
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  # Allow traffic from Ingress Controller
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          {{ .Values.networkPolicy.ingressNamespaceLabels | toYaml | nindent 10 }}
+    ports:
+    - protocol: TCP
+      port: {{ .Values.frontend.service.targetPort }}
+  egress:
+  # Allow DNS resolution
+  - to:
+    - namespaceSelector: {}
+    ports:
+    - protocol: UDP
+      port: 53
+  # Allow outbound to backend, MCP, and WebSocket services
+  - to:
+    - podSelector:
+        matchLabels:
+          {{- include "todo-app.backendSelectorLabels" . | nindent 12 }}
+    - podSelector:
+        matchLabels:
+          {{- include "todo-app.mcpSelectorLabels" . | nindent 12 }}
+    - podSelector:
+        matchLabels:
+          {{- include "todo-app.websocketSelectorLabels" . | nindent 12 }}
+    ports:
+    - protocol: TCP
+      port: {{ .Values.backend.service.port }}
+    - protocol: TCP
+      port: {{ .Values.mcpServer.service.port }}
+    - protocol: TCP
+      port: {{ .Values.websocketService.service.port }}
+---
+# Network Policy for Backend
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "todo-app.fullname" . }}-backend
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "todo-app.backendLabels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "todo-app.backendSelectorLabels" . | nindent 6 }}
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  # Allow traffic from Frontend
+  - from:
+    - podSelector:
+        matchLabels:
+          {{- include "todo-app.frontendSelectorLabels" . | nindent 12 }}
+    ports:
+    - protocol: TCP
+      port: {{ .Values.backend.service.targetPort }}
+  # Allow traffic from Ingress Controller (if needed)
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          {{ .Values.networkPolicy.ingressNamespaceLabels | toYaml | nindent 10 }}
+    ports:
+    - protocol: TCP
+      port: {{ .Values.backend.service.targetPort }}
+  egress:
+  # Allow DNS resolution
+  - to:
+    - namespaceSelector: {}
+    ports:
+    - protocol: UDP
+      port: 53
+  # Allow access to external PostgreSQL (Neon)
+  - to:
+    - namespaceSelector: {}
+    ports:
+    - protocol: TCP
+      port: 5432
+  # Allow access to Dapr sidecar
+  - to:
+    - ipBlock:
+        cidr: {{ .Values.networkPolicy.podCIDR | default "10.0.0.0/8" }}
+    ports:
+    - protocol: TCP
+      port: 3500
+    - protocol: TCP
+      port: 50001
+---
+# Network Policy for MCP Server
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "todo-app.fullname" . }}-mcp-server
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "todo-app.mcpLabels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "todo-app.mcpSelectorLabels" . | nindent 6 }}
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  # Allow traffic from Backend and Frontend
+  - from:
+    - podSelector:
+        matchLabels:
+          {{- include "todo-app.backendSelectorLabels" . | nindent 12 }}
+    - podSelector:
+        matchLabels:
+          {{- include "todo-app.frontendSelectorLabels" . | nindent 12 }}
+    ports:
+    - protocol: TCP
+      port: {{ .Values.mcpServer.service.targetPort }}
+  egress:
+  # Allow DNS resolution
+  - to:
+    - namespaceSelector: {}
+    ports:
+    - protocol: UDP
+      port: 53
+---
+# Network Policy for Notification Service
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "todo-app.fullname" . }}-notification
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "todo-app.notificationLabels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "todo-app.notificationSelectorLabels" . | nindent 6 }}
+  policyTypes:
+  - Ingress
+  - Egress
+  egress:
+  # Allow DNS resolution
+  - to:
+    - namespaceSelector: {}
+    ports:
+    - protocol: UDP
+      port: 53
+  # Allow access to Kafka brokers
+  - to:
+    - namespaceSelector: {}
+    ports:
+    - protocol: TCP
+      port: {{ .Values.kafka.port }}
+  # Allow access to PostgreSQL
+  - to:
+    - namespaceSelector: {}
+    ports:
+    - protocol: TCP
+      port: 5432
+  # Allow access to Dapr sidecar
+  - to:
+    - ipBlock:
+        cidr: {{ .Values.networkPolicy.podCIDR | default "10.0.0.0/8" }}
+    ports:
+    - protocol: TCP
+      port: 3500
+    - protocol: TCP
+      port: 50001
+---
+# Network Policy for Recurring Task Service
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "todo-app.fullname" . }}-recurring-task
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "todo-app.recurringTaskLabels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "todo-app.recurringTaskSelectorLabels" . | nindent 6 }}
+  policyTypes:
+  - Ingress
+  - Egress
+  egress:
+  # Allow DNS resolution
+  - to:
+    - namespaceSelector: {}
+    ports:
+    - protocol: UDP
+      port: 53
+  # Allow access to Kafka brokers
+  - to:
+    - namespaceSelector: {}
+    ports:
+    - protocol: TCP
+      port: {{ .Values.kafka.port }}
+  # Allow access to PostgreSQL
+  - to:
+    - namespaceSelector: {}
+    ports:
+    - protocol: TCP
+      port: 5432
+  # Allow access to Backend service
+  - to:
+    - podSelector:
+        matchLabels:
+          {{- include "todo-app.backendSelectorLabels" . | nindent 12 }}
+    ports:
+    - protocol: TCP
+      port: {{ .Values.backend.service.port }}
+  # Allow access to Dapr sidecar
+  - to:
+    - ipBlock:
+        cidr: {{ .Values.networkPolicy.podCIDR | default "10.0.0.0/8" }}
+    ports:
+    - protocol: TCP
+      port: 3500
+    - protocol: TCP
+      port: 50001
+---
+# Network Policy for Audit Service
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "todo-app.fullname" . }}-audit
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "todo-app.auditLabels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "todo-app.auditSelectorLabels" . | nindent 6 }}
+  policyTypes:
+  - Ingress
+  - Egress
+  egress:
+  # Allow DNS resolution
+  - to:
+    - namespaceSelector: {}
+    ports:
+    - protocol: UDP
+      port: 53
+  # Allow access to Kafka brokers
+  - to:
+    - namespaceSelector: {}
+    ports:
+    - protocol: TCP
+      port: {{ .Values.kafka.port }}
+  # Allow access to PostgreSQL
+  - to:
+    - namespaceSelector: {}
+    ports:
+    - protocol: TCP
+      port: 5432
+  # Allow access to Dapr sidecar
+  - to:
+    - ipBlock:
+        cidr: {{ .Values.networkPolicy.podCIDR | default "10.0.0.0/8" }}
+    ports:
+    - protocol: TCP
+      port: 3500
+    - protocol: TCP
+      port: 50001
+---
+# Network Policy for WebSocket Service
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "todo-app.fullname" . }}-websocket
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "todo-app.websocketLabels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "todo-app.websocketSelectorLabels" . | nindent 6 }}
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  # Allow WebSocket traffic from external clients via Ingress
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          {{ .Values.networkPolicy.ingressNamespaceLabels | toYaml | nindent 10 }}
+    ports:
+    - protocol: TCP
+      port: {{ .Values.websocketService.service.targetPort }}
+  egress:
+  # Allow DNS resolution
+  - to:
+    - namespaceSelector: {}
+    ports:
+    - protocol: UDP
+      port: 53
+  # Allow access to Kafka brokers
+  - to:
+    - namespaceSelector: {}
+    ports:
+    - protocol: TCP
+      port: {{ .Values.kafka.port }}
+  # Allow access to PostgreSQL
+  - to:
+    - namespaceSelector: {}
+    ports:
+    - protocol: TCP
+      port: 5432
+  # Allow access to Dapr sidecar
+  - to:
+    - ipBlock:
+        cidr: {{ .Values.networkPolicy.podCIDR | default "10.0.0.0/8" }}
+    ports:
+    - protocol: TCP
+      port: 3500
+    - protocol: TCP
+      port: 50001
+{{- end }}

@@ -8,6 +8,8 @@ if TYPE_CHECKING:
     from src.models.category import TaskCategory
     from src.models.tag import Tag
 
+from src.models.task_tag import TaskTag
+
 
 def utcnow() -> datetime:
     """Return current UTC time without timezone info (for PostgreSQL TIMESTAMP WITHOUT TIME ZONE)."""
@@ -48,4 +50,9 @@ class Task(SQLModel, table=True):
 
     # Relationships (to other SQLModel models only)
     # Note: No user relationship - Better Auth manages users externally
-    tags: List["Tag"] = Relationship(back_populates="tasks", link_model="TaskTag")
+    # Using selectin lazy loading for async-safe relationship access
+    tags: List["Tag"] = Relationship(
+        back_populates="tasks",
+        link_model=TaskTag,
+        sa_relationship_kwargs={"lazy": "selectin"}
+    )

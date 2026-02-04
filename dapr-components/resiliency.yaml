@@ -5,20 +5,98 @@ metadata:
   namespace: todo-app
 spec:
   policies:
+    # Retry policies for different component types
     retries:
-      pubsubRetry:
+      DefaultRetryPolicy:
+        policy: constant
+        duration: 1s
+        maxRetries: 3
+
+      PubSubRetryPolicy:
         policy: exponential
         maxRetries: 5
         duration: 1s
         maxDuration: 30s
+
+      StateStoreRetryPolicy:
+        policy: exponential
+        maxRetries: 3
+        duration: 500ms
+        maxDuration: 15s
+
+      ServiceInvocationRetryPolicy:
+        policy: exponential
+        maxRetries: 4
+        duration: 500ms
+        maxDuration: 10s
+
+    # Timeout policies
+    timeouts:
+      DefaultTimeout: 5s
+      PubSubTimeout: 10s
+      StateStoreTimeout: 3s
+      ServiceInvocationTimeout: 7s
+
+    # Circuit breaker policies
     circuitBreakers:
-      pubsubCircuitBreaker:
+      DefaultCircuitBreaker:
         maxRequests: 3
         timeout: 30s
         trip: consecutiveFailures >= 5
+
+      PubSubCircuitBreaker:
+        maxRequests: 5
+        timeout: 60s
+        trip: consecutiveFailures >= 8
+
+      StateStoreCircuitBreaker:
+        maxRequests: 3
+        timeout: 20s
+        trip: consecutiveFailures >= 5
+
   targets:
+    # App-level policies
+    apps:
+      backend:
+        retry: DefaultRetryPolicy
+        timeout: DefaultTimeout
+        circuitBreaker: DefaultCircuitBreaker
+
+      notification-service:
+        retry: DefaultRetryPolicy
+        timeout: DefaultTimeout
+        circuitBreaker: DefaultCircuitBreaker
+
+      recurring-task-service:
+        retry: DefaultRetryPolicy
+        timeout: DefaultTimeout
+        circuitBreaker: DefaultCircuitBreaker
+
+      audit-service:
+        retry: StateStoreRetryPolicy
+        timeout: StateStoreTimeout
+        circuitBreaker: StateStoreCircuitBreaker
+
+      websocket-service:
+        retry: ServiceInvocationRetryPolicy
+        timeout: ServiceInvocationTimeout
+        circuitBreaker: DefaultCircuitBreaker
+
+    # Component-specific policies
     components:
-      kafka-pubsub:
+      pubsub-kafka:
         outbound:
-          retry: pubsubRetry
-          circuitBreaker: pubsubCircuitBreaker
+          retry: PubSubRetryPolicy
+          timeout: PubSubTimeout
+          circuitBreaker: PubSubCircuitBreaker
+
+      statestore-postgres:
+        outbound:
+          retry: StateStoreRetryPolicy
+          timeout: StateStoreTimeout
+          circuitBreaker: StateStoreCircuitBreaker
+
+      kubernetes-secrets:
+        outbound:
+          retry: DefaultRetryPolicy
+          timeout: DefaultTimeout

@@ -6,10 +6,14 @@ metadata:
   labels:
     {{- include "todo-app.labels" . | nindent 4 }}
 data:
-  # Environment
+  # ============================================================================
+  # General Environment
+  # ============================================================================
   NODE_ENV: {{ .Values.frontend.env.NODE_ENV | quote }}
 
+  # ============================================================================
   # Service Discovery (Internal K8s DNS)
+  # ============================================================================
   NEXT_PUBLIC_API_URL: {{ printf "http://%s-backend:%d" (include "todo-app.fullname" .) (int .Values.backend.service.port) | quote }}
   NEXT_PUBLIC_MCP_URL: {{ printf "http://%s-mcp-server:%d" (include "todo-app.fullname" .) (int .Values.mcpServer.service.port) | quote }}
   MCP_SERVER_URL: {{ printf "http://%s-mcp-server:%d/mcp" (include "todo-app.fullname" .) (int .Values.mcpServer.service.port) | quote }}
@@ -17,5 +21,93 @@ data:
   # Better Auth URL for JWT validation (backend needs to reach frontend's JWKS endpoint)
   BETTER_AUTH_URL: {{ printf "http://%s-frontend:%d" (include "todo-app.fullname" .) (int .Values.frontend.service.port) | quote }}
 
+  # CORS Configuration
+  ALLOWED_ORIGINS: "http://localhost:3000,http://localhost:3001"
+
+  # ============================================================================
   # Next.js Configuration
+  # ============================================================================
   NEXT_TELEMETRY_DISABLED: {{ .Values.frontend.env.NEXT_TELEMETRY_DISABLED | quote }}
+
+  # ============================================================================
+  # Phase 5: Kafka Configuration (Event Streaming)
+  # ============================================================================
+  {{- if .Values.kafka.enabled }}
+  KAFKA_BROKERS: {{ .Values.kafka.brokers | quote }}
+  KAFKA_PORT: {{ .Values.kafka.port | quote }}
+  KAFKA_TASK_EVENTS_TOPIC: {{ .Values.kafka.topics.taskEvents | quote }}
+  KAFKA_REMINDERS_TOPIC: {{ .Values.kafka.topics.reminders | quote }}
+  KAFKA_TASK_UPDATES_TOPIC: {{ .Values.kafka.topics.taskUpdates | quote }}
+  KAFKA_AUDIT_EVENTS_TOPIC: {{ .Values.kafka.topics.auditEvents | quote }}
+  {{- end }}
+
+  # ============================================================================
+  # Phase 5: Dapr Configuration
+  # ============================================================================
+  {{- if .Values.dapr.enabled }}
+  DAPR_ENABLED: "true"
+  DAPR_HTTP_PORT: {{ .Values.dapr.httpPort | quote }}
+  DAPR_GRPC_PORT: {{ .Values.dapr.grpcPort | quote }}
+  DAPR_CONFIG: {{ .Values.dapr.config | quote }}
+  {{- end }}
+
+  # ============================================================================
+  # Phase 5: Advanced Features Configuration
+  # ============================================================================
+  {{- if .Values.advancedFeatures.priorities.enabled }}
+  PRIORITIES_ENABLED: "true"
+  DEFAULT_PRIORITY: {{ .Values.advancedFeatures.priorities.default | quote }}
+  {{- end }}
+
+  {{- if .Values.advancedFeatures.tags.enabled }}
+  TAGS_ENABLED: "true"
+  MAX_TAGS_PER_TASK: {{ .Values.advancedFeatures.tags.maxPerTask | quote }}
+  MAX_TAGS_PER_USER: {{ .Values.advancedFeatures.tags.maxPerUser | quote }}
+  {{- end }}
+
+  {{- if .Values.advancedFeatures.dueDates.enabled }}
+  DUE_DATES_ENABLED: "true"
+  {{- if .Values.advancedFeatures.dueDates.reminderDefaults.enabled }}
+  REMINDERS_ENABLED: "true"
+  REMINDER_OFFSET_HOURS: {{ .Values.advancedFeatures.dueDates.reminderDefaults.offsetHours | quote }}
+  {{- end }}
+  {{- end }}
+
+  {{- if .Values.advancedFeatures.recurring.enabled }}
+  RECURRING_ENABLED: "true"
+  {{- end }}
+
+  {{- if .Values.advancedFeatures.search.enabled }}
+  SEARCH_ENABLED: "true"
+  SEARCH_TYPE: {{ .Values.advancedFeatures.search.type | quote }}
+  {{- end }}
+
+  {{- if .Values.advancedFeatures.filter.enabled }}
+  FILTER_ENABLED: "true"
+  {{- end }}
+
+  {{- if .Values.advancedFeatures.sort.enabled }}
+  SORT_ENABLED: "true"
+  SORT_DEFAULT_FIELD: {{ .Values.advancedFeatures.sort.default | quote }}
+  SORT_DEFAULT_DIRECTION: {{ .Values.advancedFeatures.sort.direction | quote }}
+  {{- end }}
+
+  # ============================================================================
+  # Phase 5: Observability Configuration
+  # ============================================================================
+  {{- if .Values.observability.logging }}
+  LOG_LEVEL: {{ .Values.observability.logging.level | quote }}
+  LOG_FORMAT: {{ .Values.observability.logging.format | quote }}
+  {{- end }}
+
+  {{- if and .Values.observability.metrics .Values.observability.metrics.enabled }}
+  METRICS_ENABLED: "true"
+  METRICS_PORT: {{ .Values.observability.metrics.port | quote }}
+  METRICS_PATH: {{ .Values.observability.metrics.path | quote }}
+  {{- end }}
+
+  {{- if and .Values.observability.tracing .Values.observability.tracing.enabled }}
+  TRACING_ENABLED: "true"
+  TRACING_SAMPLING: {{ .Values.observability.tracing.sampling | quote }}
+  TRACING_EXPORTER: {{ .Values.observability.tracing.exporter | quote }}
+  {{- end }}
