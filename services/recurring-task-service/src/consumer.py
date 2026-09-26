@@ -50,9 +50,10 @@ def register_subscriptions(dapr_app: DaprApp) -> None:
                 }
         """
         try:
-            event_type = event.get("event_type")
-            task_data = event.get("task", {})
-            user_id = event.get("user_id")
+            payload = event.get("data", event)  # unwrap CloudEvents envelope
+            event_type = payload.get("event_type")
+            task_data = payload.get("task", {})
+            user_id = payload.get("user_id")
 
             logger.info(
                 "Received task event",

@@ -46,11 +46,12 @@ def register_subscriptions(dapr_app: DaprApp):
             event: The event payload from Dapr
         """
         try:
+            payload = event.get("data", event)  # unwrap CloudEvents envelope
             # Extract event fields
-            event_type = event.get("event_type")
-            user_id = event.get("user_id")
-            task_data = event.get("task", {})
-            request_id = event.get("request_id")
+            event_type = payload.get("event_type")
+            user_id = payload.get("user_id")
+            task_data = payload.get("task", {})
+            request_id = payload.get("request_id")
 
             # Validate required fields
             if not event_type:

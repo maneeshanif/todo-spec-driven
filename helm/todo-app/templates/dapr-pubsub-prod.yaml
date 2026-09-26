@@ -8,7 +8,7 @@
 apiVersion: dapr.io/v1alpha1
 kind: Component
 metadata:
-  name: pubsub-kafka
+  name: taskpubsub
   namespace: {{ .Values.namespace }}
 spec:
   type: pubsub.kafka

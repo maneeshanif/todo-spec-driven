@@ -99,7 +99,8 @@ def register_subscriptions(dapr_app: DaprApp) -> None:
         Dapr calls this function when a message is published to the reminders topic.
         """
         logger.info(f"Received event from {config.reminders_topic} topic")
-        result = await handle_reminder_event(event)
+        payload = event.get("data", event)  # unwrap CloudEvents envelope
+        result = await handle_reminder_event(payload)
         return result
 
     logger.info(f"Subscribed to topic: {config.reminders_topic}")

@@ -2,15 +2,14 @@ apiVersion: dapr.io/v1alpha1
 kind: Component
 metadata:
   name: taskpubsub
-  namespace: todo-app
 spec:
   type: pubsub.kafka
   version: v1
   metadata:
     - name: brokers
-      value: "evolution-kafka-kafka-bootstrap.kafka.svc.cluster.local:9092"
+      value: "redpanda:9092"
     - name: consumerGroup
-      value: "{appid}-group"
+      value: "{appID}-group"
     - name: authRequired
       value: "false"
     - name: disableTls

@@ -381,8 +381,8 @@ class ReminderService:
 
         # Publish via Dapr pub/sub
         published = await DaprClient.publish_event(
-            pubsub_name="pubsub-kafka",
-            topic="reminder-events",
+            pubsub_name="taskpubsub",
+            topic="reminders",
             data=event.model_dump(mode='json')
         )
 

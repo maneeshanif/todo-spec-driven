@@ -20,7 +20,7 @@ from src.utils.caching import generate_etag, check_etag_match, set_cache_headers
 logger = get_logger(__name__)
 
 # Dapr pub/sub component name
-PUBSUB_NAME = "pubsub-kafka"
+PUBSUB_NAME = "taskpubsub"
 
 
 async def _extract_task_data(task) -> TaskEventData:

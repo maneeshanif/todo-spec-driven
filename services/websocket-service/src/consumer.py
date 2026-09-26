@@ -40,9 +40,10 @@ def register_subscriptions(dapr_app: DaprApp, pubsub_name: str, topic: str) -> N
             Confirmation dict for Dapr
         """
         try:
-            event_type = event.get("event_type")
-            user_id = event.get("user_id")
-            task_data = event.get("task")
+            payload = event.get("data", event)  # unwrap CloudEvents envelope
+            event_type = payload.get("event_type")
+            user_id = payload.get("user_id")
+            task_data = payload.get("task")
 
             if not event_type or not user_id:
                 logger.error(f"Invalid event structure: {event}")
@@ -53,7 +54,7 @@ def register_subscriptions(dapr_app: DaprApp, pubsub_name: str, topic: str) -> N
                 "type": "task_update",
                 "event": event_type,
                 "task": task_data,
-                "timestamp": event.get("timestamp"),
+                "timestamp": payload.get("timestamp"),
             }
 
             logger.info(
