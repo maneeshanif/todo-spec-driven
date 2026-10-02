@@ -17,7 +17,8 @@
         "titleBar.activeForeground": "#15202b",
         "titleBar.inactiveBackground": "#24f0ad99",
         "titleBar.inactiveForeground": "#15202b99",
-        "commandCenter.foreground": "#15202b"
+        "commandCenter.foreground": "#15202b",
+        "statusBar.inactiveBackground": "#24f0ad"
     },
     "chat.promptFilesRecommendations": {
         "speckit.constitution": true,
