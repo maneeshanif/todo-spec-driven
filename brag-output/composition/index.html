@@ -1,0 +1,500 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=1920, height=1080" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Geist:wght@300;400;500&family=Geist+Mono:wght@400&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<style>
+:root{
+  --bg:#f8f5f0; --bg-alt:#f0ebe3; --dark:#0a0a0a; --gold:#c9a962; --gold-dark:#a08339; --gold-text:#7d672c;
+  --red:#8b2635; --text:#1a1a1a; --muted:#666666; --border:#e5dfd5;
+  --serif:"Cormorant Garamond", Georgia, serif; --sans:"Geist", ui-sans-serif, system-ui, sans-serif;
+  --mono:"Geist Mono", ui-monospace, monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{margin:0;width:1920px;height:1080px;overflow:hidden;background:var(--dark)}
+#root{position:relative;width:1920px;height:1080px;overflow:hidden;font-family:var(--sans);color:var(--text)}
+.scene{position:absolute;left:0;top:0;width:1920px;height:1080px;overflow:hidden;background:var(--bg)}
+.caps{font-family:var(--sans);text-transform:uppercase;letter-spacing:.3em;font-weight:400}
+.ch{opacity:0;display:inline-block;white-space:pre}
+.abs{position:absolute}
+.orb{position:absolute;border-radius:50%;filter:blur(90px)}
+.corner{position:absolute;border-color:var(--gold);border-style:solid;width:0;height:0}
+.cursor{position:absolute;left:0;top:0;z-index:100;opacity:0;filter:drop-shadow(0 4px 6px rgba(0,0,0,.25))}
+
+/* S0 intro */
+#s0{background:var(--dark);z-index:13}
+#s0 .i1{left:0;width:1920px;top:260px;text-align:center;color:var(--gold);font-size:30px;opacity:0}
+#s0 .i2{left:0;width:1920px;top:330px;text-align:center;color:#faf8f5;font-family:var(--serif);font-style:italic;font-weight:300;font-size:132px;line-height:1.05;opacity:0}
+#s0 .i3{left:0;width:1920px;top:600px;text-align:center;color:#e8e2d4;font-size:46px;font-weight:300;line-height:1.45;opacity:0}
+.ur{position:absolute;top:850px;border-left:4px solid var(--gold-dark);padding-left:24px;opacity:0}
+.ur .u1{font-family:var(--serif);font-size:40px;line-height:1.15;color:var(--text)}
+.ur .u2{margin-top:8px;font-size:22px;color:var(--muted)}
+
+/* S1 */
+#s1{background:var(--dark);z-index:10}
+#s1 .wm{left:0;width:1920px;top:330px;text-align:center;color:var(--gold);font-size:30px;opacity:0}
+#s1 .hook{left:0;width:1920px;top:430px;text-align:center;color:#faf8f5;font-family:var(--serif);font-style:italic;font-weight:300;font-size:118px;line-height:1.05;opacity:0}
+
+/* S2 */
+#s2{z-index:5}
+#s2 .brand{left:96px;top:64px;color:var(--gold-text);font-size:22px}
+#s2 .eyebrow{left:0;width:1920px;top:180px;text-align:center;color:var(--gold-text);font-size:24px;opacity:0}
+#s2 h1{position:absolute;left:0;width:1920px;top:290px;text-align:center;font-family:var(--serif);font-weight:300;font-size:210px;line-height:1.02;letter-spacing:-.02em}
+#s2 h1 .l{display:block;opacity:0}
+#s2 h1 .gold{color:var(--gold-dark)}
+#s2 .sub{left:0;width:1920px;top:800px;text-align:center;font-family:var(--serif);font-style:italic;font-weight:300;font-size:50px;color:var(--muted);opacity:0}
+
+/* app shell */
+#s3,#s4,#s5{z-index:6;opacity:0}
+#s4{z-index:7}#s5{z-index:8}
+.side{position:absolute;left:0;top:0;width:340px;height:1080px;background:var(--bg-alt);border-right:1px solid var(--border)}
+.side .brand{position:absolute;left:44px;top:70px;color:var(--gold-text);font-size:22px}
+.nav{position:absolute;left:28px;width:284px;height:64px;padding-left:28px;display:flex;align-items:center;font-size:26px;font-weight:300;color:var(--muted)}
+.nav.on{background:rgba(160,131,57,.12);color:var(--text);border-left:4px solid var(--gold-dark);padding-left:24px}
+.nav-hl{position:absolute;left:28px;width:284px;height:64px;background:rgba(160,131,57,.16);border-left:4px solid var(--gold-dark);opacity:0}
+h1.page{position:absolute;left:412px;top:48px;font-family:var(--serif);font-weight:300;font-size:64px;line-height:1.1}
+h1.page span{color:var(--gold-dark)}
+.subt{position:absolute;left:412px;top:130px;font-size:26px;font-style:italic;font-weight:300;color:var(--muted)}
+.newbtn{position:absolute;right:72px;top:58px;width:250px;height:66px;background:#86702f;color:#fff;font-size:20px;display:flex;align-items:center;justify-content:center}
+
+/* stats */
+.stat{position:absolute;top:220px;width:341px;height:170px;background:rgba(255,255,255,.7);border:1px solid var(--border);opacity:0}
+.stat .sl{position:absolute;left:28px;top:26px;font-size:18px;color:var(--muted);letter-spacing:.22em}
+.stat .sq{position:absolute;right:28px;top:30px;width:14px;height:14px;background:var(--gold)}
+.num{position:absolute;left:28px;top:56px;width:200px;height:100px;font-family:var(--serif);font-weight:300;font-size:92px;line-height:100px}
+.cv{position:absolute;left:0;top:0}
+
+/* tasks panel */
+.panel{position:absolute;left:412px;top:430px;width:1436px;height:590px;background:rgba(240,235,227,.55);border:1px solid var(--border);opacity:0}
+.panel .pt{position:absolute;left:36px;top:26px;font-family:var(--serif);font-weight:300;font-size:46px}
+.panel .btn{position:absolute;top:30px;height:52px;padding:0 26px;border:1px solid var(--border);color:var(--muted);font-size:17px;display:flex;align-items:center}
+
+/* rows */
+.row{position:absolute;left:412px;width:1436px;height:104px;background:rgba(255,255,255,.75);border:1px solid var(--border);opacity:0}
+.row .box{position:absolute;left:28px;top:30px;width:40px;height:40px;border:2px solid var(--gold-dark)}
+.row .fill{position:absolute;left:28px;top:30px;width:40px;height:40px;background:var(--gold-dark);color:#fff;font-size:26px;display:flex;align-items:center;justify-content:center;opacity:0}
+.row .rt{position:absolute;left:96px;top:14px;font-size:36px;font-weight:300;line-height:44px}
+.row .rt .in{position:relative;display:inline-block}
+.row .strike{position:absolute;left:0;top:50%;width:100%;height:3px;background:var(--gold-dark);transform-origin:left center;opacity:0}
+.row .rs{position:absolute;left:96px;top:60px;font-size:22px;color:var(--gold-text);letter-spacing:.04em}
+.row .rr{position:absolute;right:210px;top:0;height:104px;display:flex;align-items:center;font-size:24px;color:var(--muted)}
+.row .badge{position:absolute;right:28px;top:29px;height:46px;padding:0 24px;display:flex;align-items:center;font-size:19px;letter-spacing:.28em;text-transform:uppercase;border:1px solid}
+.row .tint{position:absolute;inset:0;background:rgba(201,169,98,.18);opacity:0}
+.b-high{color:var(--red);border-color:var(--red)}
+.b-med{color:var(--gold-text);border-color:var(--gold-dark)}
+.b-low{color:var(--muted);border-color:#bdb5a6}
+.b-new{color:#fff;background:var(--gold-dark);border-color:var(--gold-dark)}
+
+/* voice */
+.micwrap{position:absolute;left:1020px;top:230px;width:220px;height:220px}
+.ring{position:absolute;inset:0;border-radius:50%;border:3px solid var(--red);opacity:0}
+.mic{position:absolute;inset:0;border-radius:50%;display:flex;align-items:center;justify-content:center}
+#micg{background:var(--gold-dark)}#micr{background:var(--red);opacity:0}
+.mlabel{position:absolute;left:412px;width:1436px;text-align:center;top:490px;font-size:26px;color:var(--muted);opacity:0}
+.tr{position:absolute;left:630px;top:600px;width:1000px;height:110px;background:#fff;border:1px solid var(--border);display:flex;align-items:center;padding:0 44px;font-family:var(--serif);font-style:italic;font-size:54px;opacity:0}
+.tool{position:absolute;left:630px;top:736px;background:rgba(201,169,98,.14);border:1px solid var(--gold);color:var(--gold-text);font-family:var(--mono);font-size:30px;padding:16px 30px;opacity:0}
+.reply{position:absolute;left:630px;top:832px;width:1000px;height:130px;background:#fff;border:1px solid var(--border);border-left:5px solid var(--gold-dark);display:flex;align-items:center;gap:28px;padding:0 44px;font-family:var(--serif);font-size:56px;opacity:0}
+.reply b{font-weight:400;color:var(--gold-dark)}
+
+/* recurring */
+.pill{position:absolute;top:720px;width:310px;height:84px;border:1px solid var(--gold-dark);background:rgba(255,255,255,.75);display:flex;align-items:center;justify-content:center;text-align:center;font-family:var(--mono);font-size:24px;color:var(--gold-text);opacity:0}
+.arr{position:absolute;top:720px;width:64px;height:84px;display:flex;align-items:center;justify-content:center;font-size:34px;color:var(--gold-dark);opacity:0}
+.cap5{position:absolute;left:412px;top:850px;font-size:22px;color:var(--muted);opacity:0}
+.toast{position:absolute;right:72px;top:30px;width:620px;background:#1a1a1a;padding:20px 32px;opacity:0;z-index:50}
+.toast .tk{font-size:16px;color:var(--gold);margin-bottom:6px}
+.toast .tt{font-size:34px;font-weight:300;color:#fff}
+.toast .ts{font-size:20px;color:#b9b3a6;margin-top:8px}
+
+/* S6 */
+#s6{z-index:9;opacity:0}
+.eye6{left:0;width:1920px;text-align:center;top:70px;color:var(--gold-text);font-size:22px}
+.ttl6{left:0;width:1920px;text-align:center;top:120px;font-family:var(--serif);font-weight:300;font-size:80px}
+.node{position:absolute;top:455px;width:250px;height:180px;background:#fff;border:1px solid var(--gold-dark);text-align:center;opacity:0}
+.node .nm{margin-top:30px;font-family:var(--serif);font-size:48px;font-weight:400}
+.node .nr{margin-top:8px;padding:0 14px;font-size:24px;line-height:1.25;color:var(--muted)}
+.svc{position:absolute;left:1500px;width:380px;height:110px;background:#fff;border:1px solid var(--border);text-align:left;padding:14px 26px;opacity:0}
+.svc .nm{font-family:var(--serif);font-size:34px;white-space:nowrap}
+.svc .nr{font-size:24px;color:var(--muted);margin-top:2px}
+.ln{position:absolute;background:var(--gold-dark);height:2px;transform-origin:left center}
+.spine{position:absolute;left:1440px;top:355px;width:2px;height:390px;background:var(--gold-dark);transform-origin:top center}
+.dot{position:absolute;left:0;top:0;width:20px;height:20px;border-radius:50%;background:var(--gold);opacity:0;box-shadow:0 0 18px 6px rgba(201,169,98,.5)}
+.topics{position:absolute;left:720px;top:690px;width:700px;text-align:center;font-family:var(--mono);font-size:26px;color:var(--gold-text);line-height:1.6;opacity:0}
+#s6b{position:absolute;inset:0;opacity:0}
+.tc{position:absolute;width:420px;height:300px;background:#fff;border:1px solid var(--border);padding:40px 34px;opacity:0}
+.tc .nm{font-family:var(--serif);font-size:56px;line-height:1.02;font-weight:400}
+.tc .nr{margin-top:18px;font-size:30px;color:var(--muted);line-height:1.3;font-weight:300}
+.tc .bar{position:absolute;left:0;top:0;width:100%;height:4px;background:var(--gold-dark)}
+
+/* S7 */
+#s7{z-index:12;opacity:0}
+#s7 .l1{left:0;width:1920px;top:250px;text-align:center;font-family:var(--serif);font-weight:300;font-size:170px;line-height:1;opacity:0}
+#s7 .l2{left:0;width:1920px;top:430px;text-align:center;font-family:var(--serif);font-style:italic;font-weight:300;font-size:210px;line-height:1;color:var(--gold-dark);opacity:0}
+#s7 .rule{left:800px;top:720px;width:320px;height:1px;background:var(--gold-dark);transform-origin:center}
+#s7 .wm{left:0;width:1920px;top:760px;text-align:center;color:var(--gold-text);font-size:30px;opacity:0}
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="49.15" data-width="1920" data-height="1080">
+
+  <!-- S0 intro -->
+  <div id="s0" class="scene clip" data-start="0" data-duration="6.6" data-track-index="0">
+    <div class="orb" style="left:380px;top:250px;width:420px;height:420px;background:var(--gold);opacity:.16"></div>
+    <div class="orb" style="left:1150px;top:560px;width:340px;height:340px;background:var(--red);opacity:.12"></div>
+    <div class="corner" style="left:64px;top:64px;border-width:2px 0 0 2px;width:96px;height:96px"></div>
+    <div class="corner" style="right:64px;top:64px;border-width:2px 2px 0 0;width:96px;height:96px"></div>
+    <div class="corner" style="left:64px;bottom:64px;border-width:0 0 2px 2px;width:96px;height:96px"></div>
+    <div class="corner" style="right:64px;bottom:64px;border-width:0 2px 2px 0;width:96px;height:96px"></div>
+    <div class="abs caps i1" id="i1">January 2026</div>
+    <div class="abs i2" id="i2">Built with Spec-Kit Plus</div>
+    <div class="abs i3" id="i3">A basic project, made just to try<br/>a little Kafka, and Kubernetes with Helm.</div>
+  </div>
+
+  <!-- S1 hook -->
+  <div id="s1" class="scene clip" data-start="6.55" data-duration="4.2" data-track-index="1">
+    <div class="orb" id="o1" style="left:380px;top:250px;width:420px;height:420px;background:var(--gold);opacity:.2"></div>
+    <div class="orb" id="o2" style="left:1150px;top:560px;width:340px;height:340px;background:var(--red);opacity:.15"></div>
+    <div class="corner" id="c1" style="left:64px;top:64px;border-width:2px 0 0 2px"></div>
+    <div class="corner" id="c2" style="right:64px;top:64px;border-width:2px 2px 0 0"></div>
+    <div class="corner" id="c3" style="left:64px;bottom:64px;border-width:0 0 2px 2px"></div>
+    <div class="corner" id="c4" style="right:64px;bottom:64px;border-width:0 2px 2px 0"></div>
+    <div class="abs caps wm" id="s1wm">TaskWhisper®</div>
+    <div class="abs hook" id="s1hook">Productivity, but<br/>make it couture.</div>
+  </div>
+
+  <!-- S2 reveal -->
+  <div id="s2" class="scene clip" data-start="9.75" data-duration="4.2" data-track-index="2">
+    <div class="orb" style="left:300px;top:300px;width:300px;height:300px;background:var(--gold);opacity:.18"></div>
+    <div class="orb" style="left:1300px;top:600px;width:360px;height:360px;background:var(--red);opacity:.08"></div>
+    <div class="abs caps brand">TaskWhisper®</div>
+    <div class="abs caps eyebrow" id="s2eye">Just Whisper It, Done.</div>
+    <h1 id="s2h1"><span class="l" id="s2l1">Elevate Your</span><span class="l gold" id="s2l2">Workflow</span></h1>
+    <div class="abs sub" id="s2sub">AI-powered task management through natural conversation.</div>
+  </div>
+
+  <!-- S3 dashboard -->
+  <div id="s3" class="scene clip" data-start="13.55" data-duration="6.1" data-track-index="3">
+    
+    <div class="side">
+      <div class="caps brand">TaskWhisper®</div>
+      <div class="nav on" style="top:190px">Dashboard</div><div class="nav" style="top:260px">All Tasks</div><div class="nav" style="top:330px">Today</div><div class="nav" style="top:400px">Upcoming</div><div class="nav" style="top:470px">Analytics</div><div class="nav" style="top:540px">AI Chat</div><div class="nav" style="top:610px">Voice Assistant</div><div class="nav" style="top:680px">Settings</div>
+      <div class="nav-hl" id="s3hl" style="top:610px"></div>
+    </div>
+    <h1 class="page" id="s3h">Welcome back, <span>Alex</span></h1>
+    <div class="subt" id="s3sub">Here's what's happening with your tasks today</div>
+    <div class="caps newbtn" id="s3new">+ New Task</div>
+    <div class="stat" id="st0" style="left:412px"><div class="caps sl">Total Tasks</div><div class="num" id="n1"><span class="cv" data-i="0" style="opacity:1">0</span><span class="cv" data-i="1" style="opacity:0">2</span><span class="cv" data-i="2" style="opacity:0">4</span><span class="cv" data-i="3" style="opacity:0">6</span><span class="cv" data-i="4" style="opacity:0">8</span><span class="cv" data-i="5" style="opacity:0">10</span><span class="cv" data-i="6" style="opacity:0">12</span></div><div class="sq"></div></div><div class="stat" id="st1" style="left:777px"><div class="caps sl">Completed</div><div class="num" id="n2"><span class="cv" data-i="0" style="opacity:1">0</span><span class="cv" data-i="1" style="opacity:0">1</span><span class="cv" data-i="2" style="opacity:0">2</span><span class="cv" data-i="3" style="opacity:0">3</span><span class="cv" data-i="4" style="opacity:0">4</span><span class="cv" data-i="5" style="opacity:0">5</span></div><div class="sq"></div></div><div class="stat" id="st2" style="left:1142px"><div class="caps sl">In Progress</div><div class="num" id="n3"><span class="cv" data-i="0" style="opacity:1">0</span><span class="cv" data-i="1" style="opacity:0">1</span><span class="cv" data-i="2" style="opacity:0">2</span><span class="cv" data-i="3" style="opacity:0">3</span><span class="cv" data-i="4" style="opacity:0">4</span><span class="cv" data-i="5" style="opacity:0">5</span><span class="cv" data-i="6" style="opacity:0">6</span></div><div class="sq"></div></div><div class="stat" id="st3" style="left:1507px"><div class="caps sl">Overdue</div><div class="num" id="n4"><span class="cv" data-i="0" style="opacity:1">0</span><span class="cv" data-i="1" style="opacity:0">1</span></div><div class="sq"></div></div>
+    <div class="panel" id="s3panel"><div class="pt">Your Tasks</div><div class="caps btn" style="right:196px">Filter</div><div class="caps btn" style="right:36px">Sort</div></div>
+    
+    <div class="row" id="d1" style="top:540px">
+      <div class="box"></div><div class="fill">✓</div>
+      <div class="rt"><span class="in">Finish quarterly report<span class="strike"></span></span></div>
+      <div class="rs">#work</div>
+      <div class="rr">Due today</div>
+      <div class="badge b-high">High</div>
+      <div class="tint"></div>
+    </div>
+    
+    <div class="row" id="d2" style="top:656px">
+      <div class="box"></div><div class="fill">✓</div>
+      <div class="rt"><span class="in">Call mom tonight<span class="strike"></span></span></div>
+      <div class="rs">#family</div>
+      <div class="rr">6:00 PM</div>
+      <div class="badge b-med">Medium</div>
+      <div class="tint"></div>
+    </div>
+    
+    <div class="row" id="d3" style="top:772px">
+      <div class="box"></div><div class="fill">✓</div>
+      <div class="rt"><span class="in">Weekly review<span class="strike"></span></span></div>
+      <div class="rs">#planning · ↻ Weekly</div>
+      <div class="rr">Due Mon</div>
+      <div class="badge b-low">Low</div>
+      <div class="tint"></div>
+    </div>
+    <svg class="cursor" id="cur3" width="44" height="44" viewBox="0 0 24 24"><path d="M3 2 L3 19 L8 14.5 L11.5 22 L14 21 L10.5 13.5 L17 13 Z" fill="#1a1a1a" stroke="#ffffff" stroke-width="1.2" stroke-linejoin="round"/></svg>
+  </div>
+
+  <!-- S4 voice -->
+  <div id="s4" class="scene clip" data-start="19.10" data-duration="7.65" data-track-index="4">
+    
+    <div class="side">
+      <div class="caps brand">TaskWhisper®</div>
+      <div class="nav" style="top:190px">Dashboard</div><div class="nav" style="top:260px">All Tasks</div><div class="nav" style="top:330px">Today</div><div class="nav" style="top:400px">Upcoming</div><div class="nav" style="top:470px">Analytics</div><div class="nav" style="top:540px">AI Chat</div><div class="nav on" style="top:610px">Voice Assistant</div><div class="nav" style="top:680px">Settings</div>
+      <div class="nav-hl" id="s4hl" style="top:610px"></div>
+    </div>
+    <h1 class="page">Voice Assistant</h1>
+    <div class="micwrap">
+      <div class="ring" id="ring1"></div><div class="ring" id="ring2"></div>
+      <div class="mic" id="micg"><svg width="96" height="96" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2.5" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0"/><path d="M12 17.5V21"/><path d="M8.5 21h7"/></svg></div><div class="mic" id="micr"><svg width="96" height="96" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2.5" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0"/><path d="M12 17.5V21"/><path d="M8.5 21h7"/></svg></div>
+    </div>
+    <div class="caps mlabel" id="lab1" style="opacity:1">Tap to speak</div>
+    <div class="caps mlabel" id="lab2">Listening...</div>
+    <div class="caps mlabel" id="lab3">Thinking...</div>
+    <div class="tr" id="s4tr"><span class="ch w4">“Add&nbsp;</span><span class="ch w4">a&nbsp;</span><span class="ch w4">task&nbsp;</span><span class="ch w4">to&nbsp;</span><span class="ch w4">buy&nbsp;</span><span class="ch w4">groceries”</span></div>
+    <div class="tool" id="s4tool">◆ add_task &nbsp;“Buy groceries” &nbsp;✓</div>
+    <div class="reply" id="s4reply"><svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#a08339" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5h3.5L12 5.5v13L7.5 14.5H4z"/><path d="M15.5 9a4 4 0 0 1 0 6"/><path d="M18 6.5a7.5 7.5 0 0 1 0 11"/></svg><div>Done. <b>“Buy groceries”</b> added.</div></div>
+    <svg class="cursor" id="cur4" width="44" height="44" viewBox="0 0 24 24"><path d="M3 2 L3 19 L8 14.5 L11.5 22 L14 21 L10.5 13.5 L17 13 Z" fill="#1a1a1a" stroke="#ffffff" stroke-width="1.2" stroke-linejoin="round"/></svg>
+  </div>
+
+  <!-- S5 recurring + reminder -->
+  <div id="s5" class="scene clip" data-start="26.55" data-duration="8.6" data-track-index="5">
+    
+    <div class="side">
+      <div class="caps brand">TaskWhisper®</div>
+      <div class="nav" style="top:190px">Dashboard</div><div class="nav on" style="top:260px">All Tasks</div><div class="nav" style="top:330px">Today</div><div class="nav" style="top:400px">Upcoming</div><div class="nav" style="top:470px">Analytics</div><div class="nav" style="top:540px">AI Chat</div><div class="nav" style="top:610px">Voice Assistant</div><div class="nav" style="top:680px">Settings</div>
+      <div class="nav-hl" id="s5hl" style="top:610px"></div>
+    </div>
+    <h1 class="page">All Tasks</h1>
+    
+    <div class="row" id="r1" style="top:190px">
+      <div class="box"></div><div class="fill">✓</div>
+      <div class="rt"><span class="in">Weekly review<span class="strike"></span></span></div>
+      <div class="rs">↻ Weekly · #planning</div>
+      <div class="rr">Due Mon, Oct 6</div>
+      <div class="badge b-low">Low</div>
+      <div class="tint"></div>
+    </div>
+    
+    <div class="row" id="r2" style="top:310px">
+      <div class="box"></div><div class="fill">✓</div>
+      <div class="rt"><span class="in">Buy groceries<span class="strike"></span></span></div>
+      <div class="rs">#home · added by voice</div>
+      <div class="rr">Due Tue</div>
+      <div class="badge b-med">Medium</div>
+      <div class="tint"></div>
+    </div>
+    
+    <div class="row" id="r3" style="top:430px">
+      <div class="box"></div><div class="fill">✓</div>
+      <div class="rt"><span class="in">Call mom tonight<span class="strike"></span></span></div>
+      <div class="rs">Reminder at 6:00 PM</div>
+      <div class="rr">Today</div>
+      <div class="badge b-med">Medium</div>
+      <div class="tint"></div>
+    </div>
+    
+    <div class="row" id="r4" style="top:550px">
+      <div class="box"></div><div class="fill">✓</div>
+      <div class="rt"><span class="in">Weekly review<span class="strike"></span></span></div>
+      <div class="rs">↻ Weekly · #planning</div>
+      <div class="rr">Due Mon, Oct 13</div>
+      <div class="badge b-new">New</div>
+      <div class="tint"></div>
+    </div>
+    <div class="pill" id="p1" style="left:412px">task.completed</div><div class="arr" id="a1" style="left:722px">→</div>
+    <div class="pill" id="p2" style="left:786px">Kafka · task-events</div><div class="arr" id="a2" style="left:1096px">→</div>
+    <div class="pill" id="p3" style="left:1160px">Recurring service</div><div class="arr" id="a3" style="left:1470px">→</div>
+    <div class="pill" id="p4" style="left:1534px;width:314px">Next task created</div>
+    <div class="toast" id="s5toast"><div class="caps tk">Reminder</div><div class="tt">Call mom tonight is due</div><div class="ts">Notification service → WebSocket → your screen</div></div>
+    <div class="ur" id="urA" style="left:412px;width:660px"><div class="u1">Recurring matlab: jo task har hafte khud dobara ban jaye.</div><div class="u2">a task that re-creates itself every week</div></div>
+    <div class="ur" id="urB" style="left:1130px;width:718px"><div class="u1">Reminder: waqt hote hi app khud yaad dila deti hai.</div><div class="u2">the app reminds you on time, by itself</div></div>
+    <svg class="cursor" id="cur5" width="44" height="44" viewBox="0 0 24 24"><path d="M3 2 L3 19 L8 14.5 L11.5 22 L14 21 L10.5 13.5 L17 13 Z" fill="#1a1a1a" stroke="#ffffff" stroke-width="1.2" stroke-linejoin="round"/></svg>
+  </div>
+
+  <!-- S6 tech -->
+  <div id="s6" class="scene clip" data-start="34.75" data-duration="9.85" data-track-index="6">
+    <div id="s6a" style="position:absolute;inset:0">
+      <div class="abs caps eye6">Under the hood</div>
+      <div class="abs ttl6">Behind every whisper</div>
+      <div class="node" id="nd1" style="left:90px"><div class="nm">Next.js</div><div class="nr">dashboard · voice · chat</div></div>
+      <div class="ln" id="l1" style="left:340px;top:544px;width:90px"></div>
+      <div class="node" id="nd2" style="left:430px"><div class="nm">FastAPI</div><div class="nr">tasks in Neon Postgres</div></div>
+      <div class="ln" id="l2" style="left:680px;top:544px;width:90px"></div>
+      <div class="node" id="nd3" style="left:770px"><div class="nm">Dapr</div><div class="nr">sidecar pub/sub</div></div>
+      <div class="ln" id="l3" style="left:1020px;top:544px;width:90px"></div>
+      <div class="node" id="nd4" style="left:1110px"><div class="nm">Kafka</div><div class="nr">event bus</div></div>
+      <div class="ln" id="l4" style="left:1360px;top:544px;width:80px"></div>
+      <div class="spine" id="spine"></div>
+      <div class="ln" id="t1" style="left:1440px;top:354px;width:60px"></div>
+      <div class="ln" id="t2" style="left:1440px;top:484px;width:60px"></div>
+      <div class="ln" id="t3" style="left:1440px;top:614px;width:60px"></div>
+      <div class="ln" id="t4" style="left:1440px;top:744px;width:60px"></div>
+      <div class="svc" id="sv1" style="top:300px"><div class="nm">Recurring · 8003</div><div class="nr">next occurrence</div></div>
+      <div class="svc" id="sv2" style="top:430px"><div class="nm">Notification · 8002</div><div class="nr">due reminders</div></div>
+      <div class="svc" id="sv3" style="top:560px"><div class="nm">Audit · 8004</div><div class="nr">audit log</div></div>
+      <div class="svc" id="sv4" style="top:690px"><div class="nm">WebSocket · 8005</div><div class="nr">live screen sync</div></div>
+      <div class="topics" id="topics">task-events · reminder-events<br/>task-updates · audit-events</div>
+      <div class="dot" id="dot0"></div><div class="dot" id="dotA"></div><div class="dot" id="dotB"></div><div class="dot" id="dotC"></div><div class="dot" id="dotD"></div>
+    </div>
+    <div id="s6b">
+      <div class="abs caps eye6" style="top:80px">The stack</div>
+      <div class="abs ttl6" style="top:130px;font-size:72px">Who does what</div>
+      <div class="tc" id="tc0" style="left:75px;top:290px"><div class="bar"></div><div class="nm">Next.js 16</div><div class="nr">Dashboard, voice and chat UI</div></div>
+      <div class="tc" id="tc1" style="left:525px;top:290px"><div class="bar"></div><div class="nm">FastAPI + Neon</div><div class="nr">REST API, tasks in Postgres</div></div>
+      <div class="tc" id="tc2" style="left:975px;top:290px"><div class="bar"></div><div class="nm">Better Auth</div><div class="nr">JWT login, per-user tasks</div></div>
+      <div class="tc" id="tc3" style="left:1425px;top:290px"><div class="bar"></div><div class="nm">Agents SDK + Gemini</div><div class="nr">Turns speech into task actions</div></div>
+      <div class="tc" id="tc4" style="left:75px;top:630px"><div class="bar"></div><div class="nm">FastMCP</div><div class="nr">The add, list, complete tools</div></div>
+      <div class="tc" id="tc5" style="left:525px;top:630px"><div class="bar"></div><div class="nm">Dapr</div><div class="nr">Pub/sub between services</div></div>
+      <div class="tc" id="tc6" style="left:975px;top:630px"><div class="bar"></div><div class="nm">Kafka</div><div class="nr">Task, reminder and audit events</div></div>
+      <div class="tc" id="tc7" style="left:1425px;top:630px"><div class="bar"></div><div class="nm">Docker · Helm · DOKS</div><div class="nr">Shipped by GitHub Actions</div></div>
+    </div>
+  </div>
+
+  <!-- S7 outro -->
+  <div id="s7" class="scene clip" data-start="44.60" data-duration="4.55" data-track-index="7">
+    <div class="corner" style="left:64px;top:64px;border-width:2px 0 0 2px;width:64px;height:64px;opacity:.5"></div>
+    <div class="corner" style="right:64px;top:64px;border-width:2px 2px 0 0;width:64px;height:64px;opacity:.5"></div>
+    <div class="corner" style="left:64px;bottom:64px;border-width:0 0 2px 2px;width:64px;height:64px;opacity:.5"></div>
+    <div class="corner" style="right:64px;bottom:64px;border-width:0 2px 2px 0;width:64px;height:64px;opacity:.5"></div>
+    <div class="abs l1" id="s7l1">Just Whisper It,</div>
+    <div class="abs l2" id="s7l2">Done.</div>
+    <div class="abs rule" id="s7rule"></div>
+    <div class="abs caps wm" id="s7wm">TaskWhisper®</div>
+  </div>
+
+  <!-- audio -->
+  <audio id="bgm" data-start="0" data-duration="49.15" data-track-index="9" data-volume="2.2" data-fade-in="1" data-fade-out="1.6" src="assets/music/happy-beats-business-moves-vol-12-by-ende-dot-app.mp3"></audio>
+  <audio id="sfx-1" data-start="0.85" data-duration="0.12" data-track-index="11" data-volume="1.1" src="assets/sfx/interface/bong_001.ogg"></audio>
+  <audio id="sfx-2" data-start="9.70" data-duration="0.18" data-track-index="12" data-volume="0.9" src="assets/sfx/impact/impactSoft_medium_001.ogg"></audio>
+  <audio id="sfx-3" data-start="14.15" data-duration="0.60" data-track-index="13" data-volume="1.6" src="assets/sfx/casino/card-slide-1.ogg"></audio>
+  <audio id="sfx-4" data-start="15.55" data-duration="0.60" data-track-index="14" data-volume="1.6" src="assets/sfx/casino/card-slide-1.ogg"></audio>
+  <audio id="sfx-5" data-start="18.25" data-duration="0.06" data-track-index="15" data-volume="2" src="assets/sfx/ui/mouseclick1.ogg"></audio>
+  <audio id="sfx-6" data-start="20.95" data-duration="0.06" data-track-index="16" data-volume="2" src="assets/sfx/ui/mouseclick1.ogg"></audio>
+  <audio id="sfx-7" data-start="24.02" data-duration="0.11" data-track-index="17" data-volume="1.8" src="assets/sfx/interface/drop_001.ogg"></audio>
+  <audio id="sfx-8" data-start="25.11" data-duration="0.12" data-track-index="18" data-volume="1.1" src="assets/sfx/interface/bong_001.ogg"></audio>
+  <audio id="sfx-9" data-start="29.48" data-duration="0.06" data-track-index="19" data-volume="2" src="assets/sfx/ui/mouseclick1.ogg"></audio>
+  <audio id="sfx-10" data-start="30.01" data-duration="0.23" data-track-index="20" data-volume="1.8" src="assets/sfx/ui/rollover1.ogg"></audio>
+  <audio id="sfx-11" data-start="30.57" data-duration="0.23" data-track-index="21" data-volume="1.8" src="assets/sfx/ui/rollover1.ogg"></audio>
+  <audio id="sfx-12" data-start="31.11" data-duration="0.23" data-track-index="10" data-volume="1.8" src="assets/sfx/ui/rollover1.ogg"></audio>
+  <audio id="sfx-13" data-start="31.66" data-duration="0.23" data-track-index="11" data-volume="1.8" src="assets/sfx/ui/rollover1.ogg"></audio>
+  <audio id="sfx-14" data-start="32.20" data-duration="0.12" data-track-index="12" data-volume="1.1" src="assets/sfx/interface/bong_001.ogg"></audio>
+  <audio id="sfx-15" data-start="33.29" data-duration="0.11" data-track-index="13" data-volume="1.8" src="assets/sfx/interface/drop_001.ogg"></audio>
+  <audio id="sfx-16" data-start="39.29" data-duration="0.60" data-track-index="14" data-volume="1.6" src="assets/sfx/casino/card-slide-1.ogg"></audio>
+  <audio id="sfx-17" data-start="39.84" data-duration="0.60" data-track-index="15" data-volume="1.6" src="assets/sfx/casino/card-slide-1.ogg"></audio>
+  <audio id="sfx-18" data-start="40.38" data-duration="0.60" data-track-index="16" data-volume="1.6" src="assets/sfx/casino/card-slide-1.ogg"></audio>
+  <audio id="sfx-19" data-start="40.93" data-duration="0.60" data-track-index="17" data-volume="1.6" src="assets/sfx/casino/card-slide-1.ogg"></audio>
+  <audio id="sfx-20" data-start="44.65" data-duration="0.18" data-track-index="18" data-volume="0.9" src="assets/sfx/impact/impactSoft_medium_001.ogg"></audio>
+</div>
+
+<script>
+  window.__timelines = window.__timelines || {};
+  const root = gsap.timeline({ paused: true });
+  const tl = gsap.timeline();
+  const SHIFT = 6.55;
+  const E = "power3.out";
+  const fi = (sel, t, d = 0.5, y = 20) => tl.fromTo(sel, { opacity: 0, y }, { opacity: 1, y: 0, duration: d, ease: E }, t);
+  const cnt = (id, start, total, count) => {
+    const el = document.querySelectorAll("#" + id + " .cv");
+    for (let i = 1; i < count; i++) {
+      const t = start + (total * i) / (count - 1);
+      tl.set(el[i - 1], { opacity: 0 }, t); tl.set(el[i], { opacity: 1 }, t);
+    }
+  };
+  const click = (sel, t) => { tl.to(sel, { scale: 0.82, duration: 0.07, ease: "power1.in" }, t); tl.to(sel, { scale: 1, duration: 0.12, ease: "power1.out" }, t + 0.07); };
+
+  // ---- S1 hook 0-3.2 ----
+  ["#c1","#c2","#c3","#c4"].forEach((c, i) => tl.fromTo(c, { width: 0, height: 0 }, { width: 96, height: 96, duration: 0.7, ease: "power2.out" }, 0.15 + i * 0.08));
+  fi("#s1wm", 0.35, 0.6, 14);
+  fi("#s1hook", 1.15, 0.7, 26);
+  tl.to("#o1", { x: 90, duration: 3.2, ease: "none" }, 0);
+  tl.to("#o2", { x: -70, duration: 3.2, ease: "none" }, 0);
+  tl.to("#s1", { y: -1080, duration: 0.8, ease: "power4.inOut" }, 3.27); // beat-grid: 3.27s
+
+  // ---- S2 reveal 3.2-7.4 ----
+  fi("#s2eye", 3.75, 0.5, 14);
+  fi("#s2l1", 3.95, 0.7, 40);
+  fi("#s2l2", 4.15, 0.7, 40);
+  fi("#s2sub", 4.95, 0.5, 18);
+
+  // ---- S3 dashboard 7.0-13.1 ----
+  tl.fromTo("#s3", { opacity: 0 }, { opacity: 1, duration: 0.45, ease: "power2.out" }, 7.0);
+  fi("#s3h", 7.5, 0.5, 16); fi("#s3sub", 7.6, 0.5, 12); fi("#s3new", 7.7, 0.4, 12);
+  [0, 1, 2, 3].forEach((i) => fi("#st" + i, 7.6 + i * 0.14, 0.45, 24));
+  cnt("n1", 8.0, 1.0, 7); cnt("n2", 8.0, 1.0, 6); cnt("n3", 8.0, 1.0, 7); cnt("n4", 8.0, 1.0, 2);
+  tl.fromTo("#s3panel", { opacity: 0 }, { opacity: 1, duration: 0.5, ease: E }, 8.75);
+  fi("#d1", 9.0, 0.45, 22); fi("#d2", 9.3, 0.45, 22); fi("#d3", 9.6, 0.45, 22);
+  // cursor travels to Voice Assistant, clicks
+  tl.set("#cur3", { x: 1650, y: 300, opacity: 0 }, 10.0);
+  tl.to("#cur3", { opacity: 1, duration: 0.2 }, 10.05);
+  tl.to("#cur3", { x: 165, y: 636, duration: 1.4, ease: "power2.inOut" }, 10.2);
+  click("#cur3", 11.7);
+  tl.set("#s3hl", { opacity: 1 }, 11.72);
+
+  // ---- S4 voice 12.55-20.2 ----
+  tl.fromTo("#s4", { opacity: 0 }, { opacity: 1, duration: 0.4, ease: "power2.out" }, 12.55); // beat-locked: 12.55s
+  tl.set("#s4hl", { opacity: 1 }, 12.55);
+  tl.set("#cur4", { x: 165, y: 636, opacity: 1 }, 12.55);
+  tl.to("#cur4", { x: 1128, y: 395, duration: 1.0, ease: "power2.inOut" }, 13.2);
+  click("#cur4", 14.4);
+  tl.set("#s4hl", { opacity: 0 }, 13.0);
+  tl.to("#micr", { opacity: 1, duration: 0.15 }, 14.45);
+  tl.set("#lab1", { opacity: 0 }, 14.45); tl.set("#lab2", { opacity: 1 }, 14.45);
+  [0, 1].forEach((k) => {
+    tl.fromTo(k ? "#ring2" : "#ring1", { scale: 1, opacity: 0.7 }, { scale: 1.7, opacity: 0, duration: 1.0, ease: "power1.out", repeat: 2, repeatDelay: 0 }, 14.5 + k * 0.5);
+  });
+  tl.fromTo("#s4tr", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.35, ease: E }, 14.85);
+  document.querySelectorAll(".w4").forEach((el, i) => tl.set(el, { opacity: 1 }, 15.0 + i * 0.3));
+  tl.to("#micr", { opacity: 0, duration: 0.2 }, 17.1);
+  tl.set("#lab2", { opacity: 0 }, 17.1); tl.set("#lab3", { opacity: 1 }, 17.1);
+  fi("#s4tool", 17.47, 0.35, 12); // beat-locked: 17.47s
+  tl.set("#lab3", { opacity: 0 }, 18.5); tl.set("#lab1", { opacity: 1 }, 18.5);
+  fi("#s4reply", 18.56, 0.45, 16); // beat-locked: 18.56s
+  tl.to("#cur4", { opacity: 0, duration: 0.3 }, 14.7);
+
+  // ---- S5 recurring + reminder 20.0-28.6 ----
+  tl.fromTo("#s5", { opacity: 0 }, { opacity: 1, duration: 0.4, ease: "power2.out" }, 20.0);
+  fi("#r1", 20.4, 0.45, 22); fi("#r2", 20.75, 0.45, 22); fi("#r3", 21.1, 0.45, 22);
+  tl.set("#cur5", { x: 1050, y: 640, opacity: 0 }, 21.4);
+  tl.to("#cur5", { opacity: 1, duration: 0.2 }, 21.45);
+  tl.to("#cur5", { x: 456, y: 236, duration: 1.1, ease: "power2.inOut" }, 21.6);
+  click("#cur5", 22.93); // beat-locked: 22.93s
+  tl.to("#r1 .fill", { opacity: 1, duration: 0.2 }, 22.98);
+  tl.fromTo("#r1 .strike", { scaleX: 0, opacity: 1 }, { scaleX: 1, opacity: 1, duration: 0.35, ease: "power2.out" }, 23.0);
+  tl.to("#r1 .tint", { opacity: 1, duration: 0.35 }, 23.0);
+  tl.to("#cur5", { opacity: 0, duration: 0.3 }, 23.4);
+  [["#p1", 23.46], ["#a1", 23.75], ["#p2", 24.02], ["#a2", 24.3], ["#p3", 24.56], ["#a3", 24.85], ["#p4", 25.11]].forEach(([s, t]) => fi(s, t, 0.35, 10));
+  tl.fromTo("#r4", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.5, ease: E }, 25.65); // beat-locked: 25.65s
+  tl.fromTo("#s5toast", { opacity: 0, y: -30 }, { opacity: 1, y: 0, duration: 0.45, ease: E }, 26.74); // beat-locked: 26.74s
+
+  // ---- S6 tech 28.2-38.4 ----
+  tl.fromTo("#s6", { opacity: 0 }, { opacity: 1, duration: 0.4, ease: "power2.out" }, 28.2);
+  tl.fromTo("#s6a .eye6", { opacity: 0 }, { opacity: 1, duration: 0.4 }, 28.5);
+  tl.fromTo("#s6a .ttl6", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.5, ease: E }, 28.6);
+  fi("#nd1", 29.0, 0.4, 18); tl.fromTo("#l1", { scaleX: 0 }, { scaleX: 1, duration: 0.3 }, 29.3);
+  fi("#nd2", 29.4, 0.4, 18); tl.fromTo("#l2", { scaleX: 0 }, { scaleX: 1, duration: 0.3 }, 29.7);
+  fi("#nd3", 29.8, 0.4, 18); tl.fromTo("#l3", { scaleX: 0 }, { scaleX: 1, duration: 0.3 }, 30.1);
+  fi("#nd4", 30.2, 0.4, 18); tl.fromTo("#l4", { scaleX: 0 }, { scaleX: 1, duration: 0.3 }, 30.5);
+  tl.fromTo("#spine", { scaleY: 0 }, { scaleY: 1, duration: 0.4, ease: "power2.out" }, 30.6);
+  ["#t1","#t2","#t3","#t4"].forEach((t, i) => tl.fromTo(t, { scaleX: 0 }, { scaleX: 1, duration: 0.25 }, 30.85 + i * 0.05));
+  ["#sv1","#sv2","#sv3","#sv4"].forEach((s, i) => fi(s, 30.9 + i * 0.2, 0.4, 14));
+  tl.fromTo("#topics", { opacity: 0 }, { opacity: 1, duration: 0.5 }, 31.0);
+  // packet travels along the path
+  tl.set("#dot0", { x: 340, y: 535, opacity: 0 }, 30.2);
+  tl.to("#dot0", { opacity: 1, duration: 0.1 }, 30.3);
+  tl.to("#dot0", { x: 1430, duration: 0.9, ease: "power1.inOut" }, 30.4);
+  tl.to("#dot0", { opacity: 0, duration: 0.1 }, 31.3);
+  [["#dotA", 355], ["#dotB", 485], ["#dotC", 615], ["#dotD", 745]].forEach(([d, y], i) => {
+    tl.set(d, { x: 1435, y: 535, opacity: 0 }, 31.25);
+    tl.to(d, { opacity: 1, duration: 0.08 }, 31.3);
+    tl.to(d, { x: 1495, y: y - 10, duration: 0.35, ease: "power2.out" }, 31.3);
+    tl.to(d, { opacity: 0, duration: 0.3 }, 31.85);
+  });
+  // diagram out, grid in
+  tl.to("#s6a", { opacity: 0, duration: 0.3, ease: "power1.in" }, 32.35);
+  tl.set("#s6b", { opacity: 1 }, 32.6);
+  [[0, 32.74], [1, 32.84], [2, 33.29], [3, 33.39], [4, 33.83], [5, 33.93], [6, 34.38], [7, 34.48]].forEach(([i, t]) => tl.fromTo("#tc" + i, { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.5, ease: E }, t)); // beat-locked: 32.74s; beat-grid: 33.29, 33.83, 34.38
+
+  // ---- S7 outro 38.0-42.6 ----
+  tl.set("#s7", { opacity: 1 }, 38.05);
+  fi("#s7l1", 38.2, 0.7, 30); // beat-locked: 38.20s
+  fi("#s7l2", 38.65, 0.7, 30);
+  tl.fromTo("#s7rule", { scaleX: 0 }, { scaleX: 1, duration: 0.6, ease: "power2.out" }, 39.4);
+  fi("#s7wm", 39.6, 0.6, 10);
+  tl.to("#s7", { opacity: 0, duration: 0.7, ease: "power2.inOut" }, 41.9);
+
+  fi("#urA", 21.3, 0.5, 14);
+  fi("#urB", 25.4, 0.5, 14);
+  // ---- S0 intro (absolute time) ----
+  root.fromTo("#i1", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.6, ease: E }, 0.3);
+  root.fromTo("#i2", { opacity: 0, y: 26 }, { opacity: 1, y: 0, duration: 0.8, ease: E }, 0.8);
+  root.fromTo("#i3", { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.7, ease: E }, 2.2);
+  root.to("#s0", { opacity: 0, duration: 0.45, ease: "power2.in" }, 6.05);
+  root.add(tl, SHIFT);
+  window.__timelines["main"] = root;
+  root.seek(0);
+</script>
+</body>
+</html>

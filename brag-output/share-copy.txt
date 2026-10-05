@@ -1,0 +1,1 @@
+Built TaskWhisper in Jan 2026 with Spec-Kit Plus, a basic project just to try Kafka and Kubernetes with Helm. Tap the mic, say "add a task to buy groceries", and an AI agent does it. Recurring tasks re-create themselves through Kafka + Dapr microservices. Just Whisper It, Done.
