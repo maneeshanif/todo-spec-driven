@@ -55,7 +55,11 @@ def get_gemini_model(model_name: str | None = None):
     Raises:
         ValueError: If GEMINI_API_KEY is not configured
     """
+    import litellm
     from agents.extensions.models.litellm_model import LitellmModel
+
+    # Gemini regularly answers 503 "high demand" for a few seconds; retry instead of failing the chat
+    litellm.num_retries = 4
 
     api_key = settings.GEMINI_API_KEY
     if not api_key:
