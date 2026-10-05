@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TaskWhisper Architecture</title>
+<style>
+  :root {
+    --bg: #0f172a; --panel: #1e293b; --text: #e2e8f0; --muted: #94a3b8; --line: #334155;
+    --blue: #3b82f6; --purple: #8b5cf6; --green: #10b981; --orange: #f59e0b;
+    --pink: #ec4899; --red: #ef4444; --cyan: #06b6d4; --yellow: #eab308;
+  }
+  @media (prefers-color-scheme: light) {
+    :root { --bg: #f1f5f9; --panel: #ffffff; --text: #0f172a; --muted: #475569; --line: #cbd5e1; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, "Segoe UI", sans-serif; line-height: 1.45; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { font-size: 1.9rem; margin: 0 0 4px; }
+  .sub { color: var(--muted); margin: 0 0 20px; }
+  .hint { color: var(--muted); font-size: .9rem; margin: 0 0 12px; }
+
+  /* Steps */
+  .steps { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+  .step { border: 1px solid var(--line); background: var(--panel); color: var(--text); border-radius: 999px; padding: 8px 14px; cursor: pointer; font-size: .9rem; }
+  .step b { display: inline-block; width: 22px; height: 22px; line-height: 22px; text-align: center; border-radius: 50%; background: var(--blue); color: #fff; margin-right: 6px; font-size: .8rem; }
+  .step.active { outline: 2px solid var(--orange); }
+  #stepText { background: var(--panel); border-left: 4px solid var(--orange); border-radius: 8px; padding: 12px 16px; margin-bottom: 20px; min-height: 52px; }
+
+  /* Cluster frame */
+  .cluster { border: 2px dashed var(--cyan); border-radius: 18px; padding: 18px; background: color-mix(in srgb, var(--cyan) 6%, transparent); position: relative; }
+  .cluster > .tag { position: absolute; top: -13px; left: 18px; background: var(--bg); padding: 0 10px; color: var(--cyan); font-weight: 700; }
+  .lane { margin: 14px 0; }
+  .lane > h3 { margin: 0 0 8px; font-size: .78rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+  .row { display: flex; flex-wrap: wrap; gap: 12px; }
+  .arrow { text-align: center; color: var(--muted); font-size: 1.3rem; margin: 2px 0; }
+
+  .node { flex: 1 1 200px; min-width: 190px; background: var(--panel); border: 2px solid var(--c, var(--line)); border-radius: 12px; padding: 12px 14px; transition: transform .15s, box-shadow .15s, opacity .15s; }
+  .node h4 { margin: 0 0 4px; font-size: 1rem; color: var(--c); }
+  .node p { margin: 0; font-size: .85rem; color: var(--muted); }
+  .node code { font-size: .78rem; color: var(--text); background: color-mix(in srgb, var(--c) 14%, transparent); padding: 1px 6px; border-radius: 4px; }
+  .node .port { float: right; font-size: .75rem; color: var(--muted); }
+  .dim .node { opacity: .28; }
+  .dim .node.hl { opacity: 1; transform: translateY(-3px); box-shadow: 0 0 0 3px var(--c), 0 8px 22px rgba(0,0,0,.35); }
+
+  .user { --c: var(--pink); } .gw { --c: var(--orange); } .fe { --c: var(--blue); } .be { --c: var(--purple); }
+  .ai { --c: var(--yellow); } .dapr { --c: var(--cyan); } .kafka { --c: var(--red); } .svc { --c: var(--green); }
+  .db { --c: #64748b; } .mon { --c: #a855f7; }
+
+  .topics { display: flex; flex-wrap: wrap; gap: 8px; }
+  .topic { background: color-mix(in srgb, var(--red) 18%, transparent); border: 1px solid var(--red); border-radius: 8px; padding: 6px 10px; font-family: ui-monospace, Consolas, monospace; font-size: .82rem; }
+
+  .optional { border-style: dashed; }
+
+  /* Explainers */
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; margin-top: 26px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+  .card h3 { margin: 0 0 6px; }
+  .card ul { margin: 6px 0 0; padding-left: 18px; }
+  .card li { margin: 3px 0; font-size: .92rem; }
+  table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+  td { padding: 6px 4px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  td:first-child { font-family: ui-monospace, Consolas, monospace; color: var(--green); white-space: nowrap; padding-right: 10px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; margin: 14px 0 0; font-size: .85rem; color: var(--muted); }
+  .legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>TaskWhisper: what is behind a to-do list</h1>
+  <p class="sub">A simple to-do app built with spec-driven development, running as an event-driven system on Kubernetes.</p>
+
+  <p class="hint">Click a step to see which parts light up.</p>
+  <div class="steps" id="steps">
+    <button class="step" data-s="1"><b>1</b>Open the app</button>
+    <button class="step" data-s="2"><b>2</b>Log in</button>
+    <button class="step" data-s="3"><b>3</b>Talk to the AI</button>
+    <button class="step" data-s="4"><b>4</b>Create a task</button>
+    <button class="step" data-s="5"><b>5</b>Event reaches Kafka</button>
+    <button class="step" data-s="6"><b>6</b>Services react</button>
+    <button class="step" data-s="7"><b>7</b>Live update</button>
+    <button class="step" data-s="0">Reset</button>
+  </div>
+  <div id="stepText">Pick a step above, or just read the diagram from top to bottom.</div>
+
+  <div class="cluster" id="diagram">
+    <span class="tag">Kubernetes cluster (Minikube)</span>
+
+    <div class="lane"><h3>Outside the cluster</h3>
+      <div class="row">
+        <div class="node user" data-k="user"><h4>You in the browser</h4><p>Typing or speaking. Voice uses the browser's built-in speech recognition (Chrome or Edge).</p></div>
+      </div>
+    </div>
+    <div class="arrow">↓</div>
+
+    <div class="lane"><h3>Entry point: the cluster's front door</h3>
+      <div class="row">
+        <div class="node gw" data-k="gw"><h4>Ingress / port-forward</h4><p>Kubernetes routes browser traffic to the right service. In production this is the NGINX Ingress. In this demo we use <code>kubectl port-forward</code> to localhost.</p></div>
+      </div>
+    </div>
+    <div class="arrow">↓</div>
+
+    <div class="lane"><h3>Your app</h3>
+      <div class="row">
+        <div class="node fe" data-k="fe"><h4>Frontend <span class="port">:3000</span></h4><p>Next.js + Shadcn UI. Login with Better Auth. Dashboard, chat and voice pages.</p></div>
+        <div class="node be" data-k="be"><h4>Backend API <span class="port">:8000</span></h4><p>FastAPI. Checks your login token, serves tasks, runs the AI chat stream.</p></div>
+        <div class="node ai" data-k="ai"><h4>AI agent + MCP server <span class="port">:8001</span></h4><p>The agent (Gemini) decides what to do. The MCP server gives it safe tools like add_task and list_tasks.</p></div>
+      </div>
+    </div>
+    <div class="arrow">↓ every change becomes an event ↓</div>
+
+    <div class="lane"><h3>Messaging: Dapr sidecars + Kafka</h3>
+      <div class="row">
+        <div class="node dapr" data-k="dapr"><h4>Dapr sidecars</h4><p>A small helper container next to each service. The service just says "publish" or "subscribe"; Dapr talks to Kafka.</p></div>
+        <div class="node kafka" data-k="kafka"><h4>Kafka (Strimzi)</h4><p>The message bus. Services never call each other directly for events.</p>
+          <div class="topics" style="margin-top:8px">
+            <span class="topic">task-events</span><span class="topic">task-updates</span><span class="topic">reminders</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="arrow">↓</div>
+
+    <div class="lane"><h3>Microservices (each reacts to events on its own)</h3>
+      <div class="row">
+        <div class="node svc" data-k="notif"><h4>Notification <span class="port">:8002</span></h4><p>Listens to <code>reminders</code>. Sends reminder notifications.</p></div>
+        <div class="node svc" data-k="recur"><h4>Recurring Task <span class="port">:8003</span></h4><p>Listens to <code>task-events</code>. When a recurring task is completed, it creates the next one through the backend.</p></div>
+        <div class="node svc" data-k="audit"><h4>Audit <span class="port">:8004</span></h4><p>Listens to <code>task-events</code>. Writes a history of what happened.</p></div>
+        <div class="node svc" data-k="ws"><h4>WebSocket <span class="port">:8005</span></h4><p>Listens to <code>task-updates</code>. Pushes live changes to open browser tabs.</p></div>
+      </div>
+    </div>
+    <div class="arrow">↓</div>
+
+    <div class="lane"><h3>Data</h3>
+      <div class="row">
+        <div class="node db" data-k="db"><h4>PostgreSQL</h4><p>Users, sessions, tasks, tags, reminders, conversations, audit history.</p></div>
+      </div>
+    </div>
+
+    <div class="lane"><h3>Watching the system (optional in the demo)</h3>
+      <div class="row">
+        <div class="node mon optional" data-k="mon"><h4>Prometheus</h4><p>Collects numbers (metrics) from every pod: CPU, memory, requests per second, errors. It stores them over time.</p></div>
+        <div class="node mon optional" data-k="mon"><h4>Grafana</h4><p>Draws those numbers as charts and dashboards, so you can see health at a glance.</p></div>
+        <div class="node gw" data-k="dash"><h4>Kubernetes Dashboard</h4><p>A web view of the cluster itself: which pods run, which are healthy, their logs.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <span><i style="background:var(--orange)"></i>Entry</span><span><i style="background:var(--blue)"></i>Frontend</span>
+    <span><i style="background:var(--purple)"></i>Backend</span><span><i style="background:var(--yellow)"></i>AI</span>
+    <span><i style="background:var(--cyan)"></i>Dapr</span><span><i style="background:var(--red)"></i>Kafka</span>
+    <span><i style="background:var(--green)"></i>Microservices</span><span><i style="background:#64748b"></i>Database</span>
+    <span><i style="background:#a855f7"></i>Monitoring</span>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h3>In plain words</h3>
+      <ul>
+        <li><b>Kubernetes</b>: the manager. It runs every part as a pod, restarts anything that crashes, and routes traffic. It also acts as the front door (the gateway) for the app.</li>
+        <li><b>Kafka</b>: a post office. The backend drops a message; interested services pick it up.</li>
+        <li><b>Dapr</b>: the postal clerk next to each service, so code stays simple.</li>
+        <li><b>Prometheus</b>: collects and stores the numbers.</li>
+        <li><b>Grafana</b>: turns the numbers into charts.</li>
+        <li><b>MCP</b>: a standard way to give an AI agent safe tools.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Where to find it in the repo</h3>
+      <table>
+        <tr><td>frontend/</td><td>Next.js app (pages in <code>app/</code>: dashboard, tasks, chat, voice)</td></tr>
+        <tr><td>backend/src/</td><td>FastAPI: <code>api/</code> routes, <code>agents/</code> AI agent, <code>mcp_server/</code> tools, <code>services/dapr_client.py</code></td></tr>
+        <tr><td>services/</td><td>The 4 microservices: notification, recurring-task, audit, websocket</td></tr>
+        <tr><td>k8s/</td><td>Kubernetes manifests</td></tr>
+        <tr><td>k8s/kafka/</td><td>Kafka cluster and topics</td></tr>
+        <tr><td>k8s/phase5/</td><td>Microservices + Dapr pub/sub component</td></tr>
+        <tr><td>dapr-components/</td><td>Dapr pub/sub, state store, resiliency config</td></tr>
+        <tr><td>helm/todo-app/</td><td>Helm chart that packages everything</td></tr>
+        <tr><td>specs/ + history/</td><td>The specs and prompt history from spec-driven development</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <h3>Say this about the monitoring</h3>
+      <ul>
+        <li>"Prometheus is the data collector. Every few seconds it asks each pod for its numbers and remembers them."</li>
+        <li>"Grafana is the screen. It reads from Prometheus and shows charts."</li>
+        <li>"Together they answer: is it healthy, is it slow, and what changed?"</li>
+        <li>In a short video, show one Grafana dashboard for about 15 seconds, then move on.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<script>
+  var STEPS = {
+    1: { keys: ["user","gw","fe"], text: "You open the app. Kubernetes routes the request to the frontend pod, which serves the Next.js pages." },
+    2: { keys: ["fe","be","db"], text: "You log in. Better Auth in the frontend stores your session in PostgreSQL and issues a signed token. The backend checks that token on every request." },
+    3: { keys: ["fe","be","ai"], text: "You type or speak. The backend streams your message to the AI agent (Gemini). The agent decides which tool to use through the MCP server." },
+    4: { keys: ["ai","be","db"], text: "The agent calls add_task through MCP. The task is saved in PostgreSQL, and the backend gets the result." },
+    5: { keys: ["be","dapr","kafka"], text: "The backend publishes 'task created' through its Dapr sidecar into Kafka topics (task-events and task-updates). It does not call the other services directly." },
+    6: { keys: ["kafka","dapr","recur","audit","notif"], text: "Each service subscribes through its own Dapr sidecar. Audit records the event, Recurring Task creates the next task when needed, and Notification handles reminders." },
+    7: { keys: ["kafka","ws","fe","user"], text: "The WebSocket service reads task-updates and pushes the change to every open browser tab, so the list updates without a refresh." }
+  };
+  var diagram = document.getElementById("diagram");
+  var text = document.getElementById("stepText");
+  var buttons = document.querySelectorAll(".step");
+  function show(n) {
+    buttons.forEach(function (b) { b.classList.toggle("active", b.dataset.s === String(n) && n !== 0); });
+    diagram.querySelectorAll(".node").forEach(function (el) { el.classList.remove("hl"); });
+    if (!n || !STEPS[n]) { diagram.classList.remove("dim"); text.textContent = "Pick a step above, or just read the diagram from top to bottom."; return; }
+    diagram.classList.add("dim");
+    STEPS[n].keys.forEach(function (k) {
+      diagram.querySelectorAll('[data-k="' + k + '"]').forEach(function (el) { el.classList.add("hl"); });
+    });
+    text.textContent = STEPS[n].text;
+  }
+  buttons.forEach(function (b) { b.addEventListener("click", function () { show(Number(b.dataset.s)); }); });
+</script>
+</body>
+</html>

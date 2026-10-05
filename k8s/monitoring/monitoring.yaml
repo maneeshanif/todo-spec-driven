@@ -1,0 +1,423 @@
+# Lightweight monitoring for the local demo: Prometheus (collects numbers) + Grafana (draws charts).
+# Apply: kubectl apply -f k8s/monitoring/monitoring.yaml
+# Open:  kubectl port-forward -n monitoring svc/grafana 3001:3000   (no login needed)
+apiVersion: v1
+kind: Namespace
+metadata: {name: monitoring}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata: {name: prometheus, namespace: monitoring}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata: {name: prometheus-demo}
+rules:
+  - apiGroups: [""]
+    resources: [nodes, nodes/proxy, nodes/metrics, pods, services, endpoints]
+    verbs: [get, list, watch]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata: {name: prometheus-demo}
+roleRef: {apiGroup: rbac.authorization.k8s.io, kind: ClusterRole, name: prometheus-demo}
+subjects: [{kind: ServiceAccount, name: prometheus, namespace: monitoring}]
+---
+apiVersion: v1
+kind: ConfigMap
+metadata: {name: prometheus-config, namespace: monitoring}
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+    scrape_configs:
+      - job_name: cadvisor
+        scheme: https
+        tls_config:
+          ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        authorization:
+          credentials_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+        kubernetes_sd_configs:
+          - role: node
+        relabel_configs:
+          - target_label: __address__
+            replacement: kubernetes.default.svc:443
+          - source_labels: [__meta_kubernetes_node_name]
+            regex: (.+)
+            target_label: __metrics_path__
+            replacement: /api/v1/nodes/$1/proxy/metrics/cadvisor
+      - job_name: dapr-sidecars
+        kubernetes_sd_configs:
+          - role: pod
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_container_port_name]
+            action: keep
+            regex: dapr-metrics
+          - source_labels: [__meta_kubernetes_namespace]
+            target_label: namespace
+          - source_labels: [__meta_kubernetes_pod_name]
+            target_label: pod
+---
+apiVersion: v1
+kind: ConfigMap
+metadata: {name: grafana-provisioning, namespace: monitoring}
+data:
+  datasource.yml: |
+    apiVersion: 1
+    datasources:
+      - name: Prometheus
+        uid: prometheus
+        type: prometheus
+        access: proxy
+        url: http://prometheus:9090
+        isDefault: true
+  dashboards.yml: |
+    apiVersion: 1
+    providers:
+      - name: demo
+        folder: ""
+        type: file
+        options:
+          path: /var/lib/grafana/dashboards
+  taskwhisper.json: |
+    {
+      "uid": "taskwhisper",
+      "title": "TaskWhisper: cluster at a glance",
+      "schemaVersion": 38,
+      "version": 1,
+      "refresh": "10s",
+      "time": {
+        "from": "now-30m",
+        "to": "now"
+      },
+      "tags": [
+        "demo"
+      ],
+      "panels": [
+        {
+          "id": 1,
+          "type": "stat",
+          "title": "App pods reporting",
+          "gridPos": {
+            "x": 0,
+            "y": 0,
+            "w": 6,
+            "h": 4
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "targets": [
+            {
+              "expr": "count(count by (pod)(container_memory_working_set_bytes{namespace=\"todo-app\",pod!=\"\",container=\"\"}))",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "type": "stat",
+          "title": "Kafka memory",
+          "gridPos": {
+            "x": 6,
+            "y": 0,
+            "w": 6,
+            "h": 4
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "targets": [
+            {
+              "expr": "sum(container_memory_working_set_bytes{namespace=\"kafka\",pod!=\"\",container=\"\"})",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "bytes"
+            },
+            "overrides": []
+          }
+        },
+        {
+          "id": 3,
+          "type": "stat",
+          "title": "Requests through Dapr sidecars",
+          "gridPos": {
+            "x": 12,
+            "y": 0,
+            "w": 6,
+            "h": 4
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "targets": [
+            {
+              "expr": "sum(dapr_http_server_request_count)",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "id": 4,
+          "type": "stat",
+          "title": "Services with a Dapr sidecar",
+          "gridPos": {
+            "x": 18,
+            "y": 0,
+            "w": 6,
+            "h": 4
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "targets": [
+            {
+              "expr": "count(count by (app_id)(dapr_http_server_request_count))",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "id": 5,
+          "type": "timeseries",
+          "title": "Memory by pod (todo-app)",
+          "gridPos": {
+            "x": 0,
+            "y": 4,
+            "w": 12,
+            "h": 8
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "bytes",
+              "custom": {
+                "fillOpacity": 12,
+                "lineWidth": 2
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "bottom",
+              "calcs": [
+                "lastNotNull"
+              ]
+            }
+          },
+          "targets": [
+            {
+              "expr": "sum by (pod)(container_memory_working_set_bytes{namespace=\"todo-app\",pod!=\"\",container=\"\"})",
+              "legendFormat": "{{pod}}",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "id": 6,
+          "type": "timeseries",
+          "title": "CPU by pod (todo-app, cores)",
+          "gridPos": {
+            "x": 12,
+            "y": 4,
+            "w": 12,
+            "h": 8
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "custom": {
+                "fillOpacity": 12,
+                "lineWidth": 2
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "bottom",
+              "calcs": [
+                "lastNotNull"
+              ]
+            }
+          },
+          "targets": [
+            {
+              "expr": "sum by (pod)(rate(container_cpu_usage_seconds_total{namespace=\"todo-app\",pod!=\"\",container=\"\"}[2m]))",
+              "legendFormat": "{{pod}}",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "id": 7,
+          "type": "timeseries",
+          "title": "Requests handled by each Dapr sidecar",
+          "gridPos": {
+            "x": 0,
+            "y": 12,
+            "w": 12,
+            "h": 8
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "custom": {
+                "fillOpacity": 12,
+                "lineWidth": 2
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "bottom",
+              "calcs": [
+                "lastNotNull"
+              ]
+            }
+          },
+          "targets": [
+            {
+              "expr": "sum by (app_id)(dapr_http_server_request_count)",
+              "legendFormat": "{{app_id}}",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "id": 8,
+          "type": "timeseries",
+          "title": "Kafka events published (appears after you create a task)",
+          "gridPos": {
+            "x": 12,
+            "y": 12,
+            "w": 12,
+            "h": 8
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "custom": {
+                "fillOpacity": 12,
+                "lineWidth": 2
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "bottom",
+              "calcs": [
+                "lastNotNull"
+              ]
+            }
+          },
+          "targets": [
+            {
+              "expr": "sum by (app_id)(dapr_component_pubsub_egress_count)",
+              "legendFormat": "{{app_id}}",
+              "refId": "A"
+            }
+          ]
+        }
+      ]
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: prometheus, namespace: monitoring}
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: prometheus}}
+  template:
+    metadata: {labels: {app: prometheus}}
+    spec:
+      serviceAccountName: prometheus
+      containers:
+        - name: prometheus
+          image: prom/prometheus:v2.48.0
+          args: ["--config.file=/etc/prometheus/prometheus.yml", "--storage.tsdb.path=/prometheus", "--storage.tsdb.retention.time=6h"]
+          ports: [{containerPort: 9090}]
+          resources:
+            requests: {cpu: 50m, memory: 128Mi}
+            limits: {memory: 400Mi}
+          volumeMounts:
+            - {name: config, mountPath: /etc/prometheus}
+            - {name: data, mountPath: /prometheus}
+      volumes:
+        - name: config
+          configMap: {name: prometheus-config}
+        - name: data
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata: {name: prometheus, namespace: monitoring}
+spec:
+  selector: {app: prometheus}
+  ports: [{port: 9090, targetPort: 9090}]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: grafana, namespace: monitoring}
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: grafana}}
+  template:
+    metadata: {labels: {app: grafana}}
+    spec:
+      containers:
+        - name: grafana
+          image: grafana/grafana:10.2.2
+          env:
+            - {name: GF_AUTH_ANONYMOUS_ENABLED, value: "true"}
+            - {name: GF_AUTH_ANONYMOUS_ORG_ROLE, value: Admin}
+            - {name: GF_AUTH_DISABLE_LOGIN_FORM, value: "true"}
+            - {name: GF_ANALYTICS_REPORTING_ENABLED, value: "false"}
+            - {name: GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH, value: /var/lib/grafana/dashboards/taskwhisper.json}
+          ports: [{containerPort: 3000}]
+          resources:
+            requests: {cpu: 50m, memory: 128Mi}
+            limits: {memory: 350Mi}
+          volumeMounts:
+            - {name: prov, mountPath: /etc/grafana/provisioning/datasources/datasource.yml, subPath: datasource.yml}
+            - {name: prov, mountPath: /etc/grafana/provisioning/dashboards/dashboards.yml, subPath: dashboards.yml}
+            - {name: prov, mountPath: /var/lib/grafana/dashboards/taskwhisper.json, subPath: taskwhisper.json}
+      volumes:
+        - name: prov
+          configMap: {name: grafana-provisioning}
+---
+apiVersion: v1
+kind: Service
+metadata: {name: grafana, namespace: monitoring}
+spec:
+  selector: {app: grafana}
+  ports: [{port: 3000, targetPort: 3000}]

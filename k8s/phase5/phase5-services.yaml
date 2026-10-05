@@ -1,0 +1,194 @@
+# Phase 5 event-driven layer for local Minikube (Strimzi Kafka + Dapr)
+# Apply: kubectl apply -f k8s/phase5/phase5-services.yaml
+# Images are built locally (docker compose build) and loaded with `minikube image load`.
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: taskpubsub
+  namespace: todo-app
+spec:
+  type: pubsub.kafka
+  version: v1
+  metadata:
+    - name: brokers
+      value: "todo-kafka-cluster-kafka-bootstrap.kafka.svc.cluster.local:9092"
+    - name: consumerGroup
+      value: "{appID}-group"
+    - name: authRequired
+      value: "false"
+    - name: disableTls
+      value: "true"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: notification-service, namespace: todo-app, labels: {app: notification-service}}
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: notification-service}}
+  template:
+    metadata:
+      labels: {app: notification-service}
+      annotations:
+        dapr.io/enabled: "true"
+        dapr.io/app-id: "notification-service"
+        dapr.io/app-port: "8002"
+        dapr.io/sidecar-memory-limit: "128Mi"
+    spec:
+      containers:
+      - name: notification-service
+        image: todo-spec-driven-notification-service:latest
+        imagePullPolicy: Never
+        ports: [{containerPort: 8002}]
+        env:
+        - {name: APP_PORT, value: "8002"}
+        - {name: DAPR_PUBSUB_NAME, value: "taskpubsub"}
+        - {name: REMINDERS_TOPIC, value: "reminders"}
+        - {name: TASK_UPDATES_TOPIC, value: "task-updates"}
+        - {name: DAPR_HTTP_PORT, value: "3500"}
+        - {name: LOG_LEVEL, value: INFO}
+        resources:
+          requests: {cpu: 50m, memory: 64Mi}
+          limits: {memory: 256Mi}
+---
+apiVersion: v1
+kind: Service
+metadata: {name: notification-service, namespace: todo-app}
+spec:
+  selector: {app: notification-service}
+  ports: [{port: 8002, targetPort: 8002}]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: recurring-task-service, namespace: todo-app, labels: {app: recurring-task-service}}
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: recurring-task-service}}
+  template:
+    metadata:
+      labels: {app: recurring-task-service}
+      annotations:
+        dapr.io/enabled: "true"
+        dapr.io/app-id: "recurring-task-service"
+        dapr.io/app-port: "8003"
+        dapr.io/sidecar-memory-limit: "128Mi"
+    spec:
+      containers:
+      - name: recurring-task-service
+        image: todo-spec-driven-recurring-task-service:latest
+        imagePullPolicy: Never
+        ports: [{containerPort: 8003}]
+        env:
+        - {name: PORT, value: "8003"}
+        - {name: PUBSUB_NAME, value: "taskpubsub"}
+        - {name: TASK_EVENTS_TOPIC, value: "task-events"}
+        - {name: BACKEND_APP_ID, value: "backend"}
+        - {name: DAPR_HTTP_PORT, value: "3500"}
+        - {name: LOG_LEVEL, value: INFO}
+        resources:
+          requests: {cpu: 50m, memory: 64Mi}
+          limits: {memory: 256Mi}
+---
+apiVersion: v1
+kind: Service
+metadata: {name: recurring-task-service, namespace: todo-app}
+spec:
+  selector: {app: recurring-task-service}
+  ports: [{port: 8003, targetPort: 8003}]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: audit-service, namespace: todo-app, labels: {app: audit-service}}
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: audit-service}}
+  template:
+    metadata:
+      labels: {app: audit-service}
+      annotations:
+        dapr.io/enabled: "true"
+        dapr.io/app-id: "audit-service"
+        dapr.io/app-port: "8004"
+        dapr.io/sidecar-memory-limit: "128Mi"
+    spec:
+      containers:
+      - name: audit-service
+        image: todo-spec-driven-audit-service:latest
+        imagePullPolicy: Never
+        ports: [{containerPort: 8004}]
+        env:
+        - {name: PORT, value: "8004"}
+        - {name: PUBSUB_NAME, value: "taskpubsub"}
+        - {name: TOPIC_NAME, value: "task-events"}
+        - {name: DAPR_HTTP_PORT, value: "3500"}
+        - {name: LOG_LEVEL, value: INFO}
+        - name: DATABASE_URL
+          valueFrom: {secretKeyRef: {name: evolution-todo-todo-app-secrets, key: DATABASE_URL}}
+        resources:
+          requests: {cpu: 50m, memory: 64Mi}
+          limits: {memory: 256Mi}
+---
+apiVersion: v1
+kind: Service
+metadata: {name: audit-service, namespace: todo-app}
+spec:
+  selector: {app: audit-service}
+  ports: [{port: 8004, targetPort: 8004}]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: websocket-service, namespace: todo-app, labels: {app: websocket-service}}
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: websocket-service}}
+  template:
+    metadata:
+      labels: {app: websocket-service}
+      annotations:
+        dapr.io/enabled: "true"
+        dapr.io/app-id: "websocket-service"
+        dapr.io/app-port: "8005"
+        dapr.io/sidecar-memory-limit: "128Mi"
+    spec:
+      containers:
+      - name: websocket-service
+        image: todo-spec-driven-websocket-service:latest
+        imagePullPolicy: Never
+        ports: [{containerPort: 8005}]
+        env:
+        - {name: PORT, value: "8005"}
+        - {name: DAPR_PUBSUB_NAME, value: "taskpubsub"}
+        - {name: DAPR_TOPIC, value: "task-updates"}
+        - {name: DAPR_HTTP_PORT, value: "3500"}
+        - {name: LOG_LEVEL, value: INFO}
+        resources:
+          requests: {cpu: 50m, memory: 64Mi}
+          limits: {memory: 256Mi}
+---
+apiVersion: v1
+kind: Service
+metadata: {name: websocket-service, namespace: todo-app}
+spec:
+  selector: {app: websocket-service}
+  ports: [{port: 8005, targetPort: 8005}]
+---
+# The backend publishes to a component named "pubsub-kafka" (hardcoded in api/routes/tasks.py).
+# Same Kafka brokers as taskpubsub, scoped to the backend only.
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: pubsub-kafka
+  namespace: todo-app
+spec:
+  type: pubsub.kafka
+  version: v1
+  metadata:
+    - name: brokers
+      value: "todo-kafka-cluster-kafka-bootstrap.kafka.svc.cluster.local:9092"
+    - name: consumerGroup
+      value: "{appID}-group"
+    - name: authRequired
+      value: "false"
+    - name: disableTls
+      value: "true"
+scopes:
+  - backend

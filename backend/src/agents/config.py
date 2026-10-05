@@ -38,25 +38,35 @@ def get_gemini_client() -> AsyncOpenAI:
     )
 
 
-def get_gemini_model(model_name: str | None = None) -> OpenAIChatCompletionsModel:
-    """Create OpenAIChatCompletionsModel wrapper for Gemini.
+def get_gemini_model(model_name: str | None = None):
+    """Create the Gemini model used by the OpenAI Agents SDK.
 
-    This uses Gemini's OpenAI-compatible endpoint which works
-    with the OpenAI Agents SDK's OpenAIChatCompletionsModel wrapper.
+    Gemini 3.x requires a "thought signature" to be sent back with every tool
+    call. The plain OpenAI-compatible endpoint (OpenAIChatCompletionsModel)
+    drops it, so the second model turn fails with HTTP 400. LiteLLM keeps the
+    signature, so we route Gemini through LitellmModel instead.
 
     Args:
         model_name: Optional model name override. Defaults to settings.GEMINI_MODEL
 
     Returns:
-        OpenAIChatCompletionsModel: Model configured for Gemini
-    """
-    client = get_gemini_client()
-    model = model_name or settings.GEMINI_MODEL
+        LitellmModel: Model configured for Gemini
 
-    return OpenAIChatCompletionsModel(
-        model=model,
-        openai_client=client,
-    )
+    Raises:
+        ValueError: If GEMINI_API_KEY is not configured
+    """
+    from agents.extensions.models.litellm_model import LitellmModel
+
+    api_key = settings.GEMINI_API_KEY
+    if not api_key:
+        raise ValueError(
+            "GEMINI_API_KEY is not configured. "
+            "Please set it in your .env file."
+        )
+
+    model = (model_name or settings.GEMINI_MODEL).removeprefix("gemini/")
+
+    return LitellmModel(model=f"gemini/{model}", api_key=api_key)
 
 
 def get_mcp_server_url(user_id: str | None = None) -> str:

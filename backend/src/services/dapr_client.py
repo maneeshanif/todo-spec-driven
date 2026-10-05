@@ -31,7 +31,8 @@ class DaprClient:
         try:
             async with httpx.AsyncClient(timeout=2.0) as client:
                 response = await client.get(f"{DAPR_BASE_URL}/v1.0/healthz")
-                is_healthy = response.status_code == 200
+                # Dapr's /v1.0/healthz returns 204 No Content when healthy
+                is_healthy = response.status_code in (200, 204)
                 if is_healthy:
                     logger.info("Dapr sidecar is available")
                 else:
